@@ -68,7 +68,8 @@ public class ToPersonTargetShapeFn
     }
 
     private String gender_id(ErrorBuilder errorBuilder, TableRow genderRow, TableRow personSourceRow) {
-        String id = ((String) personSourceRow.get("gender_id"));
+        com.example.beam.etl.schema.GenderType gender = com.example.beam.etl.schema.GenderType.findByLocalName(((com.example.beam.etl.schema.GenderType) personSourceRow.get("gender_id")));
+        String id = ((String) gender.getId().getLocalName());
         if (id!= null) {
             genderRow.set("id", id);
         } else {

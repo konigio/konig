@@ -50,7 +50,8 @@ public class ToAnimalTargetShapeFn
     }
 
     private String species_id(ErrorBuilder errorBuilder, TableRow speciesRow, TableRow animalSourceRow) {
-        String id = ((String) animalSourceRow.get("species"));
+        com.example.beam.etl.ex.Species species = com.example.beam.etl.ex.Species.findByLocalName(((com.example.beam.etl.ex.Species) animalSourceRow.get("species")));
+        String id = ((String) species.getId().getLocalName());
         if (id!= null) {
             speciesRow.set("id", id);
         } else {

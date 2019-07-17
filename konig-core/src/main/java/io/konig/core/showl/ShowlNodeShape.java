@@ -694,12 +694,27 @@ public class ShowlNodeShape implements Traversable {
 	}
 	
 	public boolean encapsulates(ShowlPropertyShape p) {
+		
+		Resource thisId = getId();
+		
 		while (p != null) {
-			if (p.getDeclaringShape() == this) {
+			if (p.getDeclaringShape().getId().equals(thisId)) {
 				return true;
 			}
 			p = p.getDeclaringShape().getAccessor();
 		}
 		return false;
+	}
+
+	public ShowlChannel findChannelFor(ShowlNodeShape node) {
+		if (channelList != null) {
+			Resource nodeId = node.getId();
+			for (ShowlChannel channel : channelList) {
+				if (channel.getSourceNode().getId().equals(nodeId)) {
+					return channel;
+				}
+			}
+		}
+		return null;
 	}
 }
