@@ -13,6 +13,8 @@ import java.util.regex.Pattern;
 import com.google.api.client.util.DateTime;
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
+import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.values.TupleTag;

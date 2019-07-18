@@ -5,6 +5,8 @@ import java.util.Set;
 import com.example.beam.etl.common.ErrorBuilder;
 import com.google.api.services.bigquery.model.TableRow;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
+import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.values.TupleTag;
 
 public class ToAnimalTargetShapeFn
@@ -13,8 +15,8 @@ public class ToAnimalTargetShapeFn
     public static TupleTag<String> deadLetterTag = new TupleTag<String>();
     public static TupleTag<TableRow> successTag = new TupleTag<TableRow>();
 
-    @DoFn.ProcessElement
-    public void processElement(DoFn.ProcessContext c) {
+    @ProcessElement
+    public void processElement(ProcessContext c) {
         ErrorBuilder errorBuilder = new ErrorBuilder();
         try {
             TableRow outputRow = new TableRow();

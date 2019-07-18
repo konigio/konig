@@ -192,8 +192,14 @@ public class BeamTransformGenerator {
   
   static {
     rewriteRuleList.add(new RewriteRule("(DoFn$", "("));
+    rewriteRuleList.add(new RewriteRule("(DoFn.", "("));
     rewriteRuleList.add(new RewriteRule("@DoFn$", "@"));
+    rewriteRuleList.add(new RewriteRule("@DoFn.", "@"));
     rewriteRuleList.add(new RewriteRule(".DoFn$", ".DoFn."));
+    rewriteRuleList.add(new RewriteRule("import org.apache.beam.sdk.transforms.DoFn;", 
+    		"import org.apache.beam.sdk.transforms.DoFn;\n" +
+        "import org.apache.beam.sdk.transforms.DoFn.ProcessElement;\n" +
+    		"import org.apache.beam.sdk.transforms.DoFn.ProcessContext;"));
   }
   
   private String basePackage;

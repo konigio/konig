@@ -7,6 +7,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
+import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.values.TupleTag;
