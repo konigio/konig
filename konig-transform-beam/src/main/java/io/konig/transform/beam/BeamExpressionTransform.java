@@ -42,6 +42,10 @@ import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.AbstractJType;
 import com.helger.jcodemodel.IJExpression;
+import com.helger.jcodemodel.JAtomDouble;
+import com.helger.jcodemodel.JAtomFloat;
+import com.helger.jcodemodel.JAtomInt;
+import com.helger.jcodemodel.JAtomLong;
 import com.helger.jcodemodel.JBlock;
 import com.helger.jcodemodel.JCodeModel;
 import com.helger.jcodemodel.JConditional;
@@ -243,15 +247,53 @@ public class BeamExpressionTransform  {
 		JBlock block = blockInfo.getBlock();
 		
 		AbstractJClass objectClass = model.ref(Object.class);
+		AbstractJClass numberClass = model.ref(Number.class);
+		
+		if (
+				left instanceof JAtomLong ||
+				left instanceof JAtomDouble ||
+				left instanceof JAtomInt ||
+				left instanceof JAtomFloat
+		) {
+			IJExpression temp = left;
+			left = right;
+			right = temp;
+		}
 		
 		JVar leftVar = block.decl(objectClass, nextVarName()).init(left);
+		
+	
 		
 		
 		switch (e.getOperator()) {
 		case EQUALS :
 			
 			if (treatNullAsFalse) {
-				return JExpr.cond(leftVar.neNull().cand(leftVar.invoke("equals").arg(right)), JExpr.TRUE, JExpr.FALSE);
+				IJExpression condition = null;
+				
+				if (right instanceof JAtomLong) {
+					
+					condition = leftVar._instanceof(numberClass).cand(
+							leftVar.castTo(numberClass).invoke("longValue").eq(right));
+				} else if (right instanceof JAtomDouble) {
+
+					condition = leftVar._instanceof(numberClass).cand(
+							leftVar.castTo(numberClass).invoke("doubleValue").eq(right));
+					
+				} else if (right instanceof JAtomFloat) {
+
+					condition = leftVar._instanceof(numberClass).cand(
+							leftVar.castTo(numberClass).invoke("floatValue").eq(right));
+					
+				} else if (right instanceof JAtomInt) {
+
+					condition = leftVar._instanceof(numberClass).cand(
+							leftVar.castTo(numberClass).invoke("intValue").eq(right));
+					
+				} else {
+					condition = leftVar.neNull().cand(leftVar.invoke("equals").arg(right));
+				} 
+				return JExpr.cond(condition, JExpr.TRUE, JExpr.FALSE);
 			}
 			
 			JConditional ifStatement = block._if(leftVar.eqNull());
@@ -272,6 +314,8 @@ public class BeamExpressionTransform  {
 		
 		return null;
 	}
+
+	
 
 	private String nextVarName() {
 		varCount++;
