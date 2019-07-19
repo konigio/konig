@@ -50,6 +50,11 @@ public class GoogleCloudPlatformConfig implements RdfSource {
 	
 	@Parameter(property="konig.gcp.bigquery", required=true)
 	private BigQueryInfo bigquery;
+
+	
+	@Parameter(property="konig.gcp.etlPipeline", required=true)
+	private EtlPipelineConfig etlPipeline;
+	
 	
 	@Parameter(property="konig.gcp.cloudstorage", required=true)
 	private CloudStorageInfo cloudstorage;
@@ -217,4 +222,13 @@ public class GoogleCloudPlatformConfig implements RdfSource {
 	public void setBigqueryEnumShapeIriTemplate(String bigqueryEnumShapeIriTemplate) {
 		this.bigqueryEnumShapeIriTemplate = bigqueryEnumShapeIriTemplate;
 	}
+
+	public EtlPipelineConfig getEtlPipeline() {
+		return etlPipeline;
+	}
+
+	public void setEtlPipeline(EtlPipelineConfig etlPipeline) {
+		this.etlPipeline = etlPipeline;
+	}
+	
 }

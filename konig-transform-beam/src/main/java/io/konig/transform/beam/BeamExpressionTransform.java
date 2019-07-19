@@ -110,8 +110,6 @@ public class BeamExpressionTransform  {
 	private ArrayList<BlockInfo> blockStack;
 	
 	private BeamLiteralFactory literalFactory;
-	
-	private SimplePropertyGenerator simplePropertyGenerator;
 
 	
 	public BeamExpressionTransform(
@@ -126,7 +124,7 @@ public class BeamExpressionTransform  {
 		
 		literalFactory = new BeamLiteralFactory(model);
 	}
-
+	
 	public IJExpression transform(ShowlExpression e) throws BeamTransformGenerationException {
 		
 		if (e instanceof ShowlLiteralExpression) {

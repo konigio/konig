@@ -79,7 +79,6 @@ public class MergeTargetFnGeneratorTest {
 	private NamespaceManager nsManager = MemoryNamespaceManager.getDefaultInstance();
 	private OwlReasoner reasoner;
 	private BeamTypeManager typeManager;
-	
 	private URI personTargetShapeId;
 	
 	@Before

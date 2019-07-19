@@ -269,6 +269,7 @@ import io.konig.spreadsheet.WorkbookProcessorImpl;
 import io.konig.transform.beam.BeamTransformGenerationException;
 import io.konig.transform.beam.BeamTransformGenerator;
 import io.konig.transform.beam.BeamTransformRequest;
+import io.konig.transform.beam.PipelineConfig;
 import io.konig.transform.model.ShapeTransformException;
 import io.konig.transform.mysql.RoutedSqlTransformVisitor;
 import io.konig.transform.mysql.SqlTransformGenerator;
@@ -1622,7 +1623,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			
 			String basePackage = mavenProject.getGroupId() + ".beam";
 			ShowlExpressionBuilder expressionBuilder = new ShowlExpressionBuilder(showlService, showlService);
-			BeamTransformGenerator generator =  new BeamTransformGenerator(basePackage, showlService, expressionBuilder);
+			
+			BeamTransformGenerator generator =  new BeamTransformGenerator(pipelineConfig(), basePackage, showlService, expressionBuilder);
 			generator.generateAll(request);
 			
 			if (generator.isEncounteredError()) {
@@ -1635,6 +1637,16 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 	
 		
 	}
+	private PipelineConfig pipelineConfig() {
+		PipelineConfig config = new PipelineConfig();
+		config.setCaseInsensitiveEnumLookup(googleCloudPlatform.getEtlPipeline().isCaseInsensitiveEnumLookup());
+		return config;
+	}
+
+
+
+
+
 	private void addLineageEmitter() {
 		if (lineageEmitter == null) {
 			File outFile = new File(rdf.getShapesDir(), "lineage.ttl");
