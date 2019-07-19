@@ -216,7 +216,7 @@ public class BeamTransformGeneratorTest {
 	}
 
 
-	@Ignore
+	@Test
 	public void testJoinNestedRecordViaInverse() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/join-nested-record-via-inverse", false);

@@ -3015,7 +3015,6 @@ public class BeamTransformGenerator {
       @Override
       protected void createDerivedKey(JBlock block) throws BeamTransformGenerationException {
 				if (keyPropertyVar == null) {
-					ShowlExpression e = keyProperty.getFormula();
 					
 					URI keyType = keyType(keyProperty);
 					
@@ -3026,8 +3025,12 @@ public class BeamTransformGenerator {
 					}
 					
 					AbstractJClass stringClass = model.ref(String.class);
-				
-					
+
+					ShowlExpression e = keyProperty.getFormula();
+					if (keyProperty instanceof ShowlDirectPropertyShape) {
+						e = new ShowlDirectPropertyExpression((ShowlDirectPropertyShape)keyProperty);
+					}
+
 					if(e != null) {
 						IJExpression initValue = etran().transform(e);
 					keyPropertyVar = block.decl(stringClass, keyProperty.getPredicate().getLocalName()).init(initValue);
