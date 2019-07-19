@@ -3,6 +3,8 @@ package com.example.beam.etl.shape;
 import com.example.beam.etl.common.ErrorBuilder;
 import com.google.api.services.bigquery.model.TableRow;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
+import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.values.TupleTag;
 
 public class ToPersonTargetShapeFn
@@ -11,8 +13,8 @@ public class ToPersonTargetShapeFn
     public static TupleTag<String> deadLetterTag = new TupleTag<String>();
     public static TupleTag<TableRow> successTag = new TupleTag<TableRow>();
 
-    @DoFn.ProcessElement
-    public void processElement(DoFn.ProcessContext c) {
+    @ProcessElement
+    public void processElement(ProcessContext c) {
         ErrorBuilder errorBuilder = new ErrorBuilder();
         try {
             TableRow outputRow = new TableRow();
@@ -68,7 +70,8 @@ public class ToPersonTargetShapeFn
     }
 
     private String gender_id(ErrorBuilder errorBuilder, TableRow genderRow, TableRow personSourceRow) {
-        String id = ((String) personSourceRow.get("gender_id"));
+        com.example.beam.etl.schema.GenderType gender = com.example.beam.etl.schema.GenderType.findByLocalName(((com.example.beam.etl.schema.GenderType) personSourceRow.get("gender_id")));
+        String id = ((String) gender.getId().getLocalName());
         if (id!= null) {
             genderRow.set("id", id);
         } else {

@@ -177,19 +177,15 @@ public class BeamExpressionTransform  {
 		
 		throw new BeamTransformGenerationException("Failed to tranform " + e.toString());
 	}
+	
 
-	private IJExpression enumNode(ShowlEnumNodeExpression e) throws BeamTransformGenerationException {
-		ShowlChannel channel = e.getChannel();
-		if (channel == null) {
-			fail("Cannot transform {0} because channel is not defined", e.displayValue());
-		}
-		ShowlStatement statement = channel.getJoinStatement();
+	public JVar declareEnumIndividual(ShowlNodeShape enumNode, ShowlStatement statement) throws BeamTransformGenerationException {
 		if (statement == null) {
-			fail("Cannot transform {0} because join statement is not defined", e.displayValue());
+			fail("Cannot declare enum individual {0} because join statement is not defined", enumNode.getPath());
 		}
 		
+		
 		if (statement instanceof ShowlEqualStatement) {
-			ShowlNodeShape enumNode = e.getEnumNode();
 			ShowlEqualStatement equal = (ShowlEqualStatement) statement;
 			ShowlExpression enumPropertyExpression = equal.expressionOf(enumNode);
 			if (enumPropertyExpression instanceof ShowlPropertyExpression) {
@@ -209,21 +205,33 @@ public class BeamExpressionTransform  {
 				AbstractJType otherType = typeManager.javaType(rdfType);
 				
 				IJExpression initExpr = enumClass.staticInvoke(getter).arg(otherJavaExpression.castTo(otherType));
+
+				BlockInfo blockInfo = peekBlockInfo();
+				String varName = blockInfo.varNameFor(enumNode);
 				
-				String varName = nextVarName();
 				
-				JBlock block = peekBlockInfo().getBlock();
+				JBlock block = blockInfo.getBlock();
 				JVar var = block.decl(enumClass, varName).init(initExpr);
-				
+				blockInfo.putEnumMember(enumNode.effectiveNode(), var);
 				
 				return var;
 			}
 			
 		} 
 
-		fail("Join statement of {0} not supported", e.displayValue());
+		fail("Cannot declare enum individual {0} because join statement not supported: {1}", enumNode.getPath(), statement.toString());
 		
 		return null;
+	}
+
+
+	private JVar enumNode(ShowlEnumNodeExpression e) throws BeamTransformGenerationException {
+		ShowlChannel channel = e.getChannel();
+		if (channel == null) {
+			fail("Cannot transform {0} because channel is not defined", e.displayValue());
+		}
+		ShowlStatement statement = channel.getJoinStatement();
+		return declareEnumIndividual(e.getEnumNode(), statement);
 	}
 
 
@@ -1129,6 +1137,26 @@ public class BeamExpressionTransform  {
 		return null;
 	}
 
+
+
+	public JVar addEnumParamForEnumProperty(BeamMethod beamMethod, ShowlPropertyShape targetProperty) throws BeamTransformGenerationException {
+		
+		BlockInfo blockInfo = peekBlockInfo();
+		ShowlNodeShape enumNode = targetProperty.getDeclaringShape();
+		ShowlPropertyShape enumAccessor = enumNode.getAccessor();
+		if (enumAccessor == null) {
+			fail("enum accesssor is not defined for {0}", targetProperty.getPath());
+		}
+		String varName = blockInfo.varName(enumAccessor.getPredicate().getLocalName());
+		URI enumClassId = enumNode.getOwlClass().getId();
+		AbstractJClass enumClass = typeManager.enumClass(enumClassId);
+		JVar enumVar = beamMethod.getMethod().param(enumClass, varName);
+		
+		blockInfo.putEnumMember(enumNode.effectiveNode(), enumVar);
+		
+		
+		return enumVar;
+	}
 	
 	public JVar addTableRowParam(BeamMethod beamMethod, ShowlEffectiveNodeShape node) throws BeamTransformGenerationException {
 		BlockInfo blockInfo = peekBlockInfo();
@@ -1473,4 +1501,5 @@ public class BeamExpressionTransform  {
 		}
 		return false;
 	}
+
 }

@@ -312,5 +312,50 @@ public class BlockInfo {
 		return result;
 	}
 
+	public String varNameFor(ShowlNodeShape enumNode) throws BeamTransformGenerationException {
+		
+		ShowlPropertyShape p = enumNode.getTargetProperty();
+		if (p == null) {
+			throw new BeamTransformGenerationException(
+					"targetProperty is not defined for " + enumNode.getPath());
+		}
+		
+		return varName(p.getPredicate().getLocalName());
+	}
+
+	public String varName(String baseName) throws BeamTransformGenerationException {
+		
+		for (int i=0; i<1000; i++) {
+			String varName = i==0 ? baseName : baseName + i;
+			
+			if (findVarByName(varName) == null) {
+				return varName;
+			}
+		}
+		throw new BeamTransformGenerationException("Cannot create variable with base name " + baseName);
+	}
+
+	private JVar findVarByName(String name) {
+	
+		for (JVar var : enumMemberMap.values()) {
+			if (var.name().equals(name)) {
+				return var;
+			}
+		}
+		for (JVar var : propertyValueMap.values()) {
+			if (var.name().equals(name)) {
+				return var;
+			}
+		}
+		for (JVar var : tableRowMap.values()) {
+			if (var.name().equals(name)) {
+				return var;
+			}
+		}
+		return null;
+	}
+
+	
+
 
 }

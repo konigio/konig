@@ -42,9 +42,14 @@ import com.helger.jcodemodel.JVar;
 
 import io.konig.core.showl.ShowlAlternativePathsExpression;
 import io.konig.core.showl.ShowlBasicStructExpression;
+import io.konig.core.showl.ShowlChannel;
+import io.konig.core.showl.ShowlEnumIndividualReference;
+import io.konig.core.showl.ShowlEnumPropertyExpression;
+import io.konig.core.showl.ShowlEnumStructExpression;
 import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.util.StringUtil;
 
 public class AlternativePathsGenerator extends StructPropertyGenerator {
 
@@ -115,6 +120,93 @@ public class AlternativePathsGenerator extends StructPropertyGenerator {
 		} else {
 			fail("Expression type {0} not supported for {1}", member.getClass().getSimpleName(), targetProperty.getPath());
 		}
+	}
+	
+	private void enumStruct(BeamMethod beamMethod, ShowlEnumStructExpression struct, ShowlPropertyShape targetProperty)
+	throws BeamTransformGenerationException {
+		BlockInfo blockInfo = etran.beginBlock(beamMethod);
+		try {
+			ShowlNodeShape enumNode = struct.getEnumNode();
+			JVar outputRow = etran.addTableRowParam(beamMethod, targetProperty.getDeclaringShape().effectiveNode());
+			declareEnumMemberVar(struct, targetProperty);
+		
+			beamMethod.excludeParamFor(BeamParameter.pattern(BeamParameterType.TABLE_ROW, targetProperty.getValueShape().effectiveNode()));
+			beamMethod.excludeParamFor(BeamParameter.pattern(BeamParameterType.TABLE_ROW, enumNode.effectiveNode()));
+			
+			
+			JCodeModel model = etran.codeModel();
+			AbstractJClass tableRowClass = model.ref(TableRow.class);
+			JBlock block = beamMethod.getMethod().body();
+			
+			String enumRowName = blockInfo.varName(targetProperty.getPredicate().getLocalName() + "Row");
+			JVar enumRow = block.decl(tableRowClass, enumRowName).init(tableRowClass._new());
+			blockInfo.putTableRow(targetProperty.getValueShape().effectiveNode(), enumRow);
+			blockInfo.putTableRow(enumNode.effectiveNode(), enumRow);
+			
+			
+			JCodeModel codeModel = etran.codeModel();
+			AbstractJType booleanType = codeModel._ref(boolean.class);
+			
+			ShowlNodeShape node = targetProperty.getValueShape();
+
+			JVar ok = block.decl(booleanType, "ok");
+			if (struct.size()==1) {
+				Entry<URI, ShowlExpression> entry = struct.entrySet().iterator().next();
+
+				URI predicate = entry.getKey();
+				ShowlExpression e = entry.getValue();
+				
+				ShowlPropertyShape p = node.getProperty(predicate);
+				
+				
+				BeamMethod fieldMethod = fieldMethod(beamMethod, p, e);
+				
+				JInvocation invoke = etran.createInvocation(fieldMethod);
+				ok.init(invoke);
+				
+				
+			} else {
+			
+				ok.init(JExpr.TRUE);
+				
+				for (Entry<URI, ShowlExpression> entry : struct.entrySet()) {
+					URI predicate = entry.getKey();
+					ShowlExpression e = entry.getValue();
+					
+					ShowlPropertyShape p = node.getProperty(predicate);
+					
+					
+					BeamMethod fieldMethod = fieldMethod(beamMethod, p, e);
+					
+					JInvocation invoke = etran.createInvocation(fieldMethod);
+					
+					block.assign(ok, ok.cand(invoke));
+				}
+				
+			}
+
+			JConditional ifStatement = block._if(ok);
+			ifStatement._then().add(outputRow.invoke("put")
+					.arg(JExpr.lit(targetProperty.getPredicate().getLocalName())).arg(enumRow));
+			block._return(ok);
+			
+		} finally {
+			etran.endBlock();
+		}
+	}
+
+
+	private JVar declareEnumMemberVar(ShowlEnumStructExpression struct, ShowlPropertyShape targetProperty) throws BeamTransformGenerationException {
+		
+		
+		ShowlNodeShape enumNode = struct.getEnumNode();
+		
+		ShowlChannel channel = targetProperty.getRootNode().findChannelFor(enumNode);
+		if (channel == null) {
+			fail("Channel for {0} not found while processing {1}", enumNode.getPath(), targetProperty.getPath());
+		}
+		
+		return etran.declareEnumIndividual(enumNode, channel.getJoinStatement());
 	}
 
 	private void basicStruct(BeamMethod beamMethod, ShowlBasicStructExpression struct, ShowlPropertyShape targetProperty) throws BeamTransformGenerationException {
@@ -197,12 +289,72 @@ public class AlternativePathsGenerator extends StructPropertyGenerator {
 		
 		if (e instanceof ShowlBasicStructExpression) {
 			basicStruct(beamMethod, (ShowlBasicStructExpression) e, targetProperty);
+		} else if (e instanceof ShowlEnumPropertyExpression) {
+			enumProperty(beamMethod, (ShowlEnumPropertyExpression)e, targetProperty);
+		} else if (e instanceof ShowlEnumStructExpression) {
+			enumStruct(beamMethod, (ShowlEnumStructExpression)e, targetProperty);
+		} else if (e instanceof ShowlEnumIndividualReference) {
+			enumIndividualReference(beamMethod, (ShowlEnumIndividualReference)e, targetProperty);
 		} else {
 			simpleField(beamMethod, e, targetProperty);
 		}
 		
 		
 		return beamMethod;
+	}
+
+	private void enumProperty(BeamMethod beamMethod, ShowlEnumPropertyExpression e, ShowlPropertyShape targetProperty) throws BeamTransformGenerationException {
+
+		BlockInfo blockInfo = etran.beginBlock(beamMethod);
+		try {
+			AbstractJClass objectClass = etran.codeModel().ref(Object.class);
+			
+			ShowlPropertyShape enumAccessor = targetProperty.getDeclaringShape().getAccessor();
+			if (enumAccessor == null) {
+				fail("enum accessor not found while processing {0}", targetProperty.getPath());
+			}
+			
+			JVar enumMemberVar = etran.addEnumParamForEnumProperty(beamMethod, targetProperty);
+			
+
+			JVar outputRow = etran.addTableRowParam(beamMethod, targetProperty.getDeclaringShape().effectiveNode());
+			
+			String propertyName = e.getSourceProperty().getPredicate().getLocalName();
+			String getter = "get" + StringUtil.capitalize(propertyName);
+			
+			IJExpression fieldValue = enumMemberVar.invoke(getter);
+			
+			JBlock block = beamMethod.getMethod().body();
+			String fieldName = targetProperty.getPredicate().getLocalName();
+			
+			JVar fieldVar = block.decl(objectClass, blockInfo.varName(fieldName)).init(fieldValue);
+			
+			JConditional ifStatement = block._if(fieldVar.neNull());
+			ifStatement._then().add(outputRow.invoke("put").arg(JExpr.lit(fieldName)).arg(fieldVar));
+			ifStatement._then()._return(JExpr.TRUE);
+			
+			block._return(JExpr.FALSE);
+		} finally {
+			etran.endBlock();
+		}
+		
+	}
+
+	private void enumIndividualReference(BeamMethod beamMethod, ShowlEnumIndividualReference e, ShowlPropertyShape targetProperty) throws BeamTransformGenerationException {
+		BlockInfo blockInfo = etran.beginBlock(beamMethod);
+		try {
+			JBlock block = blockInfo.getBlock();
+			JVar outputRow = etran.addTableRowParam(beamMethod, targetProperty.getDeclaringShape().effectiveNode());
+			
+			String fieldName = targetProperty.getPredicate().getLocalName();
+			IJExpression fieldValue = JExpr.lit(e.getIriValue().getLocalName());
+			block.add(outputRow.invoke("put").arg(JExpr.lit(fieldName)).arg(fieldValue));
+			block._return(JExpr.TRUE);
+			
+		} finally {
+			etran.endBlock();
+		}
+		
 	}
 
 	private void simpleField(BeamMethod beamMethod, ShowlExpression e, ShowlPropertyShape targetProperty) throws BeamTransformGenerationException {

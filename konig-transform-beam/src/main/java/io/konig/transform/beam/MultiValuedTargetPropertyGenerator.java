@@ -185,8 +185,6 @@ public class MultiValuedTargetPropertyGenerator extends AlternativePathsGenerato
 			}
 
 			JConditional ifStatement = block._if(ok);
-			ifStatement._then().add(outputRow.invoke("put")
-					.arg(JExpr.lit(targetProperty.getPredicate().getLocalName())).arg(structVar));
 			
 			ifStatement._then()._return(outputRow);
 			block._return(JExpr._null());
