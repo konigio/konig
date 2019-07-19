@@ -72,6 +72,7 @@ public class BeamTransformGeneratorTest {
 
 	private ShowlTransformEngine engine;
 	private BeamTransformGenerator generator;
+	private PipelineConfig pipelineConfig = new PipelineConfig();
 
 	@Before
 	public void setUp() {
@@ -91,7 +92,7 @@ public class BeamTransformGeneratorTest {
 		
 		engine = new ShowlTransformEngine(targetNodeShapeFactory, shapeManager, transformService, consumer);
 		ShowlExpressionBuilder expressionBuilder = new ShowlExpressionBuilder(showlService, showlService);
-		generator =  new BeamTransformGenerator("com.example.beam.etl", showlService, expressionBuilder);
+		generator =  new BeamTransformGenerator(pipelineConfig, "com.example.beam.etl", showlService, expressionBuilder);
 	}
 
 

@@ -71,11 +71,13 @@ public class BeamTransformGeneratorDebug {
 	private ShowlTransformEngine engine;
 	private ShowlService showlService;
 	private BeamTransformGenerator generator;
+	private PipelineConfig pipelineConfig = new PipelineConfig();
 
 	
 
 	@Before
 	public void setUp() {
+		pipelineConfig.setCaseInsensitiveEnumLookup(true);
 		nsManager = new MemoryNamespaceManager();
 		graph = new MemoryGraph(nsManager);
 		shapeManager = new MemoryShapeManager();
@@ -98,7 +100,7 @@ public class BeamTransformGeneratorDebug {
 		engine = new ShowlTransformEngine(targetNodeFactory, shapeManager, transformService, consumer);
 		
 		ShowlExpressionBuilder expressionBuilder = new ShowlExpressionBuilder(showlService, showlService);
-		generator =  new BeamTransformGenerator("com.example.beam.etl", showlService, expressionBuilder);
+		generator =  new BeamTransformGenerator(pipelineConfig, "com.example.beam.etl", showlService, expressionBuilder);
 	}
 
 	public static void main(String[] arg) throws Exception {

@@ -202,6 +202,7 @@ public class BeamTransformGenerator {
     		"import org.apache.beam.sdk.transforms.DoFn.ProcessContext;"));
   }
   
+  private PipelineConfig pipelineConfig;
   private String basePackage;
   private NamespaceManager nsManager;
   private JavaDatatypeMapper datatypeMapper;
@@ -212,7 +213,8 @@ public class BeamTransformGenerator {
   private boolean failFast;
   private boolean encounteredError;
   
-  public BeamTransformGenerator(String basePackage, ShowlSchemaService schemaService, ShowlExpressionBuilder expressionBuilder) {
+  public BeamTransformGenerator(PipelineConfig pipelineConfig, String basePackage, ShowlSchemaService schemaService, ShowlExpressionBuilder expressionBuilder) {
+  	this.pipelineConfig = pipelineConfig;
     this.basePackage = basePackage;
     this.schemaService = schemaService;
     this.reasoner = schemaService.getOwlReasoner();
@@ -678,7 +680,11 @@ public class BeamTransformGenerator {
           JMethod method = enumClass.method(JMod.STATIC | JMod.PUBLIC , enumClass, methodName);
           JVar param = method.param(propertyType, property.getLocalName());
           
-          method.body()._return(field.invoke("get").arg(param));
+          IJExpression returnValue = pipelineConfig.isCaseInsensitiveEnumLookup() ?
+          		JExpr.cond(param.eqNull(), JExpr._null(), field.invoke("get").arg(param.invoke("toUpperCase"))) :
+          		field.invoke("get").arg(param);
+          
+          method.body()._return(returnValue);
                
         }
         
@@ -691,7 +697,12 @@ public class BeamTransformGenerator {
         //  }
         
         JMethod findByLocalNameMethod = enumClass.method(JMod.PUBLIC | JMod.STATIC, enumClass, "findByLocalName");
-        JVar localNameVar = findByLocalNameMethod.param(stringClass, "localName");
+        IJExpression localNameVar = findByLocalNameMethod.param(stringClass, "localName");
+        
+        if (pipelineConfig.isCaseInsensitiveEnumLookup()) {
+        	localNameVar = JExpr.cond(localNameVar.eqNull(), JExpr._null(), localNameVar.invoke("toUpperCase"));
+        }
+        
         findByLocalNameMethod.body()._return(localNameMap.invoke("get").arg(localNameVar));
         
         //   public $enumClassName id(String namespace, String localName) {
@@ -702,9 +713,14 @@ public class BeamTransformGenerator {
         
         JMethod idMethod = enumClass.method(JMod.PRIVATE, enumClass, "id");
         JVar namespaceParam = idMethod.param(stringClass, "namespace");
-        JVar localNameParam = idMethod.param(stringClass, "localName");
+        IJExpression localNameParam = idMethod.param(stringClass, "localName");
         
         idMethod.body().assign(idField, iriClass._new().arg(namespaceParam).arg(localNameParam));
+        
+        if (pipelineConfig.isCaseInsensitiveEnumLookup()) {
+        	localNameParam = localNameParam.invoke("toUpperCase");
+        }
+        
         idMethod.body().add(localNameMap.invoke("put").arg(localNameParam).arg(JExpr._this()));
         idMethod.body()._return(JExpr._this());
         
@@ -883,6 +899,9 @@ public class BeamTransformGenerator {
         
         JFieldVar mapField = enumIndex.get(predicate);
         if (mapField != null) {
+        	if (pipelineConfig.isCaseInsensitiveEnumLookup()) {
+        		litValue = JExpr.lit(object.stringValue().toUpperCase());
+        	}
           staticInit.add(mapField.invoke("put").arg(litValue).arg(constant));
         }
         

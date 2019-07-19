@@ -69,6 +69,7 @@ public class TargetFnGeneratorTest {
 	private ShowlService showlService;
 	private ShowlNodeListingConsumer consumer;
 	private SimpleTargetFnGenerator generator;
+	private PipelineConfig pipelineConfig = new PipelineConfig();
 	
 	private URI personTargetShapeId;
 	
