@@ -61,7 +61,7 @@ public class ToPersonTargetShapeFn
     private TableRow gender(ErrorBuilder errorBuilder, TableRow personTargetRow, TableRow personSourceRow) {
         com.example.beam.etl.schema.GenderType gender = com.example.beam.etl.schema.GenderType.findByLocalName(((String) personSourceRow.get("gender_id")));
         TableRow genderRow = new TableRow();
-        gender_id(errorBuilder, genderRow, personSourceRow);
+        gender_id(errorBuilder, genderRow, gender);
         gender_name(errorBuilder, genderRow, gender);
         if (!genderRow.isEmpty()) {
             personTargetRow.set("gender", genderRow);
@@ -69,9 +69,8 @@ public class ToPersonTargetShapeFn
         return genderRow;
     }
 
-    private String gender_id(ErrorBuilder errorBuilder, TableRow genderRow, TableRow personSourceRow) {
-        com.example.beam.etl.schema.GenderType gender = com.example.beam.etl.schema.GenderType.findByLocalName(((com.example.beam.etl.schema.GenderType) personSourceRow.get("gender_id")));
-        String id = ((String) gender.getId().getLocalName());
+    private String gender_id(ErrorBuilder errorBuilder, TableRow genderRow, com.example.beam.etl.schema.GenderType gender) {
+        String id = ((String)((gender!= null)?gender.getId().getLocalName():null));
         if (id!= null) {
             genderRow.set("id", id);
         } else {

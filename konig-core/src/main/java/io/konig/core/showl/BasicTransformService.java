@@ -816,7 +816,13 @@ public class BasicTransformService implements ShowlTransformService {
 				if (direct != null && direct.getSelectedExpression() == null) {
 					ShowlDirectPropertyShape targetDirect = targetProperty.direct();
 					if (targetDirect != null && targetDirect.getSelectedExpression() != null) {
-						direct.setSelectedExpression(targetDirect.getSelectedExpression());
+						ShowlExpression s = targetDirect.getSelectedExpression();
+						if (s instanceof ShowlEnumNodeExpression && direct.getPredicate().equals(Konig.id)) {
+							ShowlNodeShape enumNode = ((ShowlEnumNodeExpression)s).getEnumNode();
+							ShowlPropertyShape enumId = enumNode.getProperty(Konig.id);
+							s = new ShowlEnumPropertyExpression(enumId);
+						}
+						direct.setSelectedExpression(s);
 						if (logger.isTraceEnabled()) {
 							logger.trace("setAccessorExpression: {} = {}", direct.getPath(),
 									targetDirect.getSelectedExpression().displayValue());
