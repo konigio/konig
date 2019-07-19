@@ -1561,7 +1561,7 @@ public class BeamTransformGenerator {
 		        AbstractJClass dateTime = model.ref(DateTime.class);
 		        JVar dateTimeVar = tryBody.decl(dateTime, "dateTimeValue").init(dateTime._new().arg(stringValue));		        
 		        JConditional isDateIf = tryBody._if(dateTimeVar.invoke("isDateOnly"));
-		        isDateIf._then()._return(dateTimeVar.invoke("getValue"));
+		        isDateIf._then()._return(dateTimeVar.invoke("getValue").div(1000));
 		        
 		        AbstractJClass instantClass = model.ref(Instant.class);
 		        AbstractJClass offsetDateTimeClass = model.ref(OffsetDateTime.class);
