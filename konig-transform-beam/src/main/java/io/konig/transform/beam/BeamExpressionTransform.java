@@ -1315,7 +1315,8 @@ public class BeamExpressionTransform  {
 					JVar fieldValueVar = (JVar) fieldValue;
 					String fieldValueType = fieldValueVar.type().fullName();
 					if (!String.class.getName().equals(fieldValueType)) {
-						fieldValue = fieldValue.invoke("getId").invoke("getLocalName");
+						var.init(JOp.cond(fieldValue.neNull(),fieldValue.invoke("getId").invoke("getLocalName").castTo(fieldType), JExpr._null())); 
+						initFlag =1;
 					}
 							
 				}
@@ -1325,13 +1326,12 @@ public class BeamExpressionTransform  {
 			}
 		}
 		
-		String fieldName = targetProperty.getPredicate().getLocalName();
-		
-		BlockInfo blockInfo = peekBlockInfo();
 		
 		
+		if(initFlag == 0) {
+			var.init(fieldValue.castTo(fieldType));
+		}
 		
-		JVar var = blockInfo.getBlock().decl(fieldType, fieldName).init(fieldValue.castTo(fieldType));
 		
 		blockInfo.putPropertyValue(targetProperty.asGroup(), var);
 		
