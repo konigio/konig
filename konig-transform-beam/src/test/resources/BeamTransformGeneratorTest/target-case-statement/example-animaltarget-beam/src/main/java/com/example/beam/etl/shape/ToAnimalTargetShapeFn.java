@@ -41,7 +41,7 @@ public class ToAnimalTargetShapeFn
     private TableRow species(ErrorBuilder errorBuilder, TableRow animalTargetRow, TableRow animalSourceRow) {
         com.example.beam.etl.ex.Species species = com.example.beam.etl.ex.Species.findByLocalName(((String) animalSourceRow.get("species")));
         TableRow speciesRow = new TableRow();
-        species_id(errorBuilder, speciesRow, animalSourceRow);
+        species_id(errorBuilder, speciesRow, species);
         species_name(errorBuilder, speciesRow, species);
         if (!speciesRow.isEmpty()) {
             animalTargetRow.set("species", speciesRow);
@@ -51,9 +51,8 @@ public class ToAnimalTargetShapeFn
         return speciesRow;
     }
 
-    private String species_id(ErrorBuilder errorBuilder, TableRow speciesRow, TableRow animalSourceRow) {
-        com.example.beam.etl.ex.Species species = com.example.beam.etl.ex.Species.findByLocalName(((com.example.beam.etl.ex.Species) animalSourceRow.get("species")));
-        String id = ((String) species.getId().getLocalName());
+    private String species_id(ErrorBuilder errorBuilder, TableRow speciesRow, com.example.beam.etl.ex.Species species) {
+        String id = ((String)((species!= null)?species.getId().getLocalName():null));
         if (id!= null) {
             speciesRow.set("id", id);
         } else {
