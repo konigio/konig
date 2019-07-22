@@ -1591,13 +1591,13 @@ public class BeamTransformGenerator {
 		        JConditional innerIf = outerIf._then()._if(stringValue.invoke("contains").arg(JExpr.lit("/")));
 		        
 		        innerIf._then()._return(instantClass.staticInvoke("from").arg(
-		            zonedDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli"));
+		            zonedDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli").div(1000));
 		        
 		        innerIf._elseif(stringValue.invoke("contains").arg("Z"))._then()._return(
-		            instantClass.staticInvoke("parse").arg(stringValue).invoke("toEpochMilli"));
+		            instantClass.staticInvoke("parse").arg(stringValue).invoke("toEpochMilli").div(1000));
 		        
 		        innerIf._else()._return(instantClass.staticInvoke("from").arg(
-		            offsetDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli"));
+		            offsetDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli").div(1000));
 		        
 		        JVar matcher = tryBody.decl(matcherClass, "matcher", 
 		            datePattern.invoke("matcher").arg(stringValue));
@@ -1617,7 +1617,7 @@ public class BeamTransformGenerator {
 		                JExpr.assign(stringValue, datePart.plus("T00:00:00.000").plus(zoneOffset)));
 		        
 		        ifMatchesBlock._return(instantClass.staticInvoke("from").arg(
-		            offsetDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli"));
+		            offsetDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli").div(1000));
 		      
 		      
 		        

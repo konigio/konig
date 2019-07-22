@@ -126,12 +126,12 @@ public class ReadPersonSourceShapeFn
                             }
                             if (stringValue.contains("T")) {
                                 if (stringValue.contains("/")) {
-                                    return Instant.from(ZonedDateTime.parse(stringValue)).toEpochMilli();
+                                    return (Instant.from(ZonedDateTime.parse(stringValue)).toEpochMilli()/ 1000);
                                 } else {
                                     if (stringValue.contains("Z")) {
-                                        return Instant.parse(stringValue).toEpochMilli();
+                                        return (Instant.parse(stringValue).toEpochMilli()/ 1000);
                                     }
-                                    return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli();
+                                    return (Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli()/ 1000);
                                 }
                             }
                             Matcher matcher = DATE_PATTERN.matcher(stringValue);
@@ -141,7 +141,7 @@ public class ReadPersonSourceShapeFn
                                 if ((zoneOffset.length() == 0)||zoneOffset.equals("Z")) {
                                     stringValue = ((datePart +"T00:00:00.000")+ zoneOffset);
                                 }
-                                return Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli();
+                                return (Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli()/ 1000);
                             }
                         } catch (final Exception ex) {
                             String message = String.format("Invalid temporal value for %s;", fieldName);
