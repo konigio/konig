@@ -128,10 +128,10 @@ import io.konig.core.showl.ReceivesDataFromSourceNodeFactory;
 import io.konig.core.showl.ShowlClassProcessor;
 import io.konig.core.showl.ShowlManager;
 import io.konig.core.showl.ShowlNodeListingConsumer;
+import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlNodeShapeBuilder;
 import io.konig.core.showl.ShowlService;
 import io.konig.core.showl.ShowlServiceImpl;
-import io.konig.core.showl.ShowlSourceNodeFactory;
 import io.konig.core.showl.ShowlTransformEngine;
 import io.konig.core.showl.ShowlTransformService;
 import io.konig.core.showl.expression.ShowlExpressionBuilder;
@@ -266,6 +266,7 @@ import io.konig.spreadsheet.GcpDeploymentSheet;
 import io.konig.spreadsheet.SettingsSheet;
 import io.konig.spreadsheet.SpreadsheetException;
 import io.konig.spreadsheet.WorkbookProcessorImpl;
+import io.konig.transform.beam.BeamErrorTableGenerator;
 import io.konig.transform.beam.BeamTransformGenerationException;
 import io.konig.transform.beam.BeamTransformGenerator;
 import io.konig.transform.beam.BeamTransformRequest;
@@ -1507,8 +1508,9 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 //					generateMySqlTransformScripts(mysqlScriptsDir);
 //				}
 			}
+			List<ShowlNodeShape> targetNodeList = null;
 			if (googleCloudPlatform.isEnableBigQueryTransform()) {
-				configureBigQueryTransform();
+				targetNodeList = configureBigQueryTransform();
 			}
 //			if (googleCloudPlatform.isEnableMySqlTransform()) {
 //				configureCloudSqlTransform();
@@ -1535,6 +1537,11 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			configManager.setErrorHandler(errorHandler());
 			File gcpConfigFile = new File(deploymentDir, "config.yaml");
 			emitter.add(new DeploymentConfigEmitter(shapeManager, configManager, gcpConfigFile));
+			
+			if (targetNodeList != null) {
+				BeamErrorTableGenerator errorTableGenerator = new BeamErrorTableGenerator(bigQueryTableGenerator, configManager, owlGraph);
+				errorTableGenerator.generateAll(targetNodeList);
+			}
 			
 			// TODO: remove the following, obsolete emitter
 //			emitter.add(new GoogleDeploymentManagerEmitter(sqlAdmin, deployManager, deploymentYaml));
@@ -1581,7 +1588,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 
 
 
-	private void configureBigQueryTransform() throws BeamTransformGenerationException, IOException {
+	private List<ShowlNodeShape> configureBigQueryTransform() throws BeamTransformGenerationException, IOException {
 		// We really ought to batch up all the transform jobs and run them all at once.
 		// To that end, this method ought to simply configure the batch to include BigQuery transforms.
 		// For now, however, we'll go ahead and run the BigQuery transform job by itself.
@@ -1634,7 +1641,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			addLineageEmitter();
 		}
 
-	
+		return consumer.getList();
 		
 	}
 	private PipelineConfig pipelineConfig() {

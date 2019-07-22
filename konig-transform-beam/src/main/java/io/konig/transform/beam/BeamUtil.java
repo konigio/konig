@@ -20,24 +20,11 @@ package io.konig.transform.beam;
  * #L%
  */
 
-
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.openrdf.model.URI;
-
-import com.google.api.services.bigquery.model.TableRow;
-import com.helger.jcodemodel.AbstractJClass;
-import com.helger.jcodemodel.JCodeModel;
-import com.helger.jcodemodel.JMethod;
-import com.helger.jcodemodel.JVar;
 
 import io.konig.core.OwlReasoner;
 import io.konig.core.showl.ShowlChannel;
@@ -52,12 +39,24 @@ import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlPropertyShapeGroup;
 import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlUtil;
-import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
 
 public class BeamUtil {
 
 
+	public static String errorTableName(URI shapeId) {
+		
+		String shapeName = ShowlUtil.shortShapeName(shapeId);
+		String prefix = shapeName.contains("_") ?
+				"ERROR_" :
+				"Error";
+				
+		StringBuilder builder = new StringBuilder();
+		builder.append(prefix);
+		builder.append(shapeName);
+		
+		return builder.toString();
+	}
 
 	
 	private static ShowlNodeShape parentEnumNode(ShowlPropertyShape p, OwlReasoner reasoner) {
