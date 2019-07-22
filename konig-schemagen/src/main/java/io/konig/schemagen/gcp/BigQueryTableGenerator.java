@@ -162,6 +162,40 @@ public class BigQueryTableGenerator {
 		return toTableSchema(shape);
 	}
 	
+	public TableSchema toErrorSchema(Shape shape) {
+		TableSchema schema = toTableSchema(shape);
+		List<TableFieldSchema> fieldList = schema.getFields();
+		
+		fieldList.add(0, new TableFieldSchema()
+				.setName("pipelineJobName")
+				.setType(BigQueryDatatype.STRING.name())
+				.setDescription("The Job Name for the ETL pipeline")
+				.setMode(FieldMode.REQUIRED.name())
+		);
+		
+		fieldList.add(0, new TableFieldSchema()
+				.setName("errorId")
+				.setType(BigQueryDatatype.STRING.name())
+				.setDescription("A UUID that uniquely identifies the error record")
+				.setMode(FieldMode.REQUIRED.name())
+		);
+		
+		fieldList.add(0, new TableFieldSchema()
+				.setName("errorCreated")
+				.setType(BigQueryDatatype.TIMESTAMP.name())
+				.setDescription("A timestamp that records when the error record was created")
+				.setMode(FieldMode.REQUIRED.name())
+		);
+		
+		fieldList.add(0, new TableFieldSchema()
+				.setName("errorId")
+				.setType(BigQueryDatatype.STRING.name())
+				.setMode(FieldMode.REQUIRED.name())
+		);
+		
+		return schema;
+	}
+	
 	public TableSchema toTableSchema(Shape shape) {
 		Traversal traversal = new Traversal(shape);
 		return toTableSchema(shape, traversal);
