@@ -188,7 +188,7 @@ public class BigQueryTableGenerator {
 		);
 		
 		fieldList.add(0, new TableFieldSchema()
-				.setName("errorId")
+				.setName("errorMessage")
 				.setType(BigQueryDatatype.STRING.name())
 				.setMode(FieldMode.REQUIRED.name())
 		);
