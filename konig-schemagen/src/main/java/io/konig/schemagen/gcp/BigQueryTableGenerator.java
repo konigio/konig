@@ -27,6 +27,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -55,6 +57,8 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.pojo.PojoFactory;
 import io.konig.core.pojo.SimplePojoFactory;
+import io.konig.core.showl.ShowlChannel;
+import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.gcp.datasource.BigQueryTableReference;
@@ -163,7 +167,48 @@ public class BigQueryTableGenerator {
 		return toTableSchema(shape);
 	}
 	
-	public TableSchema toErrorSchema(Shape shape) {
+	public TableSchema toTargetErrorSchema(ShowlNodeShape targetNode) {
+		
+		TableSchema schema = new TableSchema();
+		
+		List<TableFieldSchema> fieldList = new ArrayList<>();
+		schema.setFields(fieldList);
+
+		addErrorLogFields(fieldList);
+		
+		List<ShowlChannel> channelList = targetNode.getChannels();
+		Collections.sort(channelList, new Comparator<ShowlChannel>() {
+
+			@Override
+			public int compare(ShowlChannel a, ShowlChannel b) {
+				String nameA = ShowlUtil.shortShapeName(a.getSourceNode().getShape().getIri());
+				String nameB = ShowlUtil.shortShapeName(b.getSourceNode().getShape().getIri());
+				
+				return nameA.compareTo(nameB);
+			}
+		});
+		
+		for (ShowlChannel channel : channelList) {
+			ShowlNodeShape sourceNode = channel.getSourceNode();
+			if (!ShowlUtil.isEnumNode(sourceNode)) {
+				String fieldName = ShowlUtil.shortShapeName(sourceNode);
+
+				Traversal traversal = new Traversal(sourceNode.getShape());
+				List<TableFieldSchema> fieldSchema = listFields(sourceNode.getShape(), traversal);
+				
+				fieldList.add(new TableFieldSchema()
+						.setName(fieldName)
+						.setMode(FieldMode.REQUIRED.name())
+						.setType(BigQueryDatatype.RECORD.name())
+						.setFields(fieldSchema)
+				);
+			}
+		}
+		
+		return schema;
+	}
+	
+	public TableSchema toSourceErrorSchema(Shape shape) {
 		TableSchema schema = toTableSchema(shape);
 		List<TableFieldSchema> fieldList = schema.getFields();
 
@@ -181,6 +226,14 @@ public class BigQueryTableGenerator {
 
 		schema.setFields(fieldList);
 		
+		addErrorLogFields(fieldList);
+		fieldList.add(sourceNodeField);
+		
+		return schema;
+	}
+	
+	private void addErrorLogFields(List<TableFieldSchema> fieldList) {
+
 		fieldList.add(new TableFieldSchema()
 				.setName("errorId")
 				.setType(BigQueryDatatype.STRING.name())
@@ -209,12 +262,8 @@ public class BigQueryTableGenerator {
 				.setMode(FieldMode.REQUIRED.name())
 		);
 		
-		
-		fieldList.add(sourceNodeField);
-		
-		return schema;
 	}
-	
+
 	private void makeNullable(List<TableFieldSchema> fieldList) {
 		for (TableFieldSchema field : fieldList) {
 			if (field.getMode().equals(FieldMode.REQUIRED.name())) {
