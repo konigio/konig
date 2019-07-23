@@ -13,8 +13,6 @@ import io.konig.core.pojo.SimplePojoFactory;
 import io.konig.core.showl.ShowlChannel;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlUtil;
-import io.konig.datasource.DataSource;
-import io.konig.gcp.datasource.GoogleBigQueryTable;
 import io.konig.gcp.deployment.BigqueryTableProperties;
 import io.konig.gcp.deployment.BigqueryTableResource;
 import io.konig.gcp.deployment.DeploymentConfig;
@@ -82,10 +80,9 @@ public class BeamErrorTableGenerator {
 	 */
 	private void generateErrorTable(ShowlNodeShape node) throws BeamTransformGenerationException {
 		
-		GoogleBigQueryTable bigquery = bigQueryTable(node);
 		Shape shape = node.getShape();
 
-		String datasetId = bigquery.getTableReference().getDatasetId();
+		String datasetId = BeamUtil.errorTableDataset(node);
 		String tableId = BeamUtil.errorTableName(node.getShape().getIri());
 		
 		String resourceName = manager.bigqueryTableName(datasetId, tableId);
@@ -110,7 +107,6 @@ public class BeamErrorTableGenerator {
 			}
 
 			resource.setProperties(properties);
-			properties.setExternalDataConfiguration(bigquery.getExternalDataConfiguration());
 			
 			properties.setDatasetId(datasetId);
 			TableReference tableReference = new TableReference();
@@ -129,14 +125,5 @@ public class BeamErrorTableGenerator {
 		}
 	}
 
-
-	private GoogleBigQueryTable bigQueryTable(ShowlNodeShape sourceNode) throws BeamTransformGenerationException {
-		ShowlNodeShape targetNode = sourceNode.getTargetNode().getRoot();
-		DataSource ds = targetNode.getShapeDataSource().getDataSource();
-		if (ds instanceof GoogleBigQueryTable) {
-			return (GoogleBigQueryTable) ds;
-		}
-		throw new BeamTransformGenerationException("Expected BigQueryTable data source from " + targetNode.getPath());
-	}
 
 }

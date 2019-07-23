@@ -40,6 +40,8 @@ import io.konig.core.showl.ShowlPropertyShapeGroup;
 import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlUtil;
 import io.konig.core.vocab.Konig;
+import io.konig.datasource.DataSource;
+import io.konig.gcp.datasource.GoogleBigQueryTable;
 
 public class BeamUtil {
 
@@ -57,6 +59,17 @@ public class BeamUtil {
 		
 		return builder.toString();
 	}
+	
+	public static String errorTableDataset(ShowlNodeShape node) throws BeamTransformGenerationException {
+
+		ShowlNodeShape targetNode = node.isTargetNode() ? node.getRoot() : node.getTargetNode().getRoot();
+		DataSource ds = targetNode.getShapeDataSource().getDataSource();
+		if (ds instanceof GoogleBigQueryTable) {
+			return ((GoogleBigQueryTable) ds).getTableReference().getDatasetId();
+		}
+		throw new BeamTransformGenerationException("Expected BigQueryTable data source from " + targetNode.getPath());
+	}
+
 
 	
 	private static ShowlNodeShape parentEnumNode(ShowlPropertyShape p, OwlReasoner reasoner) {

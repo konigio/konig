@@ -173,6 +173,8 @@ public class BigQueryTableGenerator {
 		
 		List<TableFieldSchema> fieldList = new ArrayList<>();
 		schema.setFields(fieldList);
+
+		addErrorLogFields(fieldList);
 		
 		List<ShowlChannel> channelList = targetNode.getChannels();
 		Collections.sort(channelList, new Comparator<ShowlChannel>() {
