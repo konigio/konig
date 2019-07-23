@@ -63,6 +63,7 @@ public class BeamErrorTableGenerator {
 	}
 
 	private void visitTargetNode(ShowlNodeShape targetShape) throws BeamTransformGenerationException {
+		generateErrorTable(targetShape);
 		
 		for (ShowlChannel channel : targetShape.getChannels()) {
 			ShowlNodeShape sourceNode = channel.getSourceNode();
@@ -75,17 +76,17 @@ public class BeamErrorTableGenerator {
 	
 
 	/**
-	 * Generate the error log table for a given source Node Shape.
-	 * @param sourceNode
+	 * Generate the error log table for a given Node Shape.
+	 * @param node
 	 * @throws BeamTransformGenerationException 
 	 */
-	private void generateErrorTable(ShowlNodeShape sourceNode) throws BeamTransformGenerationException {
+	private void generateErrorTable(ShowlNodeShape node) throws BeamTransformGenerationException {
 		
-		GoogleBigQueryTable bigquery = bigQueryTable(sourceNode);
-		Shape shape = sourceNode.getShape();
+		GoogleBigQueryTable bigquery = bigQueryTable(node);
+		Shape shape = node.getShape();
 
 		String datasetId = bigquery.getTableReference().getDatasetId();
-		String tableId = BeamUtil.errorTableName(sourceNode.getShape().getIri());
+		String tableId = BeamUtil.errorTableName(node.getShape().getIri());
 		
 		String resourceName = manager.bigqueryTableName(datasetId, tableId);
 
@@ -117,7 +118,10 @@ public class BeamErrorTableGenerator {
 			tableReference.setDatasetId(datasetId);
 			tableReference.setTableId(tableId);
 			
-			TableSchema tableSchema = tableGenerator.toErrorSchema(shape);
+			TableSchema tableSchema = node.isTargetNode() ?
+					tableGenerator.toTargetErrorSchema(node) :
+					tableGenerator.toSourceErrorSchema(shape);
+					
 			properties.setSchema(tableSchema);
 			
 			resource.produceMetadata().addDependency(manager.datasetName(datasetId));
