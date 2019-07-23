@@ -55,6 +55,7 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.pojo.PojoFactory;
 import io.konig.core.pojo.SimplePojoFactory;
+import io.konig.core.showl.ShowlUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.gcp.datasource.BigQueryTableReference;
 import io.konig.schemagen.SchemaGeneratorException;
@@ -165,37 +166,64 @@ public class BigQueryTableGenerator {
 	public TableSchema toErrorSchema(Shape shape) {
 		TableSchema schema = toTableSchema(shape);
 		List<TableFieldSchema> fieldList = schema.getFields();
+
+		makeNullable(fieldList);
 		
-		fieldList.add(0, new TableFieldSchema()
-				.setName("pipelineJobName")
-				.setType(BigQueryDatatype.STRING.name())
-				.setDescription("The Job Name for the ETL pipeline")
+		String sourceNodeName = ShowlUtil.shortShapeName(shape.getIri());
+		TableFieldSchema sourceNodeField = new TableFieldSchema()
+				.setName(sourceNodeName)
+				.setType(BigQueryDatatype.RECORD.name())
 				.setMode(FieldMode.REQUIRED.name())
-		);
+				.setFields(fieldList);
 		
-		fieldList.add(0, new TableFieldSchema()
+		fieldList = new ArrayList<>();
+		
+
+		schema.setFields(fieldList);
+		
+		fieldList.add(new TableFieldSchema()
 				.setName("errorId")
 				.setType(BigQueryDatatype.STRING.name())
 				.setDescription("A UUID that uniquely identifies the error record")
 				.setMode(FieldMode.REQUIRED.name())
 		);
-		
-		fieldList.add(0, new TableFieldSchema()
+
+		fieldList.add(new TableFieldSchema()
 				.setName("errorCreated")
 				.setType(BigQueryDatatype.TIMESTAMP.name())
 				.setDescription("A timestamp that records when the error record was created")
 				.setMode(FieldMode.REQUIRED.name())
 		);
 		
-		fieldList.add(0, new TableFieldSchema()
+		fieldList.add(new TableFieldSchema()
 				.setName("errorMessage")
 				.setType(BigQueryDatatype.STRING.name())
 				.setMode(FieldMode.REQUIRED.name())
 		);
 		
+		
+		fieldList.add(new TableFieldSchema()
+				.setName("pipelineJobName")
+				.setType(BigQueryDatatype.STRING.name())
+				.setDescription("The Job Name for the ETL pipeline")
+				.setMode(FieldMode.REQUIRED.name())
+		);
+		
+		
+		fieldList.add(sourceNodeField);
+		
 		return schema;
 	}
 	
+	private void makeNullable(List<TableFieldSchema> fieldList) {
+		for (TableFieldSchema field : fieldList) {
+			if (field.getMode().equals(FieldMode.REQUIRED.name())) {
+				field.setMode(FieldMode.NULLABLE.name());
+			}
+		}
+		
+	}
+
 	public TableSchema toTableSchema(Shape shape) {
 		Traversal traversal = new Traversal(shape);
 		return toTableSchema(shape, traversal);
