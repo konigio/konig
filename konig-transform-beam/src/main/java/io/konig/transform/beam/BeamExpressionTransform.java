@@ -689,7 +689,7 @@ public class BeamExpressionTransform  {
 			JBlock forBody = forLoop.body();
 			
 			JVar c = forBody.decl(intType, "c").init(text.invoke("codePointAt").arg(i));
-			forBody._if(characterClass.staticInvoke("isSpaceChar").arg(c))._then().add(builder.invoke("appendCodePoint").arg(c));
+			forBody._if(characterClass.staticInvoke("isSpaceChar").arg(c).not())._then().add(builder.invoke("appendCodePoint").arg(c));
 			forBody.add(i.assignPlus(characterClass.staticInvoke("charCount").arg(c)));
 			block._return(builder.invoke("toString"));
 		}
