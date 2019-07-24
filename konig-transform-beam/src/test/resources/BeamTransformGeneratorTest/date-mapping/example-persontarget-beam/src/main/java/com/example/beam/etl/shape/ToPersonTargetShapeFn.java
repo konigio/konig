@@ -67,8 +67,8 @@ public class ToPersonTargetShapeFn
         return modifiedDate;
     }
 
-    private Long birthDate(ErrorBuilder errorBuilder, TableRow personTargetRow, TableRow personSourceRow) {
-        Long birthDate = ((Long) personSourceRow.get("birth_date"));
+    private String birthDate(ErrorBuilder errorBuilder, TableRow personTargetRow, TableRow personSourceRow) {
+        String birthDate = ((String) personSourceRow.get("birth_date"));
         if (birthDate!= null) {
             personTargetRow.set("birthDate", birthDate);
         }
