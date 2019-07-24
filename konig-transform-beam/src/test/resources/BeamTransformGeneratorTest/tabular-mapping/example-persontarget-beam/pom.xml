@@ -35,6 +35,7 @@
     <konig.version>2.5.0-SNAPSHOT</konig.version>
     <!-- Properties specific to Konig Beam Transform -->
     <apache.commons-csv.version>1.6</apache.commons-csv.version>
+    <com.fasterxml.uuid.version>3.1.4</com.fasterxml.uuid.version>
   </properties>
 
   
@@ -561,5 +562,10 @@
         <artifactId>commons-csv</artifactId>
         <version>${apache.commons-csv.version}</version>
     </dependency>
+     <dependency>
+	    <groupId>com.fasterxml.uuid</groupId>
+	    <artifactId>java-uuid-generator</artifactId>
+	    <version>${com.fasterxml.uuid.version}</version>
+	</dependency>
   </dependencies>
 </project>

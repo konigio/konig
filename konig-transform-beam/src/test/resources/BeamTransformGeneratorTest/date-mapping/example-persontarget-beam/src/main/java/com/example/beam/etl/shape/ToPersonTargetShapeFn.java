@@ -1,7 +1,10 @@
 package com.example.beam.etl.shape;
 
+import java.util.Date;
 import com.example.beam.etl.common.ErrorBuilder;
+import com.fasterxml.uuid.Generators;
 import com.google.api.services.bigquery.model.TableRow;
+import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
@@ -10,11 +13,11 @@ import org.apache.beam.sdk.values.TupleTag;
 public class ToPersonTargetShapeFn
     extends DoFn<TableRow, TableRow>
 {
-    public static TupleTag<String> deadLetterTag = new TupleTag<String>();
+    public static TupleTag<TableRow> deadLetterTag = new TupleTag<TableRow>();
     public static TupleTag<TableRow> successTag = new TupleTag<TableRow>();
 
     @ProcessElement
-    public void processElement(ProcessContext c) {
+    public void processElement(ProcessContext c, PipelineOptions options) {
         ErrorBuilder errorBuilder = new ErrorBuilder();
         try {
             TableRow outputRow = new TableRow();
@@ -26,13 +29,18 @@ public class ToPersonTargetShapeFn
                 errorBuilder.addError("record is empty");
             }
             if (!errorBuilder.isEmpty()) {
-                c.output(deadLetterTag, errorBuilder.toString());
+                TableRow errorRow = new TableRow();
+                errorRow.set("errorId", Generators.timeBasedGenerator().generate());
+                errorRow.set("errorCreated", (new Date().getTime()/ 1000));
+                errorRow.set("errorMessage", errorBuilder.toString());
+                errorRow.set("pipelineJobName", options.getJobName());
+                errorRow.set("PersonSource", personSourceRow);
+                c.output(deadLetterTag, errorRow);
             } else {
                 c.output(successTag, outputRow);
             }
         } catch (final Throwable oops) {
-            errorBuilder.addError(oops.getMessage());
-            c.output(deadLetterTag, errorBuilder.toString());
+            oops.printStackTrace();
         }
     }
 

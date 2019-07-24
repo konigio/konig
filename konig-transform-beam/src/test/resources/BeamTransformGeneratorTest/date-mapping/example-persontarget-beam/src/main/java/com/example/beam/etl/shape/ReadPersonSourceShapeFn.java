@@ -7,11 +7,14 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.fasterxml.uuid.Generators;
 import com.google.api.client.util.DateTime;
 import org.apache.beam.sdk.io.FileIO;
+import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
@@ -21,7 +24,6 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,12 +31,12 @@ public class ReadPersonSourceShapeFn
     extends DoFn<FileIO.ReadableFile, com.google.api.services.bigquery.model.TableRow>
 {
     private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
-    public static TupleTag<String> deadLetterTag = new TupleTag<String>();
+    public static TupleTag<com.google.api.services.bigquery.model.TableRow> deadLetterTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
     public static TupleTag<com.google.api.services.bigquery.model.TableRow> successTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
     private static final Pattern DATE_PATTERN = Pattern.compile("(\\d+-\\d+-\\d+)(.*)");
 
     @ProcessElement
-    public void processElement(ProcessContext c) {
+    public void processElement(ProcessContext c, PipelineOptions options) {
         try {
             FileIO.ReadableFile f = c.element();
             ReadableByteChannel rbc = f.open();
@@ -44,37 +46,30 @@ public class ReadPersonSourceShapeFn
                 validateHeaders(csv);
                 for (CSVRecord record: csv) {
                     StringBuilder builder = new StringBuilder();
-                    try {
-                        com.google.api.services.bigquery.model.TableRow row = new com.google.api.services.bigquery.model.TableRow();
-                        Long birth_date = temporalValue(csv, "birth_date", record, builder);
-                        if (birth_date!= null) {
-                            row.set("birth_date", birth_date);
-                        }
-                        Long modified_date = temporalValue(csv, "modified_date", record, builder);
-                        if (modified_date!= null) {
-                            row.set("modified_date", modified_date);
-                        }
-                        String person_id = stringValue(csv, "person_id", record, builder);
-                        if (person_id!= null) {
-                            row.set("person_id", person_id);
-                        }
-                        if (!row.isEmpty()) {
-                            c.output(successTag, row);
-                        }
-                        if (builder.length()> 0) {
-                            throw new Exception(builder.toString());
-                        }
-                    } catch (final Exception e) {
-                        HashMap<String, String> recordMap = ((HashMap<String, String> ) record.toMap());
-                        StringBuilder br = new StringBuilder();
-                        br.append("ETL_ERROR_MESSAGE");
-                        br.append(",");
-                        br.append(StringUtils.join(recordMap.keySet(), ','));
-                        br.append("\n");
-                        br.append(e.getMessage());
-                        br.append(",");
-                        br.append(StringUtils.join(recordMap.values(), ','));
-                        c.output(deadLetterTag, br.toString());
+                    com.google.api.services.bigquery.model.TableRow row = new com.google.api.services.bigquery.model.TableRow();
+                    Long birth_date = temporalValue(csv, "birth_date", record, builder);
+                    if (birth_date!= null) {
+                        row.set("birth_date", birth_date);
+                    }
+                    Long modified_date = temporalValue(csv, "modified_date", record, builder);
+                    if (modified_date!= null) {
+                        row.set("modified_date", modified_date);
+                    }
+                    String person_id = stringValue(csv, "person_id", record, builder);
+                    if (person_id!= null) {
+                        row.set("person_id", person_id);
+                    }
+                    if (!row.isEmpty()) {
+                        c.output(successTag, row);
+                    }
+                    if (builder.length()> 0) {
+                        com.google.api.services.bigquery.model.TableRow errorRow = new com.google.api.services.bigquery.model.TableRow();
+                        errorRow.set("errorId", Generators.timeBasedGenerator().generate());
+                        errorRow.set("errorCreated", (new Date().getTime()/ 1000));
+                        errorRow.set("errorMessage", builder.toString());
+                        errorRow.set("pipelineJobName", options.getJobName());
+                        errorRow.set("PersonSource", row);
+                        c.output(deadLetterTag, errorRow);
                     }
                 }
             } finally {
