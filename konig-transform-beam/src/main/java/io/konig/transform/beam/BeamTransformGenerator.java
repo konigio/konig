@@ -552,6 +552,9 @@ public class BeamTransformGenerator {
       if (datatype == null) {
         return null;
       }
+      if (XMLSchema.DATE.equals(datatype)) {
+      	return String.class;
+      }
       
       return datatypeMapper.javaDatatype(datatype);
     }

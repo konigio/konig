@@ -46,7 +46,7 @@ public class ReadPersonSourceShapeFn
                     StringBuilder builder = new StringBuilder();
                     try {
                         com.google.api.services.bigquery.model.TableRow row = new com.google.api.services.bigquery.model.TableRow();
-                        Long birth_date = temporalValue(csv, "birth_date", record, builder);
+                        String birth_date = stringValue(csv, "birth_date", record, builder);
                         if (birth_date!= null) {
                             row.set("birth_date", birth_date);
                         }
@@ -103,6 +103,35 @@ public class ReadPersonSourceShapeFn
         }
     }
 
+    private String stringValue(CSVParser csv,
+        String fieldName,
+        CSVRecord record,
+        StringBuilder exceptionMessageBr)
+        throws Exception
+    {
+        HashMap<String, Integer> headerMap = ((HashMap<String, Integer> ) csv.getHeaderMap());
+        if (headerMap.get(fieldName)!= null) {
+            {
+                String stringValue = record.get(fieldName);
+                if (stringValue!= null) {
+                    stringValue = stringValue.trim();
+                    if (stringValue.equals("InjectErrorForTesting")) {
+                        throw new Exception("Error in pipeline : InjectErrorForTesting");
+                    }
+                    if (stringValue.length()> 0) {
+                        try {
+                            return stringValue;
+                        } catch (final Exception ex) {
+                            String message = String.format("Invalid string value for %s;", fieldName);
+                            exceptionMessageBr.append(message);
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     private Long temporalValue(CSVParser csv,
         String fieldName,
         CSVRecord record,
@@ -145,35 +174,6 @@ public class ReadPersonSourceShapeFn
                             }
                         } catch (final Exception ex) {
                             String message = String.format("Invalid temporal value for %s;", fieldName);
-                            exceptionMessageBr.append(message);
-                        }
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    private String stringValue(CSVParser csv,
-        String fieldName,
-        CSVRecord record,
-        StringBuilder exceptionMessageBr)
-        throws Exception
-    {
-        HashMap<String, Integer> headerMap = ((HashMap<String, Integer> ) csv.getHeaderMap());
-        if (headerMap.get(fieldName)!= null) {
-            {
-                String stringValue = record.get(fieldName);
-                if (stringValue!= null) {
-                    stringValue = stringValue.trim();
-                    if (stringValue.equals("InjectErrorForTesting")) {
-                        throw new Exception("Error in pipeline : InjectErrorForTesting");
-                    }
-                    if (stringValue.length()> 0) {
-                        try {
-                            return stringValue;
-                        } catch (final Exception ex) {
-                            String message = String.format("Invalid string value for %s;", fieldName);
                             exceptionMessageBr.append(message);
                         }
                     }
