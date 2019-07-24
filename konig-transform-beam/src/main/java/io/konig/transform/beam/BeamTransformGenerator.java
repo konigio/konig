@@ -556,6 +556,9 @@ public class BeamTransformGenerator {
       if (datatype == null) {
         return null;
       }
+      if (XMLSchema.DATE.equals(datatype)) {
+      	return String.class;
+      }
       
       return datatypeMapper.javaDatatype(datatype);
     }
@@ -1381,7 +1384,7 @@ public class BeamTransformGenerator {
 		    ShowlNodeShape sourceNode = sourceBeamChannel.getFocusNode();
 		    String sourceShapeName = ShowlUtil.shortShapeName(sourceNode);	
 		    JVar errorRow = errorBlock.decl(tableRowClass, "errorRow").init(tableRowClass._new());
-		    errorBlock.add(errorRow.invoke("set").arg("errorId").arg(model.ref(Generators.class).staticInvoke("timeBasedGenerator").invoke("generate")));
+		    errorBlock.add(errorRow.invoke("set").arg("errorId").arg(model.ref(Generators.class).staticInvoke("timeBasedGenerator").invoke("generate").invoke("toString")));
 		    errorBlock.add(errorRow.invoke("set").arg("errorCreated").arg(model.ref(Date.class)._new().invoke("getTime").div(1000)));
 		    errorBlock.add(errorRow.invoke("set").arg("errorMessage").arg(exceptionMessageBr.invoke("toString")));
 		    errorBlock.add(errorRow.invoke("set").arg("pipelineJobName").arg(pipelineOptions.invoke("getJobName")));

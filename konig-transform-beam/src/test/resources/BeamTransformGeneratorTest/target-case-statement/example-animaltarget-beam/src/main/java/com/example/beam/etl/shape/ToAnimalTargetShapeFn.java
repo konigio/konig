@@ -1,5 +1,6 @@
 package com.example.beam.etl.shape;
 
+import java.text.MessageFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -32,7 +33,7 @@ public class ToAnimalTargetShapeFn
             }
             if (!errorBuilder.isEmpty()) {
                 TableRow errorRow = new TableRow();
-                errorRow.set("errorId", Generators.timeBasedGenerator().generate());
+                errorRow.set("errorId", Generators.timeBasedGenerator().generate().toString());
                 errorRow.set("errorCreated", (new Date().getTime()/ 1000));
                 errorRow.set("errorMessage", errorBuilder.toString());
                 errorRow.set("pipelineJobName", options.getJobName());
@@ -47,10 +48,20 @@ public class ToAnimalTargetShapeFn
     }
 
     private TableRow species(ErrorBuilder errorBuilder, TableRow animalTargetRow, TableRow animalSourceRow) {
-        com.example.beam.etl.ex.Species species = com.example.beam.etl.ex.Species.findByLocalName(((String) animalSourceRow.get("species")));
         TableRow speciesRow = new TableRow();
-        species_id(errorBuilder, speciesRow, species);
-        species_name(errorBuilder, speciesRow, species);
+        String species = ((String) animalSourceRow.get("species"));
+        if (species == null) {
+            errorBuilder.addError("Cannot set required property 'species' because '{AnimalSourceShape}.species' is null");
+            return speciesRow;
+        }
+        com.example.beam.etl.ex.Species species1 = com.example.beam.etl.ex.Species.findByLocalName(species);
+        if (species1 == null) {
+            String msg = MessageFormat.format("Cannot set species because {AnimalSourceShape}.species = ''{0}'' does not map to a valid enum value", species);
+            errorBuilder.addError(msg);
+            return speciesRow;
+        }
+        species_id(errorBuilder, speciesRow, species1);
+        species_name(errorBuilder, speciesRow, species1);
         if (!speciesRow.isEmpty()) {
             animalTargetRow.set("species", speciesRow);
         } else {
@@ -80,8 +91,12 @@ public class ToAnimalTargetShapeFn
     }
 
     private TableRow genus(ErrorBuilder errorBuilder, TableRow animalTargetRow) {
-        com.example.beam.etl.ex.Genus genus = case1(errorBuilder, animalTargetRow);
         TableRow genusRow = new TableRow();
+        com.example.beam.etl.ex.Genus genus = case1(errorBuilder, animalTargetRow);
+        if (genus == null) {
+            errorBuilder.addError("Cannot set {AnimalTargetShape}.genus because CASE WHEN {AnimalTargetShape}.species.name IN ( \"Pan troglodytes\" , \"Pan paniscus\" ) THEN <http://example.com/ns/core/Pan> WHEN {AnimalTargetShape}.species.name IN ( \"Pongo abelii\" , \"Pongo pygmaeus\" , \"Pongo tapanuliensis\" ) THEN <http://example.com/ns/core/Pongo> END evaluates to null");
+            return genusRow;
+        }
         genus_id(errorBuilder, genusRow, genus);
         genus_name(errorBuilder, genusRow, genus);
         if (!genusRow.isEmpty()) {

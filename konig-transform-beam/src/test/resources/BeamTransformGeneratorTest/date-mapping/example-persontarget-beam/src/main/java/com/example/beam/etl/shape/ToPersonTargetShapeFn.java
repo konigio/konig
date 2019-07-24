@@ -30,7 +30,7 @@ public class ToPersonTargetShapeFn
             }
             if (!errorBuilder.isEmpty()) {
                 TableRow errorRow = new TableRow();
-                errorRow.set("errorId", Generators.timeBasedGenerator().generate());
+                errorRow.set("errorId", Generators.timeBasedGenerator().generate().toString());
                 errorRow.set("errorCreated", (new Date().getTime()/ 1000));
                 errorRow.set("errorMessage", errorBuilder.toString());
                 errorRow.set("pipelineJobName", options.getJobName());
@@ -75,8 +75,8 @@ public class ToPersonTargetShapeFn
         return modifiedDate;
     }
 
-    private Long birthDate(ErrorBuilder errorBuilder, TableRow personTargetRow, TableRow personSourceRow) {
-        Long birthDate = ((Long) personSourceRow.get("birth_date"));
+    private String birthDate(ErrorBuilder errorBuilder, TableRow personTargetRow, TableRow personSourceRow) {
+        String birthDate = ((String) personSourceRow.get("birth_date"));
         if (birthDate!= null) {
             personTargetRow.set("birthDate", birthDate);
         }

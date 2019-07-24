@@ -1,5 +1,6 @@
 package com.example.beam.etl.shape;
 
+import java.text.MessageFormat;
 import java.util.Date;
 import com.example.beam.etl.common.ErrorBuilder;
 import com.fasterxml.uuid.Generators;
@@ -29,7 +30,7 @@ public class ToPersonTargetShapeFn
             }
             if (!errorBuilder.isEmpty()) {
                 TableRow errorRow = new TableRow();
-                errorRow.set("errorId", Generators.timeBasedGenerator().generate());
+                errorRow.set("errorId", Generators.timeBasedGenerator().generate().toString());
                 errorRow.set("errorCreated", (new Date().getTime()/ 1000));
                 errorRow.set("errorMessage", errorBuilder.toString());
                 errorRow.set("pipelineJobName", options.getJobName());
@@ -67,8 +68,17 @@ public class ToPersonTargetShapeFn
     }
 
     private TableRow gender(ErrorBuilder errorBuilder, TableRow personTargetRow, TableRow personSourceRow) {
-        com.example.beam.etl.schema.GenderType gender = com.example.beam.etl.schema.GenderType.findByLocalName(((String) personSourceRow.get("gender_id")));
         TableRow genderRow = new TableRow();
+        String gender_id = ((String) personSourceRow.get("gender_id"));
+        if (gender_id == null) {
+            return genderRow;
+        }
+        com.example.beam.etl.schema.GenderType gender = com.example.beam.etl.schema.GenderType.findByLocalName(gender_id);
+        if (gender == null) {
+            String msg = MessageFormat.format("Cannot set gender because {PersonSourceShape}.gender_id = ''{0}'' does not map to a valid enum value", gender_id);
+            errorBuilder.addError(msg);
+            return genderRow;
+        }
         gender_id(errorBuilder, genderRow, gender);
         gender_name(errorBuilder, genderRow, gender);
         if (!genderRow.isEmpty()) {

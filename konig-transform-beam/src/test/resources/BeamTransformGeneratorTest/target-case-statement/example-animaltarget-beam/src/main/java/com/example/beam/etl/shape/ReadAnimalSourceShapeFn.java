@@ -53,7 +53,7 @@ public class ReadAnimalSourceShapeFn
                     }
                     if (builder.length()> 0) {
                         com.google.api.services.bigquery.model.TableRow errorRow = new com.google.api.services.bigquery.model.TableRow();
-                        errorRow.set("errorId", Generators.timeBasedGenerator().generate());
+                        errorRow.set("errorId", Generators.timeBasedGenerator().generate().toString());
                         errorRow.set("errorCreated", (new Date().getTime()/ 1000));
                         errorRow.set("errorMessage", builder.toString());
                         errorRow.set("pipelineJobName", options.getJobName());

@@ -191,7 +191,8 @@ public class BaseTargetFnGenerator {
 		AbstractJClass tableRowClass = model.ref(TableRow.class);
 		JVar errorRow = ifStatement._then().decl(tableRowClass, "errorRow").init(tableRowClass._new());
 		JBlock ifBlock = ifStatement._then();
-		ifBlock.add(errorRow.invoke("set").arg("errorId").arg(model.ref(Generators.class).staticInvoke("timeBasedGenerator").invoke("generate")));
+		ifBlock.add(errorRow.invoke("set").arg("errorId").arg(
+				model.ref(Generators.class).staticInvoke("timeBasedGenerator").invoke("generate").invoke("toString")));
 		ifBlock.add(errorRow.invoke("set").arg("errorCreated").arg(model.ref(Date.class)._new().invoke("getTime").div(1000)));
 		ifBlock.add(errorRow.invoke("set").arg("errorMessage").arg(errorBuilder.invoke("toString")));
 		ifBlock.add(errorRow.invoke("set").arg("pipelineJobName").arg(JExpr.ref("options").invoke("getJobName")));

@@ -1302,12 +1302,12 @@ public class BeamExpressionTransform  {
 
 
 	
-	public JVar declarePropertyValue(ShowlPropertyShape targetProperty, IJExpression fieldValue, AbstractJType fieldType) throws BeamTransformGenerationException {
+	public JVar declarePropertyValue(ShowlPropertyShape property, IJExpression fieldValue, AbstractJType fieldType) throws BeamTransformGenerationException {
 		
 		
 		if (fieldType == null) {
 		
-			if (Konig.id.equals(targetProperty.getPredicate())) {
+			if (Konig.id.equals(property.getPredicate())) {
 				fieldType = model.ref(String.class);
 				if (fieldValue instanceof JVar) {
 					JVar fieldValueVar = (JVar) fieldValue;
@@ -1318,20 +1318,20 @@ public class BeamExpressionTransform  {
 							
 				}
 			} else {
-				ShowlExpression e = targetProperty.getSelectedExpression();
+				ShowlExpression e = property.getSelectedExpression();
 				fieldType = getTypeManager().javaType(e);
 			}
 		}
-		
-		String fieldName = targetProperty.getPredicate().getLocalName();
-		
+
 		BlockInfo blockInfo = peekBlockInfo();
+		String fieldName = blockInfo.varName(property.getPredicate().getLocalName());
+		
 		
 		
 		
 		JVar var = blockInfo.getBlock().decl(fieldType, fieldName).init(fieldValue.castTo(fieldType));
 		
-		blockInfo.putPropertyValue(targetProperty.asGroup(), var);
+		blockInfo.putPropertyValue(property.asGroup(), var);
 		
 		
 		return var;

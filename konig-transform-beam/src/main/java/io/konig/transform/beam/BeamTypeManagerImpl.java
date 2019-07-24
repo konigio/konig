@@ -82,7 +82,7 @@ public class BeamTypeManagerImpl implements BeamTypeManager {
 			return model.ref(Integer.class);
 		}
 		if (XMLSchema.DATE.equals(rdfType)) {
-			return model.ref(Long.class);
+			return model.ref(String.class);
 		}
 		if (XMLSchema.DOUBLE.equals(rdfType)) {
 			return model.ref(Double.class);

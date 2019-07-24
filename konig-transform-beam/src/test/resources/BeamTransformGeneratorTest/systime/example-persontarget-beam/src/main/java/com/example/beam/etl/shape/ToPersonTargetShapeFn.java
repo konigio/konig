@@ -30,7 +30,7 @@ public class ToPersonTargetShapeFn
             }
             if (!errorBuilder.isEmpty()) {
                 TableRow errorRow = new TableRow();
-                errorRow.set("errorId", Generators.timeBasedGenerator().generate());
+                errorRow.set("errorId", Generators.timeBasedGenerator().generate().toString());
                 errorRow.set("errorCreated", (new Date().getTime()/ 1000));
                 errorRow.set("errorMessage", errorBuilder.toString());
                 errorRow.set("pipelineJobName", options.getJobName());
