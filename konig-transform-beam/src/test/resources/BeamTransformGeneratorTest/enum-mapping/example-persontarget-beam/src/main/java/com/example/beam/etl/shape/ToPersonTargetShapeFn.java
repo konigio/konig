@@ -1,5 +1,6 @@
 package com.example.beam.etl.shape;
 
+import java.text.MessageFormat;
 import com.example.beam.etl.common.ErrorBuilder;
 import com.google.api.services.bigquery.model.TableRow;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -59,13 +60,25 @@ public class ToPersonTargetShapeFn
     }
 
     private TableRow gender(ErrorBuilder errorBuilder, TableRow personTargetRow, TableRow personSourceRow) {
-        com.example.beam.etl.schema.GenderType gender = com.example.beam.etl.schema.GenderType.findByGenderCode(((String) personSourceRow.get("gender_code")));
         TableRow genderRow = new TableRow();
+        String gender_code = ((String) personSourceRow.get("gender_code"));
+        if (gender_code == null) {
+            errorBuilder.addError("Cannot set required property 'gender' because '{PersonSourceShape}.gender_code' is null");
+            return genderRow;
+        }
+        com.example.beam.etl.schema.GenderType gender = com.example.beam.etl.schema.GenderType.findByGenderCode(gender_code);
+        if (gender == null) {
+            String msg = MessageFormat.format("Cannot set gender because {PersonSourceShape}.gender_code = ''{0}'' does not map to a valid enum value", gender_code);
+            errorBuilder.addError(msg);
+            return genderRow;
+        }
         gender_id(errorBuilder, genderRow, gender);
         gender_name(errorBuilder, genderRow, gender);
         gender_genderCode(errorBuilder, genderRow, personSourceRow);
         if (!genderRow.isEmpty()) {
             personTargetRow.set("gender", genderRow);
+        } else {
+            errorBuilder.addError("Required property 'gender' is null");
         }
         return genderRow;
     }
