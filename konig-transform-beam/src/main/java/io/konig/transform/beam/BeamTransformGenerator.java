@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,6 +59,7 @@ import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO.Write.CreateDisposition;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO.Write.WriteDisposition;
+import org.apache.beam.sdk.io.gcp.bigquery.TableRowJsonCoder;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -97,6 +99,7 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.uuid.Generators;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableRow;
@@ -105,6 +108,7 @@ import com.helger.jcodemodel.EClassType;
 import com.helger.jcodemodel.IJExpression;
 import com.helger.jcodemodel.IJStatement;
 import com.helger.jcodemodel.JAnnotationUse;
+import com.helger.jcodemodel.JAssignment;
 import com.helger.jcodemodel.JBlock;
 import com.helger.jcodemodel.JCatchBlock;
 import com.helger.jcodemodel.JClassAlreadyExistsException;
@@ -1206,24 +1210,24 @@ public class BeamTransformGenerator {
 					"LOGGER", 
 					model.ref(LoggerFactory.class).staticInvoke("getLogger").arg("ReadFn"));
 			
-			JVar deadLetterTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(model.ref(String.class)), 
-					"deadLetterTag").init(tupleTagClass._new().narrow(model.ref(String.class)));
+			JVar deadLetterTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(model.ref(TableRow.class)), 
+					"deadLetterTag").init(tupleTagClass._new().narrow(model.directClass(TableRow.class.getName())));
 			
 			JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(outputClass), 
 					"successTag").init(tupleTagClass._new().narrow(outputClass));
 			
 		    // @ProcessElement
-		    // public void processElement(ProcessContext c) {
+		    // public void processElement(ProcessContext c, PipelineOptions options) {
 		    
 		    JMethod method = 
 		        thisClass.method(JMod.PUBLIC, model.VOID, "processElement");
 		    method.annotate(model.directClass(ProcessElement.class.getName()));
 		    AbstractJClass processContextClass = model.directClass(ProcessContext.class.getName());
-		    
+		    AbstractJClass pipelineOptionsClass = model.directClass(PipelineOptions.class.getName());
 		    BlockInfo blockInfo = etran().beginBlock(method.body());
 		    
 		    JVar c = method.param(processContextClass, "c");
-		    
+		    JVar pipelineOptions = method.param(pipelineOptionsClass, "options");
 		    //   try {
 		    //     FileIO.ReadableFile f = c.element();
 		    
@@ -1300,14 +1304,11 @@ public class BeamTransformGenerator {
 		    JBlock forEachRecord = forEachRecordLoop.body();
 		    JVar exceptionMessageBr = forEachRecord.decl(model.ref(StringBuilder.class), "builder")
 					.init(JExpr._new(model.ref(StringBuilder.class)));
-		    JTryBlock innerForTry = forEachRecord._try();
-		    
-		    
 		    
 		    //         TableRow row = new TableRow();
 		    
 		    AbstractJClass tableRowClass = model.ref(TableRow.class);
-		    JVar row = innerForTry.body().decl(tableRowClass, "row").init(tableRowClass._new());
+		    JVar row = forEachRecord.decl(tableRowClass, "row").init(tableRowClass._new());
 		    
 		    List<ShowlPropertyShape> sourceProperties = sourceProperties();
 		
@@ -1341,7 +1342,7 @@ public class BeamTransformGenerator {
 		      methodValidateHeaderBody.add(JExpr.invoke("validateHeader").arg(headerMap).arg(fieldName).arg(builder));
 		      
 		      //     $fieldName = ${getter}(record.get("${fieldName}"));
-		      JVar fieldVar = innerForTry.body().decl(datatypeClass, fieldName, 
+		      JVar fieldVar = forEachRecord.decl(datatypeClass, fieldName, 
 		          JExpr.invoke(getter)
 		          .arg(csv)
 		          .arg(JExpr.lit(fieldName))
@@ -1353,7 +1354,7 @@ public class BeamTransformGenerator {
 		      
 		      //     if ($fieldName != null) {
 		      //       row.set("$fieldName", $fieldName);
-		      innerForTry.body()
+		      forEachRecord
 		          ._if(fieldVar.ne(JExpr._null()))
 		          ._then().add(row.invoke("set").arg(JExpr.lit(fieldName)).arg(fieldVar));
 		      
@@ -1369,13 +1370,26 @@ public class BeamTransformGenerator {
 
 		    createDerivedKey(forEachRecord);
 		    
-		    JBlock outputBlock = innerForTry.body()._if(row.invoke("isEmpty").not())._then();
+		    JBlock outputBlock = forEachRecord._if(row.invoke("isEmpty").not())._then();
 		    deliverOutput(outputBlock, c, row, successTag);
 		    
-		    innerForTry.body()._if(exceptionMessageBr.invoke("length").gt0())._then()
-			._throw(JExpr._new(model.ref(Exception.class)).arg(exceptionMessageBr.invoke("toString")));
+		    JBlock errorBlock = forEachRecord._if(exceptionMessageBr.invoke("length").gt0())._then();
+			//._throw(JExpr._new(model.ref(Exception.class)).arg(exceptionMessageBr.invoke("toString")));
 		    
-		    
+		    //TableRow errorRow = row;
+        	//errorRow.set("errorId", Generators.timeBasedGenerator().generate());
+        	//errorRow.set("errorCreated", new Date().getTime() /1000);
+        	//errorRow.set("errorMessage", builder.toString());
+        	//errorRow.set("pipelineJobName", options.getJobName());
+		    ShowlNodeShape sourceNode = sourceBeamChannel.getFocusNode();
+		    String sourceShapeName = ShowlUtil.shortShapeName(sourceNode);	
+		    JVar errorRow = errorBlock.decl(tableRowClass, "errorRow").init(tableRowClass._new());
+		    errorBlock.add(errorRow.invoke("set").arg("errorId").arg(model.ref(Generators.class).staticInvoke("timeBasedGenerator").invoke("generate").invoke("toString")));
+		    errorBlock.add(errorRow.invoke("set").arg("errorCreated").arg(model.ref(Date.class)._new().invoke("getTime").div(1000)));
+		    errorBlock.add(errorRow.invoke("set").arg("errorMessage").arg(exceptionMessageBr.invoke("toString")));
+		    errorBlock.add(errorRow.invoke("set").arg("pipelineJobName").arg(pipelineOptions.invoke("getJobName")));
+		    errorBlock.add(errorRow.invoke("set").arg(sourceShapeName).arg(row));
+		    errorBlock.add(c.invoke("output").arg(deadLetterTag).arg(errorRow));
 		    //     } finally {
 		    //        reader.close();
 		    //     }
@@ -1385,29 +1399,11 @@ public class BeamTransformGenerator {
 		    //   } catch (Exception e) {
 		    //     e.printStackTrace();
 		    //   }
-		    
-		    AbstractJClass exceptionClass = model.directClass(Exception.class.getName());
-		    AbstractJClass stringBuilderClass = model.ref(StringBuilder.class);
-	        AbstractJClass stringUtilsClass = model.ref(StringUtils.class);
-	        
-	        JCatchBlock catchBlock = tryBlock._catch(exceptionClass);
-	        JCatchBlock catchForBlock = innerForTry._catch(exceptionClass);
-	        JBlock catchForBody = catchForBlock.body();
-	        JVar e = catchBlock.param("e");
-	        JVar e1 = catchForBlock.param("e");
-	        catchBlock.body().add(e.invoke("printStackTrace"));
-	        JVar recordMap = catchForBody.decl(hashMapClass.narrow(model.ref(String.class), model.ref(String.class)),"recordMap").init(record.invoke("toMap").castTo(hashMapClass.narrow(model.ref(String.class), model.ref(String.class))));
-	        
-	        JVar br = catchForBody.decl(stringBuilderClass, "br").init(JExpr._new(model.ref(StringBuilder.class)));
-	        catchForBody.add(br.invoke("append").arg("ETL_ERROR_MESSAGE"));
-	        catchForBody.add(br.invoke("append").arg(","));
-	        catchForBody.add(br.invoke("append").arg(stringUtilsClass.staticInvoke("join").arg(recordMap.invoke("keySet")).arg(JExpr.lit(','))));
-	        catchForBody.add(br.invoke("append").arg("\n"));
-	        catchForBody.add(br.invoke("append").arg(e1.invoke("getMessage")));
-	        catchForBody.add(br.invoke("append").arg(","));
-	        catchForBody.add(br.invoke("append").arg(stringUtilsClass.staticInvoke("join").arg(recordMap.invoke("values")).arg(JExpr.lit(','))));
-	        catchForBody.add(c.invoke("output").arg(deadLetterTag).arg(br.invoke("toString")));
-		    
+            AbstractJClass exceptionClass = model.directClass(Exception.class.getName());
+            JCatchBlock catchBlock = tryBlock._catch(exceptionClass);
+            JVar e = catchBlock.param("e");
+            catchBlock.body().add(e.invoke("printStackTrace"));
+
 		 // if (builder.length()> 0) {
 		    JBlock headerBlock = methodValidateHeaderBody._if(builder.invoke("length").gt(JExpr.lit(0)))._then();
 		    //LOGGER.warn("Mapping for {} not found", builder.toString());
@@ -3426,7 +3422,6 @@ public class BeamTransformGenerator {
 
       AbstractJClass stringClass = model.ref(String.class);
       JMethod method = mainClass.method(JMod.PRIVATE | JMod.STATIC, stringClass, "sourceURI");
-      JVar pattern = method.param(stringClass, "pattern");
       JVar options = method.param(optionsClass, "options");
       
       //   return pattern.replace("${environmentName}", options.getEnvironment());
@@ -3463,10 +3458,7 @@ public class BeamTransformGenerator {
       
 
       
-      
-      method.body()._return(pattern.invoke("replace")
-          .arg(JExpr.lit(varName))
-          .arg(options.invoke("getEnvironment")));
+     
       
       // }
       
@@ -3657,8 +3649,8 @@ public class BeamTransformGenerator {
               .invoke("to").arg(targetTableSpec)
               .invoke("withCreateDisposition").arg(createDispositionClass.staticRef("CREATE_NEVER"))
               .invoke("withWriteDisposition").arg(writeDispositionClass.staticRef("WRITE_APPEND"))));
-    		  
-      body.add(writeExceptionDocument(outputRowCollection, ".txt", targetNode.getShape().getMediaTypeBaseName(),mergeClass));
+      
+      body.add(writeErrorTable(outputRowCollection, targetNode ,mergeClass));
     }
 
 
@@ -3811,13 +3803,11 @@ public class BeamTransformGenerator {
       AbstractJClass fileIoClass = model.ref(FileIO.class);
       AbstractJClass tupleTagClass = model.ref(TupleTag.class).narrow(tableRowClass);
       AbstractJClass tupleTagListClass = model.ref(TupleTagList.class);
-      JVar pattern = block.decl(stringClass , "pattern");
     
       for (BeamChannel sourceInfo : sortedSourceInfoList()) {
         ShowlNodeShape node = sourceInfo.getFocusNode();
         set.add(node);
         URI shapeId = RdfUtil.uri(node.getId());
-        exceptionMessageDocument(node, pattern, options);
         String shapeName = shapeId.getLocalName();
         if (shapeName.endsWith("Shape")) {
           shapeName = shapeName.substring(0, shapeName.length()-5);
@@ -3848,7 +3838,7 @@ public class BeamTransformGenerator {
               				  .arg(tupleTagListClass.staticInvoke("of").arg(readFn.staticRef("deadLetterTag"))))
               );
         
-        block.add(writeExceptionDocument(pcollectionTuple, ".csv", node.getShape().getMediaTypeBaseName(), readFn));
+        block.add(writeErrorTable(pcollectionTuple, node, readFn));
         sourceInfo.setPcollection(pcollectionTuple);
         sourceInfo.setTupleTag(tagVar);
       }
@@ -3856,47 +3846,24 @@ public class BeamTransformGenerator {
       
     }
 
-    private void exceptionMessageDocument(ShowlNodeShape node,JVar pattern, JVar optionsVar) {
-        
-        String datasourceId = node.getShapeDataSource().getDataSource().getId().stringValue();
-        
-        String destinationBucket = datasourceId;
-       if(StringUtils.ordinalIndexOf(datasourceId,"/",3) != -1) {
-     	   destinationBucket = datasourceId.substring(0,StringUtils.ordinalIndexOf(datasourceId,"/",3));
-       }
-       int varStart = destinationBucket.lastIndexOf('$');
-       int varEnd = destinationBucket.indexOf('}', varStart)+1;
-       String varName = destinationBucket.substring(varStart, varEnd);
-       
-       pattern.init(JExpr.lit(destinationBucket+"/invalid/{0}").invoke("replace")
-               .arg(JExpr.lit(varName))
-               .arg(optionsVar.invoke("getEnvironment")));
-   }
    
-   private IJStatement writeExceptionDocument(JVar outputTuple, String fileFormat, String contentType, JDefinedClass fnClass) {
-   	
-			AbstractJClass stringClass = model.ref(String.class);
-			JDefinedClass anonymousUUIDGenerator = model.anonymousClass(SerializableFunction.class);
-			JMethod methodUUID = anonymousUUIDGenerator.method(JMod.PUBLIC, model.ref(Object.class), "apply");
-			methodUUID.param(model.ref(Object.class), "input");
-			JBlock methodBody = methodUUID.body();
-			methodUUID.annotate(Override.class);
-			methodBody._return(model.ref(UUID.class).staticInvoke("randomUUID").invoke("toString"));
-			JLambda lambda = new JLambda();
-			JLambdaParam key = lambda.addParam("key");
-			lambda.body().lambdaExpr(
-					model.ref(FileIO.class).staticRef("Write").invoke("defaultNaming").arg(JExpr.lit("file-").plus(key)).arg(fileFormat));
-		
+   
+		private IJStatement writeErrorTable(JVar outputTuple, ShowlNodeShape node, JDefinedClass fnClass) throws BeamTransformGenerationException {
+			AbstractJClass bigQueryIoClass = model.ref(BigQueryIO.class);
+			AbstractJClass createDispositionClass = model.ref(CreateDisposition.class);
+			AbstractJClass writeDispositionClass = model.ref(WriteDisposition.class);
+			
+			String tableName = BeamUtil.errorTableDataset(node)+"."+ BeamUtil.errorTableName(node.getShape().getIri());
+			
+			String writeLabel = "Write" + RdfUtil.shortShapeName(node.getId());
 			return outputTuple.invoke("get").arg(fnClass.staticRef("deadLetterTag"))
-					.invoke("setCoder").arg(model.ref(NullableCoder.class).staticInvoke("of").arg(model.ref(StringUtf8Coder.class).staticInvoke("of")))
-					.invoke("apply").arg("writeErrorDocument").arg(model.ref(FileIO.class).staticInvoke("writeDynamic").narrow(stringClass).narrow(stringClass)
-							.invoke("via").arg(model.ref(TextIO.class).staticInvoke("sink"))
-							.invoke("by").arg(JExpr._new(anonymousUUIDGenerator))
-							.invoke("to").arg(model.ref(MessageFormat.class).staticInvoke("format").arg(JExpr.ref("pattern")).arg(contentType))
-							.invoke("withNumShards").arg(1)
-							.invoke("withDestinationCoder").arg(model.ref(NullableCoder.class).staticInvoke("of").arg(model.ref(StringUtf8Coder.class).staticInvoke("of")))
-							.invoke("withNaming").arg(lambda));
-   }
+					.invoke("setCoder").arg(model.ref(TableRowJsonCoder.class).staticInvoke("of"))
+					.invoke("apply").arg(JExpr.lit(writeLabel + "ErrorLog"))
+						.arg(bigQueryIoClass.staticInvoke("writeTableRows").invoke("to")
+							.arg(tableName)
+							.invoke("withCreateDisposition").arg(createDispositionClass.staticRef("CREATE_NEVER"))
+							.invoke("withWriteDisposition").arg(writeDispositionClass.staticRef("WRITE_APPEND")));
+		}
 
 
 
@@ -3921,7 +3888,6 @@ public class BeamTransformGenerator {
       AbstractJClass stringClass = model.ref(String.class);
       JVar sourceURI = body.decl(stringClass, "sourceURI", JExpr.invoke("sourceURI").arg(optionsVar));
       
-      JVar pattern = body.decl(stringClass , "pattern");
       
       JVar outputTuple = body.decl(model.ref(PCollectionTuple.class), "outputTuple");
       
@@ -3954,9 +3920,8 @@ public class BeamTransformGenerator {
       outputTuple.init(pipeline);
       
       ShowlNodeShape sourceNode = sourceInfoMap.values().iterator().next().getChannel().getSourceNode();
-      exceptionMessageDocument(sourceNode, pattern, optionsVar);
-      
-      body.add(writeExceptionDocument(outputTuple, ".csv", sourceNode.getShape().getMediaTypeBaseName(), readFileFnClass));
+     
+      body.add(writeErrorTable(outputTuple, sourceNode, readFileFnClass));
       
       JVar outputTuple2 = body.decl(model.ref(PCollectionTuple.class), "outputTuple2");
       
@@ -3987,7 +3952,7 @@ public class BeamTransformGenerator {
                   .invoke("withCreateDisposition").arg(createDispositionClass.staticRef("CREATE_NEVER"))
                   .invoke("withWriteDisposition").arg(writeDispositionClass.staticRef("WRITE_APPEND"))));
           
-      body.add(writeExceptionDocument(outputTuple2, ".txt", targetNode.getShape().getMediaTypeBaseName(),toTargetFnClass));
+      body.add(writeErrorTable(outputTuple2, targetNode ,toTargetFnClass));
          
       body.add(p.invoke("run"));
       

@@ -22,7 +22,9 @@ package io.konig.transform.beam;
 
 
 import java.text.MessageFormat;
+import java.util.Date;
 
+import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
@@ -31,6 +33,7 @@ import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
+import com.fasterxml.uuid.Generators;
 import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.JBlock;
@@ -48,6 +51,7 @@ import com.helger.jcodemodel.JVar;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.RdfUtil;
+import io.konig.core.showl.ShowlChannel;
 import io.konig.core.showl.ShowlEffectiveNodeShape;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlUtil;
@@ -103,6 +107,7 @@ public class BaseTargetFnGenerator {
 		
 		AbstractJClass tupleTagStringClass = model.ref(TupleTag.class).narrow(stringClass);
 		AbstractJClass tupleTagTableRowClass = model.ref(TupleTag.class).narrow(tableRowClass);
+		AbstractJClass pipelineOptionsClass = model.directClass(PipelineOptions.class.getName());
 		
   	JMethod method = thisClass.method(JMod.PUBLIC, model.VOID, "processElement");
 		
@@ -110,8 +115,8 @@ public class BaseTargetFnGenerator {
 		BeamMethod beamMethod = new BeamMethod(method);
 		
 		JVar deadLetterTag = thisClass
-				.field(JMod.PUBLIC | JMod.STATIC, tupleTagStringClass, "deadLetterTag")
-				.init(tupleTagStringClass._new());
+				.field(JMod.PUBLIC | JMod.STATIC, tupleTagTableRowClass, "deadLetterTag")
+				.init(tupleTagTableRowClass._new());
 
 		JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC, tupleTagTableRowClass, "successTag")
 				.init(tupleTagTableRowClass._new());
@@ -125,7 +130,7 @@ public class BaseTargetFnGenerator {
 			blockInfo.beamMethod(beamMethod);
 			method.annotate(ProcessElement.class);
 			JVar c = method.param(processContextClass, "c");
-			
+			method.param(pipelineOptionsClass, "options");
 
 			blockInfo.errorBuilderVar(errorBuilder);
 
@@ -146,7 +151,8 @@ public class BaseTargetFnGenerator {
 				etran.invoke(propertyMethod);
 			}
 			
-			provideOutput(successTag, deadLetterTag, tryBlock, c, outputRow, errorBuilder);
+			
+			provideOutput(successTag, deadLetterTag, tryBlock, c, outputRow, errorBuilder, targetNode);
 			
 			
 		} finally {
@@ -154,6 +160,15 @@ public class BaseTargetFnGenerator {
 		}
 		
 	}
+  
+  	private ShowlNodeShape sourceNode(ShowlNodeShape targetNode) {
+  		 for (ShowlChannel c : targetNode.getChannels()) {
+  	        if (c.getSourceNode() !=null) {
+  	          return c.getSourceNode();
+  	        }
+  	      }
+		return null;
+  	}
 
 	private void provideOutput(
 			JVar successTag,
@@ -161,7 +176,8 @@ public class BaseTargetFnGenerator {
 			JTryBlock tryBlock, 
 			JVar c, 
 			JVar outputRow, 
-			JVar errorBuilder
+			JVar errorBuilder,
+			ShowlNodeShape targetNode
 	) {
 		
 	
@@ -169,14 +185,26 @@ public class BaseTargetFnGenerator {
 			._then().add(errorBuilder.invoke("addError").arg(JExpr.lit("record is empty")));
 		
 		JConditional ifStatement = tryBlock.body()._if(errorBuilder.invoke("isEmpty").not());
-		ifStatement._then().add(c.invoke("output").arg(deadLetterTag).arg(errorBuilder.invoke("toString")));
+		String rowName = StringUtil.javaIdentifier(StringUtil.firstLetterLowerCase(ShowlUtil.shortShapeName(sourceNode(targetNode)))) + "Row";
+		String sourceShapeName = ShowlUtil.shortShapeName(sourceNode(targetNode));	
+		
+		AbstractJClass tableRowClass = model.ref(TableRow.class);
+		JVar errorRow = ifStatement._then().decl(tableRowClass, "errorRow").init(tableRowClass._new());
+		JBlock ifBlock = ifStatement._then();
+		ifBlock.add(errorRow.invoke("set").arg("errorId").arg(
+				model.ref(Generators.class).staticInvoke("timeBasedGenerator").invoke("generate").invoke("toString")));
+		ifBlock.add(errorRow.invoke("set").arg("errorCreated").arg(model.ref(Date.class)._new().invoke("getTime").div(1000)));
+		ifBlock.add(errorRow.invoke("set").arg("errorMessage").arg(errorBuilder.invoke("toString")));
+		ifBlock.add(errorRow.invoke("set").arg("pipelineJobName").arg(JExpr.ref("options").invoke("getJobName")));
+		ifBlock.add(errorRow.invoke("set").arg(sourceShapeName).arg(JExpr.ref(rowName)));
+		ifBlock.add(c.invoke("output").arg(deadLetterTag).arg(errorRow));
+		    
 		ifStatement._else().add(c.invoke("output").arg(successTag).arg(outputRow));
 
 		AbstractJClass throwableClass = model.ref(Throwable.class);
 		JCatchBlock catchBlock = tryBlock._catch(throwableClass);
 		JVar oops = catchBlock.param("oops");
-		catchBlock.body().add(errorBuilder.invoke("addError").arg(oops.invoke("getMessage")));
-		catchBlock.body().add(c.invoke("output").arg(deadLetterTag).arg(errorBuilder.invoke("toString")));
+		catchBlock.body().add(oops.invoke("printStackTrace"));
 		
 	}
 
