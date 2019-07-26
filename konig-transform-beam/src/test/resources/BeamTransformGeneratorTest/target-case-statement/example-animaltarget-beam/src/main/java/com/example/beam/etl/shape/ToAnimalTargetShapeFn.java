@@ -56,7 +56,7 @@ public class ToAnimalTargetShapeFn
         }
         com.example.beam.etl.ex.Species species1 = com.example.beam.etl.ex.Species.findByLocalName(species);
         if (species1 == null) {
-            String msg = MessageFormat.format("Cannot set species because {AnimalSourceShape}.species = ''{0}'' does not map to a valid enum value", species);
+            String msg = MessageFormat.format("Cannot set species because '{AnimalSourceShape}.species' = ''{0}'' does not map to a valid enum value", species);
             errorBuilder.addError(msg);
             return speciesRow;
         }

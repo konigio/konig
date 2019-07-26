@@ -205,9 +205,9 @@ public class EnumNodeGenerator extends TargetPropertyGenerator {
 			StringBuilder errorMessage = new StringBuilder();
 			errorMessage.append("Cannot set ");
 			errorMessage.append(targetProperty.fullPath());
-			errorMessage.append(" because ");
+			errorMessage.append(" because '");
 			errorMessage.append(sourcePropertyPath);
-			errorMessage.append(" = ''{0}'' does not map to a valid enum value");
+			errorMessage.append("' = ''{0}'' does not map to a valid enum value");
 	
 			AbstractJClass messageFormatClass = etran.codeModel().ref(MessageFormat.class);
 			AbstractJClass stringClass = etran.codeModel().ref(String.class);
