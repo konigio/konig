@@ -28,6 +28,7 @@ import java.util.Date;
 
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.GEO;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import com.google.api.services.bigquery.model.TableRow;
@@ -69,7 +70,9 @@ public class BeamTypeManagerImpl implements BeamTypeManager {
 		if (XMLSchema.ANYURI.equals(rdfType)) {
 			return model.ref(String.class);
 		}
-		if (XMLSchema.STRING.equals(rdfType)) {
+		if (XMLSchema.STRING.equals(rdfType) ||
+				GEO.WKT_LITERAL.equals(rdfType)
+		) {
 			return model.ref(String.class);
 		}
 		if (XMLSchema.INTEGER.equals(rdfType)) {

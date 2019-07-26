@@ -35,6 +35,7 @@ import java.util.Set;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.vocabulary.GEO;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
@@ -472,7 +473,10 @@ public class OwlReasoner {
 	public boolean isDatatype(Resource id) {
 		if (id instanceof URI) {
 			URI uri = (URI) id;
-			if (XMLSchema.NAMESPACE.equals(uri.getNamespace())) {
+			if (
+				XMLSchema.NAMESPACE.equals(uri.getNamespace()) ||
+				GEO.WKT_LITERAL.equals(id)
+			) {
 				return true;
 			}
 		}

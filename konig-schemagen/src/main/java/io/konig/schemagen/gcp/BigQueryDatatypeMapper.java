@@ -22,6 +22,7 @@ package io.konig.schemagen.gcp;
 
 
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.GEO;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
 
@@ -62,6 +63,9 @@ public class BigQueryDatatypeMapper {
 			}
 			if (RDF.LANGSTRING.equals(datatype)) {
 				return BigQueryDatatype.RECORD;
+			}
+			if (GEO.WKT_LITERAL.equals(datatype)) {
+				return BigQueryDatatype.GEOGRAPHY;
 			}
 		}
 		

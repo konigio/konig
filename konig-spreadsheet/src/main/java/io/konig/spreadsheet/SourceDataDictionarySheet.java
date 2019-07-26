@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.GEO;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.NamespaceManager;
@@ -253,6 +254,10 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 			case "DATETIME2":
 			case "DATETIME":
 				return XMLSchema.DATETIME;
+				
+			case "GEOGRAPHY" :
+				return GEO.WKT_LITERAL;
+				
 			case "NUMBER":
 				return XMLSchema.DECIMAL;
 			case "SMALLINT":
