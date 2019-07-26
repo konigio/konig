@@ -48,8 +48,8 @@ public class ReadPersonSourceShapeFn
                     if (person_id!= null) {
                         row.set("person_id", person_id);
                     }
-                    if (!row.isEmpty()) {
-                        c.output(successTag, row);
+                    if (row.isEmpty()) {
+                        builder.append("record is empty");
                     }
                     if (builder.length()> 0) {
                         com.google.api.services.bigquery.model.TableRow errorRow = new com.google.api.services.bigquery.model.TableRow();
@@ -59,6 +59,8 @@ public class ReadPersonSourceShapeFn
                         errorRow.set("pipelineJobName", options.getJobName());
                         errorRow.set("PersonSource", row);
                         c.output(deadLetterTag, errorRow);
+                    } else {
+                        c.output(successTag, row);
                     }
                 }
             } finally {
