@@ -75,7 +75,7 @@ public class ToPersonTargetShapeFn
         }
         com.example.beam.etl.schema.GenderType gender = com.example.beam.etl.schema.GenderType.findByLocalName(gender_id);
         if (gender == null) {
-            String msg = MessageFormat.format("Cannot set gender because {PersonSourceShape}.gender_id = ''{0}'' does not map to a valid enum value", gender_id);
+            String msg = MessageFormat.format("Cannot set gender because '{PersonSourceShape}.gender_id' = ''{0}'' does not map to a valid enum value", gender_id);
             errorBuilder.addError(msg);
             return genderRow;
         }
