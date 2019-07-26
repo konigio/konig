@@ -637,7 +637,13 @@ public class BeamExpressionTransform  {
 	}
 
 	private IJExpression iriReference(ShowlIriReferenceExpression e) {
-		return JExpr.lit(e.getIriValue().stringValue());
+		
+		URI iri = e.getIriValue();
+		String text = reasoner.isEnumerationMember(iri) ?
+				iri.getLocalName() : 
+				iri.stringValue();
+		
+		return JExpr.lit(text);
 	}
 
 	private IJExpression filter(ShowlFilterExpression e) throws BeamTransformGenerationException {		
