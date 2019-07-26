@@ -134,7 +134,16 @@ public class EnumNodeGenerator extends TargetPropertyGenerator {
 		String sourcePropertyPath = null;
 		JVar sourcePropertyVar = null;
 		
-		if (joinInfo.getSourceProperty() != null && joinInfo.getTargetProperty()!=null) {
+		if (joinInfo.getSourceProperty() != null && 
+				(
+						joinInfo.getTargetProperty()!=null ||
+						(
+								joinInfo.getExpression()==null &&
+								joinInfo.getHardCodedReference()==null
+						)
+				)
+				
+		) {
 			ShowlPropertyShape sourceProperty = joinInfo.getSourceProperty();
 			ShowlPropertyExpression e = ShowlPropertyExpression.of(sourceProperty);
 			IJExpression sourceField = etran.transform(e);
