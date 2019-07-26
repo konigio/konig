@@ -134,8 +134,7 @@ public class MultiValuedTargetPropertyGenerator extends AlternativePathsGenerato
 			JBlock block = blockInfo.getBlock();
 			beamMethod.excludeParamFor(BeamParameter.pattern(BeamParameterType.TABLE_ROW, targetProperty.getValueShape().effectiveNode()));
 			
-			JVar outputRow = block.decl(tableRowClass, "outputRow").init(tableRowClass._new());
-
+			
 			etran.addRowParameters(beamMethod, struct);
 			
 			
@@ -186,7 +185,7 @@ public class MultiValuedTargetPropertyGenerator extends AlternativePathsGenerato
 
 			JConditional ifStatement = block._if(ok);
 			
-			ifStatement._then()._return(outputRow);
+			ifStatement._then()._return(structVar);
 			block._return(JExpr._null());
 			
 		} finally {
