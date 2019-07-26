@@ -26,6 +26,7 @@ import java.util.GregorianCalendar;
 import org.joda.time.Duration;
 import org.joda.time.LocalTime;
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.GEO;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 public class BasicJavaDatatypeMapper implements JavaDatatypeMapper {
@@ -115,6 +116,10 @@ public class BasicJavaDatatypeMapper implements JavaDatatypeMapper {
 		}
 		
 		if (XMLSchema.TOKEN.equals(rdfDatatype)) {
+			return String.class;
+		}
+		
+		if (GEO.WKT_LITERAL.equals(rdfDatatype)) {
 			return String.class;
 		}
 		

@@ -30,6 +30,7 @@ public enum BigQueryDatatype {
 	BOOLEAN,
 	TIMESTAMP,
 	RECORD, 
-	DATE
+	DATE,
+	GEOGRAPHY
 
 }
