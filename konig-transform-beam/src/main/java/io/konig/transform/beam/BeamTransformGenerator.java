@@ -1370,10 +1370,14 @@ public class BeamTransformGenerator {
 
 		    createDerivedKey(forEachRecord);
 		    
-		    JBlock outputBlock = forEachRecord._if(row.invoke("isEmpty").not())._then();
-		    deliverOutput(outputBlock, c, row, successTag);
+		    JBlock outputBlock = forEachRecord._if(row.invoke("isEmpty"))._then();
 		    
-		    JBlock errorBlock = forEachRecord._if(exceptionMessageBr.invoke("length").gt0())._then();
+		    outputBlock.add(exceptionMessageBr.invoke("append").arg(JExpr.lit("record is empty")));
+		    
+		    
+		    
+		    JConditional errorBlockIf = forEachRecord._if(exceptionMessageBr.invoke("length").gt0());
+		    JBlock errorBlock = errorBlockIf._then();
 			//._throw(JExpr._new(model.ref(Exception.class)).arg(exceptionMessageBr.invoke("toString")));
 		    
 		    //TableRow errorRow = row;
@@ -1393,7 +1397,9 @@ public class BeamTransformGenerator {
 		    //     } finally {
 		    //        reader.close();
 		    //     }
-		
+		   
+		    deliverOutput(errorBlockIf._else(), c, row, successTag);
+		    
 		    innerTry._finally().add(stream.invoke("close"));
 		    
 		    //   } catch (Exception e) {
