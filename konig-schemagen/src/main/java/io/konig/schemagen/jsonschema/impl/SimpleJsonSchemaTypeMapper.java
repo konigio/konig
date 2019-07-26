@@ -22,6 +22,7 @@ package io.konig.schemagen.jsonschema.impl;
 
 
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.GEO;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.schemagen.jsonschema.JsonSchemaDatatype;
@@ -54,7 +55,9 @@ public class SimpleJsonSchemaTypeMapper implements JsonSchemaTypeMapper {
 		if (XMLSchema.DAYTIMEDURATION.equals(rdfDatatype)) {
 			return JsonSchemaDatatype.STRING;
 		}
-		
+		if (GEO.WKT_LITERAL.equals(rdfDatatype)) {
+			return JsonSchemaDatatype.STRING;
+		}
 		
 		if (XMLSchema.DATE.equals(rdfDatatype)) {
 			return JsonSchemaDatatype.DATE;
