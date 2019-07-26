@@ -22,6 +22,7 @@ package io.konig.schemagen.jsonschema.impl;
 
 
 import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.GEO;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import io.konig.core.DatatypeRestriction;
@@ -50,6 +51,8 @@ public class SmartJsonSchemaTypeMapper implements JsonSchemaTypeMapper {
 		if (datatype != null) {
 			if (XMLSchema.NAMESPACE.equals(datatype.getNamespace())) {
 				return simple.type(property);
+			} else if (GEO.WKT_LITERAL.equals(datatype)) {
+				return JsonSchemaDatatype.STRING;
 			
 			} else {
 				DatatypeRestriction r = reasoner.datatypeRestriction(datatype);
