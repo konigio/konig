@@ -309,6 +309,7 @@ public class BeamTransformGenerator {
       context.put("groupId", request.getGroupId());
       context.put("artifactId", request.parentArtifactId());
       context.put("version", request.getVersion());
+      context.put("konigVersion", request.getKonigVersion());
       context.put("childProjectList", childProjectList);
       if(!request.getNodeList().isEmpty()) {
     	  context.put("batchEtlBucketIri", batchEtlBucketIri(request.getNodeList().get(0)));  
@@ -372,6 +373,7 @@ public class BeamTransformGenerator {
     context.put("artifactId", projectDir.getName());
     context.put("version", request.getVersion());
     context.put("projectName", projectDir.getName());
+    context.put("konigVersion", request.getKonigVersion());
     context.put("batchEtlBucketIri", batchEtlBucketIri(node));
     context.put("addOptionalParameters", addOptionalParameters());
     

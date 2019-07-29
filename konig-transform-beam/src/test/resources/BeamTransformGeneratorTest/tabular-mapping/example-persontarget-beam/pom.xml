@@ -32,7 +32,7 @@
     <hadoop.version>2.7.3</hadoop.version>
     <maven-surefire-plugin.version>2.21.0</maven-surefire-plugin.version>
     <nemo.version>0.1</nemo.version>
-    <konig.version>2.5.0-SNAPSHOT</konig.version>
+    <konig.version>2.7.0</konig.version>
     <!-- Properties specific to Konig Beam Transform -->
     <apache.commons-csv.version>1.6</apache.commons-csv.version>
     <com.fasterxml.uuid.version>3.1.4</com.fasterxml.uuid.version>
