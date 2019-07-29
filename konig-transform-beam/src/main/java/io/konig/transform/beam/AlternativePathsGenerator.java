@@ -187,7 +187,7 @@ public class AlternativePathsGenerator extends StructPropertyGenerator {
 
 			JConditional ifStatement = block._if(ok);
 			ifStatement._then().add(outputRow.invoke("put")
-					.arg(JExpr.lit(targetProperty.getPredicate().getLocalName())).arg(enumRow));
+						.arg(JExpr.lit(targetProperty.getPredicate().getLocalName())).arg(enumRow));	
 			block._return(ok);
 			
 		} finally {
@@ -330,7 +330,7 @@ public class AlternativePathsGenerator extends StructPropertyGenerator {
 			JVar fieldVar = block.decl(objectClass, blockInfo.varName(fieldName)).init(fieldValue);
 			
 			JConditional ifStatement = block._if(fieldVar.neNull());
-			ifStatement._then().add(outputRow.invoke("put").arg(JExpr.lit(fieldName)).arg(fieldVar));
+			ifStatement._then().add(outputRow.invoke("put").arg(JExpr.lit(fieldName)).arg(fieldVar));	
 			ifStatement._then()._return(JExpr.TRUE);
 			
 			block._return(JExpr.FALSE);
@@ -372,7 +372,16 @@ public class AlternativePathsGenerator extends StructPropertyGenerator {
 			JVar fieldVar = block.decl(objectClass, fieldName).init(fieldValue);
 			
 			JConditional ifStatement = block._if(fieldVar.neNull());
-			ifStatement._then().add(outputRow.invoke("put").arg(JExpr.lit(fieldName)).arg(fieldVar));
+			
+			RdfJavaType type = etran.getTypeManager().rdfJavaType(targetProperty);
+			AbstractJType javaType = type.getJavaType();
+			if(javaType == etran.codeModel().ref(String.class)){
+				ifStatement._then().add(outputRow.invoke("put").arg(JExpr.lit(fieldName)).arg(fieldVar.invoke("toString")));
+			} else {
+				ifStatement._then().add(outputRow.invoke("put").arg(JExpr.lit(fieldName)).arg(fieldVar));	
+			}
+			
+			
 			ifStatement._then()._return(JExpr.TRUE);
 			
 			block._return(JExpr.FALSE);
