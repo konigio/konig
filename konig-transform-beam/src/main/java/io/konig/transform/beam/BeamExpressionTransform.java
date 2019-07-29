@@ -481,7 +481,7 @@ public class BeamExpressionTransform  {
 				valueInit = JExpr.cond(valueInit.eqNull(), JExpr._null(), valueInit);
 			}
 		} else if(isEnumerationClass) {
-			valueInit = JExpr.cond(valueInit.eqNull(), JExpr._null(), valueInit.invoke("getId").invoke("stringValue"));
+			valueInit = JExpr.cond(valueInit.eqNull(), JExpr._null(), valueInit.invoke("getId").invoke("getLocalName"));
 		}
 		
 		JVar value = block.decl(objectClass, valueName).init(valueInit);
