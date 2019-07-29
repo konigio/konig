@@ -467,9 +467,20 @@ public class BeamExpressionTransform  {
 
 		URI leftRdfType = left.valueType(reasoner);
 		
-		if (reasoner.isEnumerationClass(leftRdfType) && left instanceof ShowlPropertyExpression) {
-			valueInit = JExpr.cond(valueInit.eqNull(), JExpr._null(), valueInit);
-		} else if(reasoner.isEnumerationClass(leftRdfType)) {
+		boolean isEnumerationClass = reasoner.isEnumerationClass(leftRdfType);
+		
+		if (isEnumerationClass && left instanceof ShowlPropertyExpression) {
+
+			ShowlPropertyShape p = ((ShowlPropertyExpression)left).getSourceProperty().asGroup().direct();
+			
+
+			if (p!=null && p.getValueShape()!=null && valueInit instanceof JInvocation && p.isTargetProperty()) {
+				 JInvocation invoke = (JInvocation) valueInit;
+				 invoke.arg(JExpr.lit("id"));
+			} else {
+				valueInit = JExpr.cond(valueInit.eqNull(), JExpr._null(), valueInit);
+			}
+		} else if(isEnumerationClass) {
 			valueInit = JExpr.cond(valueInit.eqNull(), JExpr._null(), valueInit.invoke("getId").invoke("stringValue"));
 		}
 		
