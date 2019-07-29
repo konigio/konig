@@ -1623,6 +1623,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				.groupId(mavenProject.getGroupId())
 				.artifactBaseId(mavenProject.getArtifactId())
 				.version(mavenProject.getVersion())
+				.konigVersion(mavenProject.getProperties().getProperty("konig.version"))
 				.projectDir(projectDir)
 				.nodeList(consumer.getList())
 				.build();

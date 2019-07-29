@@ -32,6 +32,7 @@ public class BeamTransformRequest {
 	private String groupId;
 	private String artifactBaseId;
 	private String version;
+	private String konigVersion;
 	private File projectDir;
 	private List<ShowlNodeShape> nodeList;
 
@@ -72,14 +73,19 @@ public class BeamTransformRequest {
 		return nodeList;
 	}
 	
+	public String getKonigVersion() {
+		return konigVersion;
+	}
+	
 	public static Builder builder() {
 		return new Builder();
 	}
-
+	
 	public static class Builder {
 		private String groupId;
 		private String artifactId;
 		private String version;
+		private String konigVersion;
 		private File projectDir;
 		private List<ShowlNodeShape> nodeList;
 
@@ -108,6 +114,11 @@ public class BeamTransformRequest {
 			return this;
 		}
 		
+		public Builder konigVersion(String konigVersion) {
+			this.konigVersion = konigVersion;
+			return this;
+		}
+		
 		public BeamTransformRequest build() {
 			return new BeamTransformRequest(this);
 		}
@@ -117,6 +128,7 @@ public class BeamTransformRequest {
 		this.groupId = builder.groupId;
 		this.artifactBaseId = builder.artifactId;
 		this.version = builder.version;
+		this.konigVersion = builder.konigVersion;
 		this.projectDir = builder.projectDir;
 		this.nodeList = builder.nodeList;
 	}

@@ -280,6 +280,7 @@ public class BeamTransformGeneratorTest {
 				.groupId("com.example")
 				.artifactBaseId("example")
 				.version("1.0")
+				.konigVersion("2.7.0")
 				.projectDir(projectDir)
 				.nodeList(consumer.getList())
 				.build();

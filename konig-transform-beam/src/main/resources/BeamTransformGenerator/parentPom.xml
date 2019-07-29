@@ -11,6 +11,7 @@
   
   <properties>
  	<maven-exec-plugin.version>1.6.0</maven-exec-plugin.version>
+ 	<konig.version>${konigVersion}</konig.version>
   </properties>
 
 	
