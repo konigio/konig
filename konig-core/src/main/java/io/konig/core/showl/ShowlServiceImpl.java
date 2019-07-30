@@ -38,6 +38,7 @@ import io.konig.core.Graph;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.Vertex;
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.datasource.DataSource;
 import io.konig.shacl.NodeKind;
@@ -76,6 +77,16 @@ public class ShowlServiceImpl implements ShowlService {
 		if (property == null) {
 			property = new ShowlProperty(predicate);
 			propertyMap.put(predicate, property);
+
+			URI domain = RdfUtil.uri(reasoner.getDomain(predicate));
+			URI range = RdfUtil.uri(reasoner.getRange(predicate));
+			
+			if (domain != null) {
+				property.setDomain(produceShowlClass(domain));
+			}
+			if (range != null) {
+				property.setRange(produceShowlClass(range));
+			}
 		}
 		return property;
 	}
