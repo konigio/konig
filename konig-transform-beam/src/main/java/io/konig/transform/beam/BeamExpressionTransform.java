@@ -83,6 +83,7 @@ import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlStructExpression;
 import io.konig.core.showl.ShowlSystimeExpression;
+import io.konig.core.showl.ShowlTeleportExpression;
 import io.konig.core.showl.ShowlUtil;
 import io.konig.core.showl.ShowlWhenThenClause;
 import io.konig.core.showl.expression.ShowlLiteralExpression;
@@ -177,9 +178,26 @@ public class BeamExpressionTransform  {
 			return enumNode((ShowlEnumNodeExpression)e);
 		}
 		
+		if (e instanceof ShowlTeleportExpression) {
+			return teleport((ShowlTeleportExpression) e);
+		}
+		
 		throw new BeamTransformGenerationException("Failed to tranform " + e.toString());
 	}
 	
+
+	private IJExpression teleport(ShowlTeleportExpression e) throws BeamTransformGenerationException {
+		ShowlExpression delegate = e.getDelegate();
+		
+		// It's not clear that we can always simply transform the delegate.
+		// Are there cases where we need to do something special to ensure that 
+		// mappings are based on the focusNode?
+		
+		// I worry that the current solution will work only in cases where the properties
+		// referenced in the delegate expression come from a flat source node.
+	
+		return transform(delegate);
+	}
 
 	public JVar declareEnumIndividual(ShowlNodeShape enumNode, ShowlStatement statement) throws BeamTransformGenerationException {
 		if (statement == null) {

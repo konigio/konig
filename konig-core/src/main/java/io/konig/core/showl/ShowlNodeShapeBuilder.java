@@ -86,6 +86,8 @@ public class ShowlNodeShapeBuilder {
 			addDirectProperty(node, c.getPredicate(), c);
 		}
 		
+		addDirectSequencePaths(node);
+		
 		processFormulas(node);
 		
 		for (PropertyConstraint c : node.getShape().getDerivedProperty()) {
@@ -99,6 +101,73 @@ public class ShowlNodeShapeBuilder {
 
 
 	
+
+	private void addDirectSequencePaths(ShowlNodeShape node) {
+		for (PropertyConstraint c : node.getShape().getProperty()) {
+			PropertyPath path = c.getPath();
+			if (path instanceof SequencePath) {
+				addDirectSequencePath(node, c, (SequencePath)path);
+			}
+		}
+		
+	}
+
+	private void addDirectSequencePath(ShowlNodeShape node, PropertyConstraint c, SequencePath path) {
+		ShowlNodeShape focusNode = node;
+		String shapeIdValue = node.getShape().getId().stringValue();
+		
+		ShowlPropertyShape last = null;
+		int end = path.size()-1;
+		for (int i=0; i<=end; i++) {
+			PropertyPath element = path.get(i);
+			if (element instanceof PredicatePath) {
+				URI predicate = ((PredicatePath) element).getPredicate();
+
+				ShowlProperty property = schemaService.produceProperty(predicate);
+				
+				ShowlDirectPropertyShape p = node.getProperty(predicate);
+				if (p == null) {
+				
+					p = new ShowlDirectPropertyShape(node, property, null);
+					property.addPropertyShape(p);
+					node.addProperty(p);
+				}
+				
+				last = p;
+
+				if (logger.isTraceEnabled()) {
+					logger.trace("addDirectSequencePath: {}", p.getPath());
+				}
+				
+				if (i<end) {
+					
+					ShowlNodeShape valueShape = p.getValueShape();
+					if (valueShape == null) {
+
+						shapeIdValue = shapeIdValue + '.' + predicate.getLocalName();
+						URI shapeId = new URIImpl(shapeIdValue);
+						Shape shape = new Shape(shapeId);
+						
+						valueShape = new ShowlNodeShape(p, shape, null);
+						p.setValueShape(valueShape);
+					}
+					node = valueShape;
+					
+				}
+				
+			} else {
+				throw new ShowlProcessingException("Nested SequencePath not supported");
+			}
+		}
+
+		if (c.getFormula() != null) {
+
+			QuantifiedExpression formula = c.getFormula();
+			ShowlExpressionBuilder builder = new ShowlExpressionBuilder(schemaService, nodeService);
+			ShowlExpression ex = builder.expression(node.getAccessor(), formula);
+			last.setFormula(new ShowlTeleportExpression(focusNode, ex));
+		}
+	}
 
 	private void processFormulas(ShowlNodeShape node) {
 		for (ShowlDirectPropertyShape direct : node.getProperties()) {
@@ -222,13 +291,7 @@ public class ShowlNodeShapeBuilder {
 			if (recursive && c!=null && c.getShape()!=null) {
 				buildNodeShape(direct, c.getShape());
 			}
-		} else {
-
-			PropertyPath path = c.getPath();
-			if (path instanceof SequencePath) {
-				addSequencePath(node, c, (SequencePath)path);
-			}
-		}
+		} 
 		
 	}
 

@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.google.api.services.bigquery.model.BigQueryModelTraining;
 import com.google.api.services.bigquery.model.Table;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableReference;
@@ -69,7 +70,10 @@ import io.konig.schemagen.sql.SqlTableGeneratorUtil;
 import io.konig.shacl.AndConstraint;
 import io.konig.shacl.NodeKind;
 import io.konig.shacl.OrConstraint;
+import io.konig.shacl.PredicatePath;
 import io.konig.shacl.PropertyConstraint;
+import io.konig.shacl.PropertyPath;
+import io.konig.shacl.SequencePath;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.ShapeNamer;
@@ -317,13 +321,96 @@ public class BigQueryTableGenerator {
 				list.add(field);
 			}
 		}
+		
+		handleSequencePaths(list, shape, traversal);
+		
 		return list;
 	}
 
+
+	private void handleSequencePaths(List<TableFieldSchema> list, Shape shape, Traversal traversal) {
+		
+		for (PropertyConstraint c : shape.getProperty()) {
+			PropertyPath path = c.getPath();
+			if (path instanceof SequencePath) {
+				handleSequencePath(list, shape, traversal, c, (SequencePath)path);
+			}
+		}
+		
+	}
+
+	private void handleSequencePath(List<TableFieldSchema> list, Shape node, Traversal traversal, PropertyConstraint c,
+			SequencePath path) {
+		
+		int lastIndex = path.size()-1;
+		for (int i=0; i<path.size(); i++) {
+			PropertyPath element = path.get(i);
+			
+			if (element instanceof PredicatePath) {
+				URI predicate = ((PredicatePath) element).getPredicate();
+				
+				TableFieldSchema field = findField(list, predicate.getLocalName());
+				if (field == null) {
+					// We need to create the field
+					
+					if (i<lastIndex) {
+						field = new TableFieldSchema();
+						field.setName(predicate.getLocalName());
+						field.setType(BigQueryDatatype.RECORD.name());
+						field.setMode(FieldMode.NULLABLE.name());
+						
+						list.add(field);
+						list = new ArrayList<>();
+						field.setFields(list);
+						
+					} else {
+						field = toField(predicate.getLocalName(), c, traversal);
+						list.add(field);
+					}
+					
+				} else {
+					// The field already exists. 
+					
+					if (i<lastIndex) {
+						
+						if (field.getType()!=BigQueryDatatype.RECORD.name()) {
+							String msg = MessageFormat.format("Inconsistent type for field {0}: Expected RECORD, but found {1}", 
+									field.getName(), field.getType());
+							throw new KonigException(msg);
+						}
+						list = field.getFields();
+					} 
+				}
+				
+				
+			} else {
+				String msg = MessageFormat.format("In node {0}, nested sequence path not supported: {1}", 
+						RdfUtil.localName(node.getId()),
+						path.toString()
+				);
+				throw new KonigException(msg);
+			}
+		}
+		
+	}
+
+	private TableFieldSchema findField(List<TableFieldSchema> list, String fieldName) {
+		for (TableFieldSchema field : list) {
+			if (field.getName().equals(fieldName)) {
+				return field;
+			}
+		}
+		
+		return null;
+	}
+
 	private TableFieldSchema toField(PropertyConstraint p, Traversal traversal) {
+		return toField(p.getPredicate().getLocalName(), p, traversal);
+	}
+	
+	private TableFieldSchema toField(String fieldName, PropertyConstraint p, Traversal traversal) {
 		traversal.push(p);
 		TableFieldSchema result = new TableFieldSchema();
-		String fieldName = p.getPredicate().getLocalName();
 		FieldMode fieldMode = fieldMode(p);
 		BigQueryDatatype fieldType = datatypeMap.type(p);
 		
