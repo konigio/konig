@@ -1190,7 +1190,79 @@ public class BeamTransformGenerator {
 				return etran;
 			}
     }
+    
+		class TableRowToKvFnGenerator {
+			private JDefinedClass fnClass;
+			private ShowlNodeShape sourceNode;
+			public TableRowToKvFnGenerator(ShowlNodeShape node) {
+			 this.sourceNode = node;
+			}
 
+			public JDefinedClass generate() throws BeamTransformGenerationException {
+				AbstractJClass tableRowClass = model.ref(TableRow.class);
+				AbstractJClass stringClass = model.ref(String.class);
+				AbstractJClass kvClass = model.ref(KV.class).narrow(stringClass).narrow(tableRowClass);
+				String fnClassName = fnClassName();
+				try {
+
+					fnClass = model._class(JMod.PUBLIC, fnClassName);
+					AbstractJClass doFnClass = model.ref(DoFn.class).narrow(tableRowClass).narrow(kvClass);
+
+					fnClass._extends(doFnClass);
+					processElement(kvClass);
+
+					JMethod method = fnClass.method(JMod.PRIVATE, stringClass, "getKey");
+					JVar row = method.param(tableRowClass, "row");
+
+					method.body()._return(row.invoke("get").arg(JExpr.lit("id")).castTo(stringClass));
+
+				} catch (JClassAlreadyExistsException e) {
+					fail("Failed to create {fnClassName} ", e);
+				}
+				return fnClass;
+			}
+
+			private void processElement(AbstractJClass outputClass) {
+				AbstractJClass processContextClass = model.ref(ProcessContext.class);
+				AbstractJClass tableRowClass = model.ref(TableRow.class);
+				AbstractJClass stringClass = model.ref(String.class);
+				AbstractJClass kvClass = model.ref(KV.class);
+				AbstractJClass throwableClass = model.ref(Throwable.class);
+				AbstractJClass tupleTagClass = model.ref(TupleTag.class);
+
+				JVar deadLetterTag = fnClass.field(JMod.PUBLIC | JMod.STATIC,
+						tupleTagClass.narrow(model.ref(String.class)), "deadLetterTag")
+						.init(tupleTagClass._new().narrow(model.ref(String.class)));
+
+				JVar successTag = fnClass
+						.field(JMod.PUBLIC | JMod.STATIC, tupleTagClass.narrow(outputClass), "successTag")
+						.init(tupleTagClass._new().narrow(outputClass));
+				
+				JMethod method = fnClass.method(JMod.PUBLIC, model.VOID, "processElement");
+				method.annotate(model.directClass(ProcessElement.class.getName()));
+
+				JVar c = method.param(processContextClass, "c");
+
+				JTryBlock tryBlock = method.body()._try();
+				JVar row = tryBlock.body().decl(tableRowClass, "row").init(c.invoke("element"));
+				JVar key = tryBlock.body().decl(stringClass, "key").init(JExpr.invoke("getKey").arg(row));
+
+				tryBlock.body()
+						.add(c.invoke("output").arg(successTag).arg(kvClass.staticInvoke("of").arg(key).arg(row)));
+
+				JCatchBlock catchBlock = tryBlock._catch(throwableClass);
+				JVar oops = catchBlock.param("oops");
+				catchBlock.body().add(c.invoke("output").arg(deadLetterTag).arg(oops.invoke("getMessage")));
+
+			}
+
+			private String fnClassName() throws BeamTransformGenerationException {
+				String shortName = ShowlUtil.shortShapeName(RdfUtil.uri(sourceNode.getId()));
+
+				return mainPackage() + "." + shortName + "ToKvFn";
+			}
+
+		}
 
     private abstract class BaseReadFnGenerator extends FnGenerator {
 		
@@ -3873,7 +3945,8 @@ public class BeamTransformGenerator {
             sourceInfo.setPcollection(pcollectionTuple);
             sourceInfo.setTupleTag(tagVar);
         }else if(sourceDs instanceof GoogleBigQueryTable) {
-        	AbstractJClass pCollectionClass = model.ref(PCollection.class);
+        	
+			JDefinedClass targetTableToKvFile = declareTableRowToKvFnGenerator(node);
         	AbstractJClass bigQueryIoClass = model.directClass(BigQueryIO.class.getName());
         	AbstractJClass tableReferenceClass = model.ref(TableReference.class);
 
@@ -3882,22 +3955,24 @@ public class BeamTransformGenerator {
     		block.add(targetTableRef.invoke("setDatasetId").arg(JExpr.lit(tableRef.getDatasetId())));
     		block.add(targetTableRef.invoke("setTableId").arg(JExpr.lit(tableRef.getTableId())));
 
-        	JVar pcollection = block.decl(pCollectionClass, shapeName, pipeline
-                    .invoke("apply").arg(bigQueryIoClass.staticInvoke("readTableRows").invoke("from").arg(targetTableRef)));
-
-        	JVar pcollectionTuple = block.decl(pCollectionTupleClass, shapeName+"OutputTuple");
-        	pcollectionTuple.init(pCollectionTupleClass.staticInvoke("of").arg(tagVar).arg(pcollection));
-        	 sourceInfo.setTupleTag(tagVar);
-        	sourceInfo.setPcollection(pcollectionTuple);
+    		JVar targetTableCollection = block.decl(pCollectionTupleClass, shapeName, pipeline
+                    .invoke("apply").arg(bigQueryIoClass.staticInvoke("readTableRows").invoke("from")
+                    		.arg(targetTableRef)).invoke("apply").arg(parDoClass.staticInvoke("of").arg(targetTableToKvFile._new())));
+        	sourceInfo.setTupleTag(tagVar);
+        	sourceInfo.setPcollection(targetTableCollection);
         }
         
       }
       
       
     }
-
+    	
+    private JDefinedClass declareTableRowToKvFnGenerator(ShowlNodeShape node) throws BeamTransformGenerationException{
+    	TableRowToKvFnGenerator generator = new TableRowToKvFnGenerator(node);
+    	return generator.generate();
+    }
    
-   
+    
 		private IJStatement writeErrorTable(JVar outputTuple, ShowlNodeShape node, JDefinedClass fnClass) throws BeamTransformGenerationException {
 			AbstractJClass bigQueryIoClass = model.ref(BigQueryIO.class);
 			AbstractJClass createDispositionClass = model.ref(CreateDisposition.class);
