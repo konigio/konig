@@ -1,0 +1,31 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonNameShape sh:property  [ 
+		sh:path alias:first_name ; 
+		konig:formula '''
+@term givenName <http://schema.org/givenName>
+
+$.givenName''' ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate alias:first_name ]  ; 
+	a sh:Shape ; 
+	konig:shapeDataSource <gs://example-inbound-${environmentName}> ; 
+	sh:targetClass schema:Person ; 
+	sh:nodeKind sh:IRI . 
+
+<gs://example-inbound-${environmentName}> gcp:name "example-inbound-${environmentName}" ; 
+	gcp:location "us" ; 
+	gcp:projectId "${gcpProjectId}" ; 
+	gcp:storageClass "multi_regional" ; 
+	a konig:GoogleCloudStorageFolder , konig:DataSource ; 
+	schema:isPartOf sys:WarehouseStaging .

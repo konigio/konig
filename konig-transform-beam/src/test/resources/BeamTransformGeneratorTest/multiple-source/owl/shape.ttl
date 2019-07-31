@@ -1,0 +1,13 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+shape: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "shape" . 
+
+shape:BqPersonShape konig:mediaTypeBaseName "application/vnd.example.example.com.shapes.person" . 
+
+shape:PersonAlumniOfShape konig:mediaTypeBaseName "application/vnd.example.example.com.shapes.person" . 
+
+shape:PersonNameShape konig:mediaTypeBaseName "application/vnd.example.example.com.shapes.person" . 

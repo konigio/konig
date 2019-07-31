@@ -29,6 +29,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.beam.sdk.transforms.join.CoGbkResult;
+import org.apache.beam.sdk.values.KV;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -36,6 +38,7 @@ import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
+import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.IJExpression;
 import com.helger.jcodemodel.JClassAlreadyExistsException;
 import com.helger.jcodemodel.JCodeModel;
@@ -62,6 +65,7 @@ import io.konig.core.showl.ShowlSourceNodeFactory;
 import io.konig.core.showl.ShowlTargetNodeShapeFactory;
 import io.konig.core.showl.ShowlTransformEngine;
 import io.konig.core.showl.ShowlTransformService;
+import io.konig.core.util.StringUtil;
 import io.konig.datasource.DataSourceManager;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.ShapeManager;
@@ -134,8 +138,12 @@ public class MergeTargetFnGeneratorTest {
 		
 		Map<ShowlEffectiveNodeShape, IJExpression> tupleTagMap = mockTupleTagMap(node);
 
+		AbstractJClass stringClass = model.ref(String.class);
+		AbstractJClass coGbkResultClass = model.ref(CoGbkResult.class);
+		AbstractJClass kvClass = model.ref(KV.class).narrow(stringClass).narrow(coGbkResultClass);
+		
 		MergeTargetFnGenerator generator = new MergeTargetFnGenerator(tupleTagMap, basePackage, nsManager, model, reasoner, typeManager);
-		generator.generate(node);
+		generator.generate(node, kvClass);
 		
 
     File javaDir = new File("target/test/TargetFnGeneratorTest/" + rdfDir.getName() + "/src/main/java");
@@ -153,7 +161,7 @@ public class MergeTargetFnGeneratorTest {
 			ShowlEffectiveNodeShape sourceNode = channel.getSourceNode().effectiveNode();
 			if (!map.containsKey(sourceNode)) {
 				String sName = RdfUtil.shortShapeName(sourceNode.canonicalNode().getId()) + "Tag";
-				IJExpression var = mainClass.staticRef(sName);
+				IJExpression var = mainClass.staticRef(StringUtil.firstLetterLowerCase(sName));
 				map.put(sourceNode, var);
 			}
 		}
