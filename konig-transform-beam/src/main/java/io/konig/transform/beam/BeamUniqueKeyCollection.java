@@ -11,8 +11,10 @@ import java.util.List;
  */
 @SuppressWarnings("serial")
 public class BeamUniqueKeyCollection extends ArrayList<BeamUniqueKey> {
+	
 
 	public BeamUniqueKeyCollection() {
 	}
+	
 
 }

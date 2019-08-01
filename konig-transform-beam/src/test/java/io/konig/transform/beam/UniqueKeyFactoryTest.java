@@ -1,9 +1,9 @@
 package io.konig.transform.beam;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import java.util.Collections;
-import java.util.Set;
+import java.io.File;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -17,18 +17,17 @@ import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
-import io.konig.core.showl.BasicTransformService;
-import io.konig.core.showl.ReceivesDataFromSourceNodeFactory;
-import io.konig.core.showl.ReceivesDataFromTargetNodeShapeFactory;
+import io.konig.core.impl.RdfUtil;
+import io.konig.core.showl.ShowlClassProcessor;
 import io.konig.core.showl.ShowlNodeListingConsumer;
-import io.konig.core.showl.ShowlNodeShapeBuilder;
+import io.konig.core.showl.ShowlNodeShape;
+import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlService;
 import io.konig.core.showl.ShowlServiceImpl;
-import io.konig.core.showl.ShowlSourceNodeFactory;
-import io.konig.core.showl.ShowlTargetNodeShapeFactory;
-import io.konig.core.showl.ShowlTransformEngine;
-import io.konig.core.showl.ShowlTransformService;
-import io.konig.core.showl.expression.ShowlExpressionBuilder;
+import io.konig.core.util.IOUtil;
+import io.konig.datasource.DataSourceManager;
+import io.konig.gcp.datasource.GcpShapeConfig;
+import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
 
@@ -42,6 +41,8 @@ public class UniqueKeyFactoryTest {
 	private ShowlService showlService;
 	private BeamExpressionTransform etran;
 	
+	private UniqueKeyFactory keyFactory;
+	
 	
 	@Before
 	public void setUp() {
@@ -50,28 +51,64 @@ public class UniqueKeyFactoryTest {
 		shapeManager = new MemoryShapeManager();
 		reasoner = new OwlReasoner(graph);
 		consumer = new ShowlNodeListingConsumer();
-		
-		Set<URI> targetSystems = Collections.singleton(uri("http://example.com/ns/sys/WarehouseOperationalData"));
 		showlService = new ShowlServiceImpl(reasoner);
-		ShowlNodeShapeBuilder builder = new ShowlNodeShapeBuilder(showlService, showlService);
-		
-		ShowlTargetNodeShapeFactory targetNodeShapeFactory = new ReceivesDataFromTargetNodeShapeFactory(targetSystems, graph, builder);
-		ShowlSourceNodeFactory sourceNodeFactory = new ReceivesDataFromSourceNodeFactory(builder, graph);
-		
 
     JCodeModel model = new JCodeModel();
 		BeamTypeManager typeManager = new BeamTypeManagerImpl("com.example", reasoner, model, nsManager);
 		
 		etran = new BeamExpressionTransform(reasoner, typeManager, model, null);
+		
+		keyFactory = new UniqueKeyFactory(etran);
 	}
 
 	private URI uri(String stringValue) {
 		return new URIImpl(stringValue);
 	}
 	
+	public ShowlNodeShape loadNode(String path, URI nodeShapeId) throws Exception {
+		
+		DataSourceManager.getInstance().clear();
+		
+		File rdfDir = new File(path);
+		assertTrue(rdfDir.exists());
+		
+		GcpShapeConfig.init();
+		RdfUtil.loadTurtle(rdfDir, graph, shapeManager);
+
+		ShowlClassProcessor classProcessor = new ShowlClassProcessor(showlService, showlService);
+		classProcessor.buildAll(shapeManager);
+		
+		
+		File projectDir = new File("target/test/UniqueKeyFactoryTest/" + rdfDir.getName());		
+
+		IOUtil.recursiveDelete(projectDir);
+	
+		Shape shape = shapeManager.getShapeById(nodeShapeId);
+		
+		return showlService.createNodeShape(shape);
+		
+	}
+	
 	@Test
-	public void test() {
-		fail("Not yet implemented");
+	public void test() throws Exception {
+		URI shapeId = uri("http://example.com/ns/shape/PersonTargetShape");
+		ShowlNodeShape node = loadNode("src/test/resources/UniqueKeyFactoryTest/merge-by-key", shapeId);
+		assertTrue(node != null);
+		
+		BeamUniqueKeyCollection keyCollection = keyFactory.createKeyList(node);
+		assertTrue(keyCollection.size()==1);
+		
+		BeamUniqueKey key = keyCollection.get(0);
+		assertTrue(key.size()==1);
+		
+		URI expectedPredicate = uri("http://example.com/ns/core/identifiedBy");
+		ShowlPropertyShape identifiedBy = key.get(0).getPropertyShape();
+		assertEquals(expectedPredicate, identifiedBy.getPredicate());
+		
+		keyCollection = keyFactory.createKeyList(identifiedBy.getValueShape());
+		assertTrue(keyCollection.size()==1);
+		
+		
 	}
 
 }

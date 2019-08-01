@@ -54,12 +54,14 @@ public class Configurator {
 
 
 	public void configure(Object entity) throws ConfigurationException {
-		Class<?> type = entity.getClass();
-		List<Field> fieldList = new ArrayList<>();
-		addAllFields(fieldList, type);
-		
-		injectSimpleDefaults(fieldList, entity);
-		injectObjects(fieldList, entity);
+		if (entity != null) {
+			Class<?> type = entity.getClass();
+			List<Field> fieldList = new ArrayList<>();
+			addAllFields(fieldList, type);
+			
+			injectSimpleDefaults(fieldList, entity);
+			injectObjects(fieldList, entity);
+		}
 		
 	}
 

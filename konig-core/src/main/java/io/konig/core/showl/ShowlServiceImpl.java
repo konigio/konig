@@ -98,7 +98,7 @@ public class ShowlServiceImpl implements ShowlService {
 
 	@Override
 	public ShowlNodeShape createNodeShape(Shape shape) throws ShowlProcessingException {
-		throw new ShowlProcessingException("not implemented yet");
+		return createShowlNodeShape(null, shape, produceShowlClass(shape.getTargetClass()));
 	}
 
 	@Override

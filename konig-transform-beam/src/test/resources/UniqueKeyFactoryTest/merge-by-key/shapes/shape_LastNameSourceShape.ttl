@@ -1,0 +1,46 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix ex: <http://example.com/ns/core/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:LastNameSourceShape sh:property  [ 
+		sh:path alias:person_id ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate alias:person_id
+	 ]  ,  [ 
+		sh:path alias:last_name ; 
+		konig:formula '''
+@term familyName <http://schema.org/familyName>
+
+$.familyName''' ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0 ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate alias:last_name
+	 ]  ,  [ 
+		sh:path alias:identified_by ; 
+		sh:minCount 0 ; 
+		rdf:predicate alias:identified_by ; 
+		sh:class ex:Identity ; 
+		sh:shape shape:LastNameIdentityShape
+	 ]  ,  [ 
+		sh:path konig:modified ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ; 
+		sh:datatype xsd:dateTime ; 
+		rdf:predicate konig:modified ]  ; 
+	a sh:Shape ; 
+	sh:targetClass schema:Person ; 
+	konig:iriTemplate '''@context {
+   "alias" : "http://example.com/ns/alias/",
+   "person_id" : "alias:person_id"
+}
+
+<http://example.com/person/{person_id}>''' ; 
+	konig:shapeDataSource <gs://example-inbound-${environmentName}> . 
