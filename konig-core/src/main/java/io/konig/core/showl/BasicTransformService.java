@@ -1097,6 +1097,7 @@ public class BasicTransformService implements ShowlTransformService {
 								ShowlExpression value = valueSet.iterator().next();
 								if (value instanceof ShowlFilterExpression) {
 									value = ((ShowlFilterExpression) value).getValue();
+									struct.put(predicate, value);
 								}
 								selectedSourceField = sourceField;
 								if (value instanceof ShowlFunctionExpression) {
