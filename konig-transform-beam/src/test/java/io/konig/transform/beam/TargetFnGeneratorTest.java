@@ -34,6 +34,7 @@ import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 
+import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.JCodeModel;
 
 import io.konig.core.Graph;
@@ -209,7 +210,7 @@ public class TargetFnGeneratorTest {
 		ShowlNodeShape node = consumer.findById(shapeId);
 		assertTrue(node!=null);
 		
-		generator.generate(node);
+		generator.generate(node, model.ref(TableRow.class));
 		
 
     File javaDir = new File("target/test/TargetFnGeneratorTest/" + rdfDir.getName() + "/src/main/java");

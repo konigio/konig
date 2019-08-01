@@ -43,6 +43,8 @@ import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.BasicTransformService;
+import io.konig.core.showl.CompositeSourceNodeFactory;
+import io.konig.core.showl.ExplicitDerivedFromSourceNodeFactory;
 import io.konig.core.showl.ReceivesDataFromSourceNodeFactory;
 import io.konig.core.showl.ReceivesDataFromTargetNodeShapeFactory;
 import io.konig.core.showl.ShowlClassProcessor;
@@ -87,7 +89,10 @@ public class BeamTransformGeneratorTest {
 		ShowlNodeShapeBuilder builder = new ShowlNodeShapeBuilder(showlService, showlService);
 		
 		ShowlTargetNodeShapeFactory targetNodeShapeFactory = new ReceivesDataFromTargetNodeShapeFactory(targetSystems, graph, builder);
-		ShowlSourceNodeFactory sourceNodeFactory = new ReceivesDataFromSourceNodeFactory(builder, graph);
+		//ShowlSourceNodeFactory sourceNodeFactory = new ReceivesDataFromSourceNodeFactory(builder, graph);
+		CompositeSourceNodeFactory sourceNodeFactory = new CompositeSourceNodeFactory();
+		sourceNodeFactory.add(new ExplicitDerivedFromSourceNodeFactory(builder));
+		sourceNodeFactory.add(new ReceivesDataFromSourceNodeFactory(builder, graph));
 		ShowlTransformService transformService = new BasicTransformService(showlService, showlService, sourceNodeFactory);
 		
 		engine = new ShowlTransformEngine(targetNodeShapeFactory, shapeManager, transformService, consumer);
@@ -171,6 +176,12 @@ public class BeamTransformGeneratorTest {
 		
 	}
 	
+	@Test
+	public void testMultipleSource() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/multiple-source");
+		
+	}
 
 	@Test
 	public void testTabularMapping() throws Exception {
