@@ -1,0 +1,45 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/shapes/> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonAlumniOfShape sh:property  [ 
+		sh:path alias:ID ; 
+		sh:class schema:Person ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		sh:nodeKind sh:IRI ; 
+		rdf:predicate alias:ID
+	 ]  ,  [ 
+		sh:path alias:alumni_of ; 
+		konig:formula '''
+@term alumniOf <http://schema.org/alumniOf>
+
+$.alumniOf''' ; 
+		sh:class schema:Organization ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1 ; 
+		sh:nodeKind sh:IRI ; 
+		rdf:predicate alias:alumni_of ]  ; 
+	a sh:Shape ; 
+	konig:iriTemplate '''@context {
+   "alias" : "http://example.com/ns/alias/",
+   "ID" : "alias:ID"
+}
+
+<{ID}>''' ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonAlumniOfShape> ; 
+	sh:targetClass schema:Person . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonAlumniOfShape> gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:datasetId "schema" ; 
+		gcp:tableId "PersonAlumniOfShape" ]  ; 
+	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ;
+	schema:isPartOf sys:WarehouseStaging .

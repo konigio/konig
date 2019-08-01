@@ -1,0 +1,122 @@
+package com.example.beam.etl.shape;
+
+import java.io.InputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.HashMap;
+import com.fasterxml.uuid.Generators;
+import org.apache.beam.sdk.io.FileIO;
+import org.apache.beam.sdk.options.PipelineOptions;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
+import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
+import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
+import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.TupleTag;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class ReadPersonNameFn
+    extends DoFn<FileIO.ReadableFile, KV<String, com.google.api.services.bigquery.model.TableRow>>
+{
+    private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
+    public static TupleTag<com.google.api.services.bigquery.model.TableRow> deadLetterTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
+    public static TupleTag<KV<String, com.google.api.services.bigquery.model.TableRow>> successTag = new TupleTag<KV<String,TableRow>>();
+
+    @ProcessElement
+    public void processElement(ProcessContext c, PipelineOptions options) {
+        try {
+            FileIO.ReadableFile f = c.element();
+            ReadableByteChannel rbc = f.open();
+            InputStream stream = Channels.newInputStream(rbc);
+            try {
+                CSVParser csv = CSVParser.parse(stream, StandardCharsets.UTF_8, CSVFormat.RFC4180 .withFirstRecordAsHeader().withSkipHeaderRecord());
+                validateHeaders(csv);
+                for (CSVRecord record: csv) {
+                    StringBuilder builder = new StringBuilder();
+                    com.google.api.services.bigquery.model.TableRow row = new com.google.api.services.bigquery.model.TableRow();
+                    String first_name = stringValue(csv, "first_name", record, builder);
+                    if (first_name!= null) {
+                        row.set("first_name", first_name);
+                    }
+                    String id = stringValue(csv, "id", record, builder);
+                    if (id!= null) {
+                        row.set("id", id);
+                    }
+                    String id = id;
+                    if (row.isEmpty()) {
+                        builder.append("record is empty");
+                    }
+                    if (builder.length()> 0) {
+                        com.google.api.services.bigquery.model.TableRow errorRow = new com.google.api.services.bigquery.model.TableRow();
+                        errorRow.set("errorId", Generators.timeBasedGenerator().generate().toString());
+                        errorRow.set("errorCreated", (new Date().getTime()/ 1000));
+                        errorRow.set("errorMessage", builder.toString());
+                        errorRow.set("pipelineJobName", options.getJobName());
+                        errorRow.set("PersonName", row);
+                        c.output(deadLetterTag, errorRow);
+                    } else {
+                        c.output(successTag, KV.of(id.toString(), row));
+                    }
+                }
+            } finally {
+                stream.close();
+            }
+        } catch (final Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void validateHeaders(CSVParser csv) {
+        HashMap<String, Integer> headerMap = ((HashMap<String, Integer> ) csv.getHeaderMap());
+        StringBuilder builder = new StringBuilder();
+        validateHeader(headerMap, "first_name", builder);
+        validateHeader(headerMap, "id", builder);
+        if (builder.length()> 0) {
+            LOGGER.warn("Mapping for {} not found", builder.toString());
+        }
+    }
+
+    private void validateHeader(HashMap headerMap, String columnName, StringBuilder builder) {
+        if (headerMap.get(columnName) == null) {
+            builder.append(columnName);
+            builder.append(";");
+        }
+    }
+
+    private String stringValue(CSVParser csv,
+        String fieldName,
+        CSVRecord record,
+        StringBuilder exceptionMessageBr)
+        throws Exception
+    {
+        HashMap<String, Integer> headerMap = ((HashMap<String, Integer> ) csv.getHeaderMap());
+        if (headerMap.get(fieldName)!= null) {
+            {
+                String stringValue = record.get(fieldName);
+                if (stringValue!= null) {
+                    stringValue = stringValue.trim();
+                    if (stringValue.equals("InjectErrorForTesting")) {
+                        throw new Exception("Error in pipeline : InjectErrorForTesting");
+                    }
+                    if (stringValue.length()> 0) {
+                        try {
+                            return stringValue;
+                        } catch (final Exception ex) {
+                            String message = String.format("Invalid string value for %s;", fieldName);
+                            exceptionMessageBr.append(message);
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+}

@@ -74,7 +74,7 @@ public class BaseTargetFnGenerator {
 		this.typeManager = typeManager;
 	}
 
-	public JDefinedClass generate(ShowlNodeShape targetNode) throws BeamTransformGenerationException {
+	public JDefinedClass generate(ShowlNodeShape targetNode, AbstractJClass inputClass) throws BeamTransformGenerationException {
 
   	String prefix = namespacePrefix(targetNode.getId());
     String localName = RdfUtil.localName(targetNode.getId());
@@ -84,7 +84,7 @@ public class BaseTargetFnGenerator {
 		try {
 			theClass = model._class(className);
 	    AbstractJClass tableRowClass = model.ref(TableRow.class);
-	    AbstractJClass doFnClass = model.ref(DoFn.class).narrow(tableRowClass).narrow(tableRowClass);
+	    AbstractJClass doFnClass = model.ref(DoFn.class).narrow(inputClass).narrow(tableRowClass);
 	    
 	    theClass._extends(doFnClass);
 	    

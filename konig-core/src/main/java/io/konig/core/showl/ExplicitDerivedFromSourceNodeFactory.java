@@ -71,6 +71,12 @@ public class ExplicitDerivedFromSourceNodeFactory implements ShowlSourceNodeFact
 			if (ds.isA(Konig.GoogleCloudStorageFolder)) {
 				return ds;
 			}
+			if (ds.isA(Konig.GoogleCloudStorageBucket)) {
+				return ds;
+			}
+			if (ds.isA(Konig.GoogleBigQueryTable)) {
+				return ds;
+			}
 		}
 		return null;
 	}
