@@ -1,0 +1,63 @@
+@prefix alias: <http://example.com/ns/alias/> .
+@prefix ex: <http://example.com/ns/core/> .
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix sys: <http://example.com/ns/sys/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:LastNameSourceShape sh:property  [ 
+		sh:path alias:person_id ; 
+		rdf:predicate alias:person_id ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1
+	 ]  ,  [ 
+		sh:path alias:last_name ; 
+		rdf:predicate alias:last_name ; 
+		sh:datatype xsd:string ; 
+		konig:formula '''
+@term familyName <http://schema.org/familyName>
+
+$.familyName''' ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0
+	 ]  ,  [ 
+		sh:path alias:identified_by ; 
+		rdf:predicate alias:identified_by ; 
+		sh:shape shape:LastNameIdentityShape ; 
+		sh:class ex:Identity ; 
+		konig:formula '''
+@term identifiedBy <http://example.com/ns/core/identifiedBy>
+
+$.identifiedBy''' ; 
+		sh:minCount 0
+	 ]  ,  [ 
+		sh:path konig:modified ; 
+		rdf:predicate konig:modified ; 
+		sh:datatype xsd:dateTime ; 
+		sh:maxCount 1 ; 
+		sh:minCount 1 ]  ; 
+	a sh:Shape ; 
+	sh:targetClass schema:Person ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/LastNameSource> ; 
+	konig:iriTemplate '''@context {
+   "alias" : "http://example.com/ns/alias/",
+   "person_id" : "alias:person_id"
+}
+
+<http://example.com/person/{person_id}>''' . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/LastNameSource> gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:datasetId "schema" ; 
+		gcp:tableId "LastNameSource" ]  ; 
+	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	konig:ddlFile  [ 
+		konig:relativePath "target/generated/gcp/bigquery/schema/schema.LastNameSource.json" ; 
+		konig:baseProject <urn:maven:io.konig.examples.sheet-download-1.0.0> ]  ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ; 
+	schema:isPartOf sys:WarehouseOperationalData . 

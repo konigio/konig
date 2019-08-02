@@ -264,6 +264,13 @@ public class BeamTransformGeneratorTest {
 		
 	}
 
+	@Ignore
+	public void testMergeByKey() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/merge-by-key", false);
+		
+	}
+
 	public void generateAll(String path) throws Exception {
 		generateAll(path, true);
 	}

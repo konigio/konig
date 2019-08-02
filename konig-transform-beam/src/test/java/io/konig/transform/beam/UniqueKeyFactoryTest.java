@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -24,12 +25,17 @@ import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlService;
 import io.konig.core.showl.ShowlServiceImpl;
+import io.konig.core.showl.ShowlUniqueKey;
+import io.konig.core.showl.ShowlUniqueKeyCollection;
+import io.konig.core.showl.UniqueKeyFactory;
 import io.konig.core.util.IOUtil;
 import io.konig.datasource.DataSourceManager;
 import io.konig.gcp.datasource.GcpShapeConfig;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.impl.MemoryShapeManager;
+import io.konig.transform.beam.BeamTypeManager;
+import io.konig.transform.beam.BeamTypeManagerImpl;
 
 public class UniqueKeyFactoryTest {
 
@@ -37,9 +43,7 @@ public class UniqueKeyFactoryTest {
 	private Graph graph;
 	private ShapeManager shapeManager;
 	private OwlReasoner reasoner;
-	private ShowlNodeListingConsumer consumer;
 	private ShowlService showlService;
-	private BeamExpressionTransform etran;
 	
 	private UniqueKeyFactory keyFactory;
 	
@@ -50,15 +54,11 @@ public class UniqueKeyFactoryTest {
 		graph = new MemoryGraph(nsManager);
 		shapeManager = new MemoryShapeManager();
 		reasoner = new OwlReasoner(graph);
-		consumer = new ShowlNodeListingConsumer();
 		showlService = new ShowlServiceImpl(reasoner);
 
-    JCodeModel model = new JCodeModel();
-		BeamTypeManager typeManager = new BeamTypeManagerImpl("com.example", reasoner, model, nsManager);
 		
-		etran = new BeamExpressionTransform(reasoner, typeManager, model, null);
 		
-		keyFactory = new UniqueKeyFactory(etran);
+		keyFactory = new UniqueKeyFactory(reasoner);
 	}
 
 	private URI uri(String stringValue) {
@@ -95,19 +95,35 @@ public class UniqueKeyFactoryTest {
 		ShowlNodeShape node = loadNode("src/test/resources/UniqueKeyFactoryTest/merge-by-key", shapeId);
 		assertTrue(node != null);
 		
-		BeamUniqueKeyCollection keyCollection = keyFactory.createKeyList(node);
+		ShowlUniqueKeyCollection keyCollection = keyFactory.createKeyCollection(node);
 		assertTrue(keyCollection.size()==1);
 		
-		BeamUniqueKey key = keyCollection.get(0);
+		ShowlUniqueKey key = keyCollection.get(0);
 		assertTrue(key.size()==1);
 		
 		URI expectedPredicate = uri("http://example.com/ns/core/identifiedBy");
 		ShowlPropertyShape identifiedBy = key.get(0).getPropertyShape();
 		assertEquals(expectedPredicate, identifiedBy.getPredicate());
 		
-		keyCollection = keyFactory.createKeyList(identifiedBy.getValueShape());
-		assertTrue(keyCollection.size()==1);
+		ShowlUniqueKeyCollection valueKeys = key.get(0).getValueKeys();
+		assertTrue(valueKeys != null);
+		assertTrue(valueKeys.size()==1);
+		key = valueKeys.get(0);
+		assertEquals(2, key.size());
 		
+		URI identifier = uri("http://example.com/ns/core/identifier");
+		URI identityProvider = uri("http://example.com/ns/core/identityProvider");
+		
+		assertEquals(identifier, key.get(0).getPropertyShape().getPredicate());
+		assertEquals(identityProvider, key.get(1).getPropertyShape().getPredicate());
+		
+		List<ShowlPropertyShape> flatList = keyCollection.flatten();
+		
+		assertTrue(flatList != null);
+		assertEquals(2, flatList.size());
+
+		assertEquals(identifier, flatList.get(0).getPredicate());
+		assertEquals(identityProvider, flatList.get(1).getPredicate());
 		
 	}
 

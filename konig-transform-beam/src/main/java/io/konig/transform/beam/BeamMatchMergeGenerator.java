@@ -2,6 +2,8 @@ package io.konig.transform.beam;
 
 import java.util.List;
 
+import io.konig.core.showl.UniqueKeyElement;
+
 /**
  * A utility that generates code used to match and merge records within a 
  * multi-valued property.
