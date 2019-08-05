@@ -1088,9 +1088,19 @@ public class BeamTransformGenerator {
         if (joinStatement == null) {
           continue;
         }
+        
+
+        ShowlPropertyShape leftKey = null;
+        ShowlPropertyShape rightKey = null;
+        ShowlPropertyPair pair = new ShowlPropertyPair();
+        if (sameConcatPattern(joinStatement, pair)) {
+        	leftKey = pair.getLeft();
+        	rightKey = pair.getRight();
+        } else {
     
-        ShowlPropertyShape leftKey = leftKey(joinStatement);
-        ShowlPropertyShape rightKey = rightKey(joinStatement);
+	        leftKey = leftKey(joinStatement);
+	        rightKey = rightKey(joinStatement);
+        }
         
         
         generateFileToKvFn(leftKey, channel(leftKey, channel));
@@ -1164,16 +1174,73 @@ public class BeamTransformGenerator {
     private ShowlPropertyShape leftKey(ShowlStatement joinStatement) throws BeamTransformGenerationException {
 
       if (joinStatement instanceof ShowlEqualStatement) {
-        ShowlExpression e = ((ShowlEqualStatement) joinStatement).getLeft();
+      	ShowlEqualStatement equal = ((ShowlEqualStatement) joinStatement);
+        ShowlExpression e = equal.getLeft();
         if (e instanceof ShowlDirectPropertyExpression) {
           return ((ShowlDirectPropertyExpression) e).getSourceProperty();
         }
+        
        
       }
       throw new BeamTransformGenerationException("Failed to get leftKey from " + joinStatement.toString());
     }
     
-    abstract class FnGenerator  {
+
+		private boolean sameConcatPattern(ShowlStatement statement, ShowlPropertyPair pair) {
+			if (!(statement instanceof ShowlEqualStatement)) {
+				return false;
+			}
+			ShowlEqualStatement equal = (ShowlEqualStatement) statement;
+			ShowlExpression left = equal.getLeft();
+			ShowlExpression right = equal.getRight();
+			
+			if (left instanceof ShowlFunctionExpression && right instanceof ShowlFunctionExpression) {
+				ShowlFunctionExpression leftFunc = (ShowlFunctionExpression) left;
+				ShowlFunctionExpression rightFunc= (ShowlFunctionExpression) right;
+				if (
+						(leftFunc.getFunction().getModel() == FunctionModel.CONCAT) && 
+						(rightFunc.getFunction().getModel()==FunctionModel.CONCAT) &&
+						(leftFunc.getArguments().size()==rightFunc.getArguments().size())
+				) {
+					
+					int propertyCount = 0;
+					
+					for (int i=0; i<leftFunc.getArguments().size(); i++) {
+						ShowlExpression leftArg = leftFunc.getArguments().get(i);
+						ShowlExpression rightArg = rightFunc.getArguments().get(i);
+					
+						if (
+								(leftArg instanceof ShowlLiteralExpression) &&
+								(rightArg instanceof ShowlLiteralExpression)
+						) {
+							Literal leftLiteral = ((ShowlLiteralExpression)leftArg).getLiteral();
+							Literal rightLiteral = ((ShowlLiteralExpression)rightArg).getLiteral();
+							if (!leftLiteral.equals(rightLiteral)) {
+								return false;
+							}
+						}
+						
+						if (
+								(leftArg instanceof ShowlPropertyExpression) &&
+								(rightArg instanceof ShowlPropertyExpression)
+						) {
+							if (++propertyCount>1) {
+								return false;
+							}
+							pair.setLeft(((ShowlPropertyExpression)leftArg).getSourceProperty());
+							pair.setRight(((ShowlPropertyExpression)rightArg).getSourceProperty());
+						}
+					}
+					return propertyCount == 1;
+					
+				}
+			}
+			return false;
+		}
+
+
+
+		abstract class FnGenerator  {
 
 		  protected JDefinedClass thisClass;
       protected JMethod concatMethod = null;

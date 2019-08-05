@@ -777,12 +777,37 @@ public class BasicTransformService implements ShowlTransformService {
 			List<ShowlPropertyShapeGroup> path = targetProperty.relativePath(targetNode);
 
 			ShowlPropertyShapeGroup sourceProperty = sourceNode.findPropertyByPath(path);
+			if (sourceProperty == null) {
+				sourceProperty = findPropertyWithSynset(source, path);
+			}
 
 			if (createMapping(isEnum, source, sourceProperty, targetProperty)) {
 				sequence.remove();
 				setAccessorExpression(targetProperty);
 			}
 		}
+	}
+
+	private ShowlPropertyShapeGroup findPropertyWithSynset(ShowlNodeShape source,
+			List<ShowlPropertyShapeGroup> path) {
+		List<URI> uriPath = uriPath(path);
+		SynsetNode synset = source.synsetNode();
+		SynsetProperty p = synset.findPropertyByPath(uriPath);
+		if (p != null) {
+			ShowlPropertyShape q = p.select();
+			if (q != null) {
+				return q.asGroup();
+			}
+		}
+		return null;
+	}
+
+	private List<URI> uriPath(List<ShowlPropertyShapeGroup> path) {
+		List<URI> result = new ArrayList<>();
+		for (ShowlPropertyShapeGroup group : path) {
+			result.add(group.getPredicate());
+		}
+		return result;
 	}
 
 	private boolean mapModified(ShowlPropertyShapeGroup targetProperty) {

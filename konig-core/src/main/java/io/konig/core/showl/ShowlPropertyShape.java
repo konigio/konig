@@ -446,6 +446,14 @@ public abstract class ShowlPropertyShape implements Traversable {
 		
 		if (!set.contains(p)) {
 			set.add(p);
+			
+			ShowlExpression formula = p.getFormula();
+			
+			if (formula instanceof ShowlPropertyExpression) {
+				ShowlPropertyShape q = ((ShowlPropertyExpression) formula).getSourceProperty();
+				set.add(q);
+			}
+			
 			for (ShowlExpression e : p.getExpressionList()) {
 				if (e instanceof ShowlPropertyExpression) {
 					ShowlPropertyShape other = ((ShowlPropertyExpression) e).getSourceProperty();

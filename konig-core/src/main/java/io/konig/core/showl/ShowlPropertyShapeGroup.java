@@ -23,7 +23,9 @@ package io.konig.core.showl;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.URI;
 
@@ -51,6 +53,22 @@ public class ShowlPropertyShapeGroup extends ArrayList<ShowlPropertyShape> {
 
 	public void setValueShape(ShowlEffectiveNodeShape valueShape) {
 		this.valueShape = valueShape;
+	}
+
+	public ShowlPropertyShapeSynSet synonyms() {
+
+		// TODO:  Should we be computing the transitive closure of the synonym relationship?
+		
+		ShowlPropertyShapeSynSet set = new ShowlPropertyShapeSynSet();
+		for (ShowlPropertyShape p : this) {
+			Set<ShowlPropertyShape> synset = p.synonyms();
+			for (ShowlPropertyShape q : synset) {
+				set.add(q.asGroup());
+			}
+		}
+		
+		return set;
+		
 	}
 
 	public ShowlEffectiveNodeShape getDeclaringShape() {

@@ -79,6 +79,7 @@ public class ShowlNodeShape implements Traversable {
 	
 	private ShowlNodeShape targetNode;
 	private ShowlEffectiveNodeShape effectiveNode;
+	private SynsetNode synsetNode;
 	
 	private ShowlManager manager;
 	
@@ -119,6 +120,12 @@ public class ShowlNodeShape implements Traversable {
 		return effectiveNode;
 	}
 
+	public SynsetNode synsetNode() {
+		if (synsetNode == null) {
+			synsetNode = new SynsetNode(this);
+		}
+		return synsetNode;
+	}
 
 	public ShowlEffectiveNodeShape effectiveNode() {
 		if (effectiveNode == null) {

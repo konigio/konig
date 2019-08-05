@@ -25,8 +25,10 @@ import java.util.ArrayList;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.openrdf.model.URI;
 
@@ -156,6 +158,24 @@ public class ShowlEffectiveNodeShape implements Comparable<ShowlEffectiveNodeSha
 	
 	public ShowlPropertyShapeGroup findPropertyByPredicate(URI predicate) {
 		return propertyMap.get(predicate);
+	}
+	
+	public ShowlPropertyShapeSynSet findPropertyByPathWithSynonyms(List<ShowlPropertyShapeGroup> path) {
+		
+		ShowlPropertyShapeSynSet result = null;
+		List<ShowlEffectiveNodeShape> nodeList = new ArrayList<>();
+		nodeList.add(this);
+		for (ShowlPropertyShapeGroup pathElement : path) {
+			if (nodeList.isEmpty()) {
+				return null;
+			}
+			result = pathElement.synonyms();
+			
+			
+			
+		}
+		
+		return null;
 	}
 	
 	public ShowlPropertyShapeGroup findPropertyByPath(List<ShowlPropertyShapeGroup> path) {
