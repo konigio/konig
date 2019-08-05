@@ -183,8 +183,19 @@ public class BasicTransformService implements ShowlTransformService {
 				if (direct != null) {
 					ShowlExpression formula = direct.getFormula();
 					if (formula != null) {
+						
+						// The direct property declares a formula.
+						// Check whether the formula is satisfied, i.e. check
+						// that all the properties the formula needs are well-defined.
+						
+						// We start by collecting the set of properties referenced
+						
 						Set<ShowlPropertyShape> set = new HashSet<>();
 						formula.addProperties(set);
+						
+						// Now that we have the set of properties, let's count the number of those
+						// properties that are well-defined.  A property is well-defined if it 
+						// has a mapping.
 
 						int count = 0;
 						for (ShowlPropertyShape p : set) {
@@ -192,9 +203,11 @@ public class BasicTransformService implements ShowlTransformService {
 							if (e == null) {
 								if (!p.isDirect()) {
 									ShowlDirectPropertyShape pDirect = p.getDeclaringShape().getProperty(p.getPredicate());
-									e = pDirect.getSelectedExpression();
-									if (e != null) {
-										p.setSelectedExpression(e);
+									if (pDirect != null) {
+										e = pDirect.getSelectedExpression();
+										if (e != null) {
+											p.setSelectedExpression(e);
+										}
 									}
 								}
 							}

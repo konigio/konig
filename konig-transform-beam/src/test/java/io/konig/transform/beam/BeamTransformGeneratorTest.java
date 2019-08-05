@@ -179,7 +179,7 @@ public class BeamTransformGeneratorTest {
 	@Ignore
 	public void testMultipleSource() throws Exception {
 		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/multiple-source");
+		generateAll("src/test/resources/BeamTransformGeneratorTest/multiple-source", false);
 		
 	}
 
