@@ -85,9 +85,6 @@ public class GroovyDeploymentScriptWriter {
 			println("import io.konig.maven.KonigDeployment;");
 			println();
 			println("def deploymentPlan = {");
-			printDatasetCommands();
-			printTableCommands();
-			printTableViewCommands();
 			printTableDataCommands();
 			printGooglePubSubCommands();
 			printGoogleCloudSqlInstanceCommand();
@@ -113,6 +110,7 @@ public class GroovyDeploymentScriptWriter {
 				print("insert BigQueryData from \"");
 				print(path);
 				println("\"");
+				println(" println response ");
 			}
 		}
 		
