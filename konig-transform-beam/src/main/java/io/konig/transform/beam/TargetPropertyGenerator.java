@@ -96,6 +96,7 @@ public abstract class TargetPropertyGenerator {
 		String methodName = builder.toString();
 		JMethod method = etran.getTargetClass().method(JMod.PRIVATE, returnType.getJavaType(), methodName);
 		BeamMethod beamMethod = new BeamMethod(method);
+		beamMethod.setTargetProperty(targetProperty);
 		etran.beginBlock(beamMethod);
 		try {
 

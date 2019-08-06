@@ -3365,11 +3365,11 @@ public class BeamTransformGenerator {
 
 
     private void sourceUriMethod() throws BeamTransformGenerationException {
-	if (singleSource()) {
-		singleSourceUriMethod();
-	} else {
-		multipleSourceUriMethod();
-	}
+			if (singleSource()) {
+				singleSourceUriMethod();
+			} else {
+				multipleSourceUriMethod();
+			}
 
     }
 
@@ -3412,13 +3412,17 @@ public class BeamTransformGenerator {
       }
 
       if (varName == null) {
-        throw new BeamTransformGenerationException("Environment name variable not found for target " + targetNode.getPath());
+      	
+      	method.body()._return(pattern);
+      	
+//        throw new BeamTransformGenerationException("Environment name variable not found for target " + targetNode.getPath());
+      } else {
+      
+      
+	      method.body()._return(pattern.invoke("replace")
+	              .arg(JExpr.lit(varName))
+	              .arg(options.invoke("getEnvironment")));
       }
-      
-      
-      method.body()._return(pattern.invoke("replace")
-              .arg(JExpr.lit(varName))
-              .arg(options.invoke("getEnvironment")));
       
       // }
       
@@ -3706,11 +3710,19 @@ public class BeamTransformGenerator {
         if (statement instanceof ShowlEqualStatement) {
           ShowlEqualStatement equal = (ShowlEqualStatement) statement;
           
-          ShowlExpression left = equal.getLeft();
-          ShowlExpression right = equal.getRight();
           
-          ShowlPropertyShape leftProperty = propertyOf(left);
-          ShowlPropertyShape rightProperty = propertyOf(right);
+          ShowlPropertyShape leftProperty = null;
+          ShowlPropertyShape rightProperty = null;
+          ShowlPropertyPair pair = new ShowlPropertyPair();
+          if (sameConcatPattern(statement, pair)) {
+          	leftProperty = pair.getLeft();
+          	rightProperty = pair.getRight();
+          } else {
+      
+  	        leftProperty = leftKey(statement);
+  	        rightProperty = rightKey(statement);
+          }
+          
           
           BeamChannel leftInfo = sourceInfoFor(leftProperty);
           BeamChannel rightInfo = sourceInfoFor(rightProperty);

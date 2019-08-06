@@ -85,7 +85,11 @@ public class MergeTargetFnGenerator extends BaseTargetFnGenerator {
 
 		IJExpression tupleTagField = tupleTagMap.get(node);
 		if (tupleTagField == null) {
-			fail("TupleTag not found for {0}", node.canonicalNode().getPath());
+			
+			// HACK
+			
+//			fail("TupleTag not found for {0}", node.canonicalNode().getPath());
+			tupleTagField = JExpr._null();
 		}
 		String rowName = StringUtil.javaIdentifier(StringUtil.firstLetterLowerCase(ShowlUtil.shortShapeName(node.canonicalNode()))) + "Row";
 		

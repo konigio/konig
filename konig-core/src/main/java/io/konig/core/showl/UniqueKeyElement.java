@@ -38,4 +38,17 @@ public class UniqueKeyElement implements Comparable<UniqueKeyElement> {
 	public void setValueKeys(ShowlUniqueKeyCollection valueKeys) {
 		this.valueKeys = valueKeys;
 	}
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("UniqueKeyElement(propertyShape: ");
+		builder.append(propertyShape.getPath());
+		if (valueKeys!=null) {
+			builder.append(", valueKeys: ");
+			builder.append(valueKeys.toString());
+		}
+		builder.append(')');
+		
+		return builder.toString();
+	}
 }

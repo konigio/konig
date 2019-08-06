@@ -587,4 +587,9 @@ public abstract class ShowlPropertyShape implements Traversable {
 		
 		return node.findPropertyByPredicate(getPredicate());
 	}
+
+	public SynsetProperty asSynsetProperty() {
+		SynsetNode node = getDeclaringShape().synsetNode();
+		return node.findPropertyByPredicate(getPredicate());
+	}
 }

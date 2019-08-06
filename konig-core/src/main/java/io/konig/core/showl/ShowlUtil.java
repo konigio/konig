@@ -298,6 +298,9 @@ public class ShowlUtil {
 	}
 	
 	public static String shortShapeName(ShowlNodeShape node) {
+		if (node == null) {
+			System.err.println("Null value detected");
+		}
 		return shortShapeName(RdfUtil.uri(node.getId()));
 	}
 

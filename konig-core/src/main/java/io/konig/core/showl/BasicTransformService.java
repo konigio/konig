@@ -78,11 +78,35 @@ public class BasicTransformService implements ShowlTransformService {
 		}
 
 	}
+	
+	
 
-	@Override
-	public Set<ShowlPropertyShapeGroup> computeTransform(ShowlNodeShape targetNode) throws ShowlProcessingException {
+	public static Logger getLogger() {
+		return logger;
+	}
 
-		State state = new State(targetNode, propertyPool(targetNode), sourceNodeFactory.candidateSourceNodes(targetNode));
+	public ShowlSourceNodeFactory getSourceNodeFactory() {
+		return sourceNodeFactory;
+	}
+
+	public ShowlSchemaService getSchemaService() {
+		return schemaService;
+	}
+
+	public void setSourceNodeFactory(ShowlSourceNodeFactory sourceNodeFactory) {
+		this.sourceNodeFactory = sourceNodeFactory;
+	}
+
+	public ShowlNodeShapeService getNodeService() {
+		return nodeService;
+	}
+	
+
+	protected Set<ShowlPropertyShapeGroup> basicComputeTransform(ShowlNodeShape targetNode) throws ShowlProcessingException {
+		
+		Set<ShowlNodeShape> candidates = sourceNodeFactory.candidateSourceNodes(targetNode);
+
+		State state = new State(targetNode, propertyPool(targetNode), candidates);
 
 		state.memory.add(targetNode);
 
@@ -116,6 +140,18 @@ public class BasicTransformService implements ShowlTransformService {
 		handleTeleportFormulas(state);
 
 		return state.propertyPool;
+	}
+
+	@Override
+	public Set<ShowlPropertyShapeGroup> computeTransform(ShowlNodeShape targetNode) throws ShowlProcessingException {
+		
+		Set<ShowlNodeShape> candidates = sourceNodeFactory.candidateSourceNodes(targetNode);
+		if (candidates.size()>1) {
+			OverlayTransformService overlayTransform = new OverlayTransformService(schemaService, nodeService, sourceNodeFactory, candidates);
+			return overlayTransform.computeTransform(targetNode);
+		}
+
+		return basicComputeTransform(targetNode);
 	}
 
 	private void handleTeleportFormulas(State state) {
@@ -1094,98 +1130,107 @@ public class BasicTransformService implements ShowlTransformService {
 	private void addStructProperties(ShowlStructExpression struct, ShowlDirectPropertyShape targetDirect,
 			ShowlPropertyShape sourceProperty) {
 
-		ShowlNodeShape sourceNode = sourceProperty.getValueShape();
-		if (sourceNode != null) {
+	
+		SynsetProperty synSourceProp = sourceProperty.asSynsetProperty();
+		SynsetNode sourceSynValue = synSourceProp.getValueNode();
+		
+		if (sourceSynValue != null) {
 
 			for (ShowlDirectPropertyShape targetField : targetDirect.getValueShape().getProperties()) {
 				URI predicate = targetField.getPredicate();
-				ShowlDirectPropertyShape sourceDirectField = sourceNode.getProperty(predicate);
+				
+				SynsetProperty s = sourceSynValue.findPropertyByPredicate(predicate);
+				
+				if (s == null) {
+					continue;
+				}
+				
+				ShowlDirectPropertyShape sourceDirectField = s.direct();
+				
+						
 				ShowlPropertyShape selectedSourceField = null;
 				if (sourceDirectField != null) {
+					selectedSourceField = sourceDirectField;
 					struct.put(predicate, new ShowlDirectPropertyExpression(sourceDirectField));
 				} else {
-					ShowlDerivedPropertyList list = sourceNode.getDerivedProperty(predicate);
+					
 
-					if (list.size() == 1) {
-						ShowlDerivedPropertyShape sourceField = list.get(0);
+					if (s.size() == 1) {
+						ShowlPropertyShape sourceField = s.get(0);
 						sourceDirectField = sourceField.direct();
 
-						if (sourceDirectField != null) {
-							struct.put(predicate, new ShowlDirectPropertyExpression(sourceDirectField));
-							selectedSourceField = sourceDirectField;
-						} else {
-							Set<ShowlExpression> valueSet = sourceField.getHasValue();
+						Set<ShowlExpression> valueSet = sourceField.getHasValue();
 
-							if (valueSet.isEmpty()) {
+						if (valueSet.isEmpty()) {
 
-								ShowlNodeShape sourceChildNode = sourceField.getValueShape();
-								ShowlNodeShape targetChildNode = targetField.getValueShape();
+							ShowlNodeShape sourceChildNode = sourceField.getValueShape();
+							ShowlNodeShape targetChildNode = targetField.getValueShape();
 
-								if (sourceChildNode != null && targetChildNode != null) {
-									ShowlStructExpression childStruct = new ShowlBasicStructExpression(targetField);
-									targetField.setSelectedExpression(ShowlDelegationExpression.getInstance());
-									struct.put(predicate, childStruct);
-									addStructProperties(childStruct, targetField, sourceField);
+							if (sourceChildNode != null && targetChildNode != null) {
+								ShowlStructExpression childStruct = new ShowlBasicStructExpression(targetField);
+								targetField.setSelectedExpression(ShowlDelegationExpression.getInstance());
+								struct.put(predicate, childStruct);
+								addStructProperties(childStruct, targetField, sourceField);
+								continue;
+
+							}
+
+
+						} else if (valueSet.size() == 1) {
+							ShowlExpression value = valueSet.iterator().next();
+							if (value instanceof ShowlFilterExpression) {
+								value = ((ShowlFilterExpression) value).getValue();
+								struct.put(predicate, value);
+							}
+							selectedSourceField = sourceField;
+							if (value instanceof ShowlFunctionExpression) {
+								if (targetField.getValueShape() == null) {
+									struct.put(predicate, value);
+								} else {
+									fail("Function returning a struct not supported yet at {0}", sourceProperty.getPath());
+								}
+							} else if (value instanceof ShowlEnumIndividualReference) {
+								if (targetField.getValueShape() != null) {
+
+									ShowlClass enumClass = sourceField.getValueType(schemaService);
+									ShowlNodeShape enumNode = enumNode(enumClass);
+									enumNode.setTargetProperty(targetField);
+									ShowlEnumStructExpression enumStruct = new ShowlEnumStructExpression(targetField, enumNode);
+
+									struct.put(predicate, enumStruct);
+									addEnumStructProperties(enumStruct, targetField.getValueShape(), enumNode);
+									ShowlDirectPropertyShape enumId = enumNode.getProperty(Konig.id);
+									ShowlEnumIndividualReference enumRef = (ShowlEnumIndividualReference) value;
+									enumStruct.put(Konig.id, enumRef);
+									ShowlStatement joinCondition = new ShowlEqualStatement(new ShowlDirectPropertyExpression(enumId),
+											enumRef);
+
+									ShowlChannel channel = new ShowlChannel(enumNode, joinCondition);
+									targetDirect.getRootNode().addChannel(channel);
 									continue;
 
 								}
 
+								struct.put(predicate, value);
 
-							} else if (valueSet.size() == 1) {
-								ShowlExpression value = valueSet.iterator().next();
-								if (value instanceof ShowlFilterExpression) {
-									value = ((ShowlFilterExpression) value).getValue();
-									struct.put(predicate, value);
-								}
-								selectedSourceField = sourceField;
-								if (value instanceof ShowlFunctionExpression) {
-									if (targetField.getValueShape() == null) {
-										struct.put(predicate, value);
-									} else {
-										fail("Function returning a struct not supported yet at {0}", sourceProperty.getPath());
-									}
-								} else if (value instanceof ShowlEnumIndividualReference) {
-									if (targetField.getValueShape() != null) {
-
-										ShowlClass enumClass = sourceField.getValueType(schemaService);
-										ShowlNodeShape enumNode = enumNode(enumClass);
-										enumNode.setTargetProperty(targetField);
-										ShowlEnumStructExpression enumStruct = new ShowlEnumStructExpression(targetField, enumNode);
-
-										struct.put(predicate, enumStruct);
-										addEnumStructProperties(enumStruct, targetField.getValueShape(), enumNode);
-										ShowlDirectPropertyShape enumId = enumNode.getProperty(Konig.id);
-										ShowlEnumIndividualReference enumRef = (ShowlEnumIndividualReference) value;
-										enumStruct.put(Konig.id, enumRef);
-										ShowlStatement joinCondition = new ShowlEqualStatement(new ShowlDirectPropertyExpression(enumId),
-												enumRef);
-
-										ShowlChannel channel = new ShowlChannel(enumNode, joinCondition);
-										targetDirect.getRootNode().addChannel(channel);
-										continue;
-
-									}
-
-									struct.put(predicate, value);
-
-								}
-							} else if (valueSet.size() > 1) {
-								// TODO: handle multiple values
-								String msg = MessageFormat.format("Cannot handle multiple values at {}.{}", sourceNode.getPath(),
-										predicate.getLocalName());
-								throw new ShowlProcessingException(msg);
-							} else {
-
-								// TODO: handle multiple variants
-								String msg = MessageFormat.format("Cannot derive field at {0}.{1}", sourceNode.getPath(),
-										predicate.getLocalName());
-								throw new ShowlProcessingException(msg);
 							}
-						}
+						} else if (valueSet.size() > 1) {
+							// TODO: handle multiple values
+							String msg = MessageFormat.format("Cannot handle multiple values at {}.{}", sourceProperty.getPath(),
+									predicate.getLocalName());
+							throw new ShowlProcessingException(msg);
+						} else {
 
-					} else if (!list.isEmpty()) {
+							// TODO: handle multiple variants
+							String msg = MessageFormat.format("Cannot derive field at {0}.{1}", sourceProperty.getPath(),
+									predicate.getLocalName());
+							throw new ShowlProcessingException(msg);
+						}
+						
+
+					} else if (!s.isEmpty()) {
 						// TODO: handle multiple variants
-						String msg = MessageFormat.format("Cannot handle multiple variants at {}.{}", sourceNode.getPath(),
+						String msg = MessageFormat.format("Cannot handle multiple variants at {}.{}", sourceProperty.getPath(),
 								predicate.getLocalName());
 						throw new ShowlProcessingException(msg);
 					}

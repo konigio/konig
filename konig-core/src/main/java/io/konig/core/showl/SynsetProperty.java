@@ -71,6 +71,7 @@ public class SynsetProperty extends ArrayList<ShowlPropertyShape> {
 		ShowlPropertyShape p = direct();
 		if (p == null) {
 			p = outFormula();
+			
 			if (p == null && !isEmpty()) {
 				p = get(0);
 			}
@@ -78,6 +79,8 @@ public class SynsetProperty extends ArrayList<ShowlPropertyShape> {
 		
 		return p;
 	}
+
+	
 
 	/**
 	 * Add the given predicate to the list of predicates, sorted by localName and then namespace.

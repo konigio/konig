@@ -60,6 +60,7 @@ import com.helger.jcodemodel.JStringLiteral;
 import com.helger.jcodemodel.JVar;
 
 import io.konig.core.OwlReasoner;
+import io.konig.core.showl.ShowlArrayExpression;
 import io.konig.core.showl.ShowlBasicStructExpression;
 import io.konig.core.showl.ShowlBinaryRelationalExpression;
 import io.konig.core.showl.ShowlCaseStatement;
@@ -78,8 +79,10 @@ import io.konig.core.showl.ShowlFunctionExpression;
 import io.konig.core.showl.ShowlIriReferenceExpression;
 import io.konig.core.showl.ShowlListRelationalExpression;
 import io.konig.core.showl.ShowlNodeShape;
+import io.konig.core.showl.ShowlOverlayExpression;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlPropertyShapeGroup;
 import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlStructExpression;
 import io.konig.core.showl.ShowlSystimeExpression;
@@ -91,6 +94,7 @@ import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.formula.FunctionExpression;
 import io.konig.formula.FunctionModel;
+import io.konig.shacl.PropertyConstraint;
 
 public class BeamExpressionTransform  {
 	private static Logger logger = LoggerFactory.getLogger(BeamExpressionTransform.class);
@@ -182,9 +186,67 @@ public class BeamExpressionTransform  {
 			return teleport((ShowlTeleportExpression) e);
 		}
 		
-		throw new BeamTransformGenerationException("Failed to tranform " + e.toString());
+		if (e instanceof ShowlOverlayExpression) {
+			return overlay((ShowlOverlayExpression)e);
+		}
+		
+		if (e instanceof ShowlArrayExpression) {
+			return array((ShowlArrayExpression)e);
+		}
+		throw new BeamTransformGenerationException("Failed to transform " + e.toString());
 	}
 	
+
+	private IJExpression array(ShowlArrayExpression e) throws BeamTransformGenerationException {
+		
+		BeamMethod method = peekBlockInfo().getBeamMethod();
+		ShowlPropertyShape targetProperty = method==null ? null : method.getTargetProperty();
+		if (targetProperty != null) {
+			if (targetProperty.getValueShape()!=null) {
+				BNodeArrayTransform worker = new BNodeArrayTransform(this);
+				return worker.transform(e);
+			}
+		}
+		
+		throw new BeamTransformGenerationException("Expression not supported: " + e.displayValue());
+	}
+
+	private IJExpression overlay(ShowlOverlayExpression e) throws BeamTransformGenerationException {
+		
+		BlockInfo blockInfo = peekBlockInfo();
+		
+		BeamMethod method = blockInfo.getBeamMethod();
+		if (method == null) {
+			fail("Cannot produce overlay expression {0} because BeamMethod is null", e.displayValue());
+		}
+		
+		ShowlPropertyShape targetProperty = method.getTargetProperty();
+		if (targetProperty == null) {
+			fail("Cannot produce overlay expression {0} because targetProperty is null", e.displayValue());
+		}
+		
+
+		String fieldName = blockInfo.varName(targetProperty.getPredicate().getLocalName());
+		AbstractJType fieldType = method.getReturnType().getJavaType();
+		
+		JBlock block = blockInfo.getBlock();
+		ShowlPropertyShapeGroup group = targetProperty.asGroup();
+		
+		JVar var = block.decl(fieldType, fieldName);
+		blockInfo.putPropertyValue(group, var);
+		
+		
+		for (int i=0; i<e.size(); i++) {
+			IJExpression init = transform(e.get(i));
+			if (i == 0) {
+				var.init(init);
+			} else {
+				block.assign(var, JExpr.cond(var.eqNull(), init, var));
+			}
+		}
+		
+		return var;
+	}
 
 	private IJExpression teleport(ShowlTeleportExpression e) throws BeamTransformGenerationException {
 		ShowlExpression delegate = e.getDelegate();
@@ -1338,35 +1400,39 @@ public class BeamExpressionTransform  {
 
 	
 	public JVar declarePropertyValue(ShowlPropertyShape property, IJExpression fieldValue, AbstractJType fieldType) throws BeamTransformGenerationException {
-		
-		
-		if (fieldType == null) {
-		
-			if (Konig.id.equals(property.getPredicate())) {
-				fieldType = model.ref(String.class);
-				if (fieldValue instanceof JVar) {
-					JVar fieldValueVar = (JVar) fieldValue;
-					String fieldValueType = fieldValueVar.type().fullName();
-					if (!String.class.getName().equals(fieldValueType)) {
-						fieldValue = fieldValue.invoke("getId").invoke("getLocalName");
-					}
-							
-				}
-			} else {
-				ShowlExpression e = property.getSelectedExpression();
-				fieldType = getTypeManager().javaType(e);
-			}
-		}
 
 		BlockInfo blockInfo = peekBlockInfo();
-		String fieldName = blockInfo.varName(property.getPredicate().getLocalName());
+		ShowlPropertyShapeGroup group = property.asGroup();
+		JVar var = blockInfo.getPropertyValue(group);
 		
-		
-		
-		
-		JVar var = blockInfo.getBlock().decl(fieldType, fieldName).init(fieldValue.castTo(fieldType));
-		
-		blockInfo.putPropertyValue(property.asGroup(), var);
+		if (var == null) {
+			if (fieldType == null) {
+			
+				if (Konig.id.equals(property.getPredicate())) {
+					fieldType = model.ref(String.class);
+					if (fieldValue instanceof JVar) {
+						JVar fieldValueVar = (JVar) fieldValue;
+						String fieldValueType = fieldValueVar.type().fullName();
+						if (!String.class.getName().equals(fieldValueType)) {
+							fieldValue = fieldValue.invoke("getId").invoke("getLocalName");
+						}
+								
+					}
+				} else {
+					ShowlExpression e = property.getSelectedExpression();
+					fieldType = getTypeManager().javaType(e);
+				}
+			}
+	
+			String fieldName = blockInfo.varName(property.getPredicate().getLocalName());
+			
+			
+			
+			
+			var = blockInfo.getBlock().decl(fieldType, fieldName).init(fieldValue.castTo(fieldType));
+			
+			blockInfo.putPropertyValue(property.asGroup(), var);
+		}
 		
 		
 		return var;
