@@ -1,5 +1,7 @@
 package io.konig.core.showl;
 
+import org.openrdf.model.Resource;
+
 /*
  * #%L
  * Konig Core
@@ -73,7 +75,10 @@ public class ShowlNodeShapeBuilder {
 		addProperties(node);
 		return node;
 	}
-
+	
+	public boolean isEnumClass(Resource targetClass) {
+		return targetClass == null ? false : schemaService.getOwlReasoner().isEnumerationClass(targetClass);
+	}
 
 	private void addProperties(ShowlNodeShape node) {
 		if (logger.isTraceEnabled()) {
