@@ -49,7 +49,7 @@ public class DestinationTypeTargetNodeShapeFactory implements ShowlTargetNodeSha
 		for (DataSource ds : shape.getShapeDataSource()) {
 			
 			for (URI dsType : ds.getType()) {
-				if (datasourceType.contains(dsType)) {
+				if (datasourceType.contains(dsType) && !builder.isEnumClass(shape.getTargetClass())) {
 
 					ShowlNodeShape targetNode = builder.buildNodeShape(null, shape);
 					targetNode.setShapeDataSource(new ShowlDataSource(targetNode, ds));
