@@ -86,9 +86,6 @@ public class GroovyTearDownScriptWriter {
 			println("import io.konig.maven.KonigDeployment;");
 			println();
 			println("def deploymentPlan = {");
-			printTableViewCommands();
-			printTableCommands();
-			printDatasetCommands();
 			printGooglePubSubCommands();
 			printGoogleCloudStorageCommands();
 			printGoogleCloudSqlTableCommand();

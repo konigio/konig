@@ -1,5 +1,7 @@
 package io.konig.maven;
 
+import java.io.BufferedReader;
+
 /*
  * #%L
  * Konig GCP Deployment Maven Plugin
@@ -25,15 +27,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
+import java.util.concurrent.TimeoutException;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.FormatOptions;
+import com.google.cloud.bigquery.Job;
+import com.google.cloud.bigquery.JobStatistics.LoadStatistics;
+import com.google.common.base.Charsets;
 import com.google.cloud.bigquery.TableDataWriteChannel;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.WriteChannelConfiguration;
-
 import io.konig.gcp.common.GoogleCloudService;
 
 public class InsertBigQueryDataAction {
@@ -44,15 +49,15 @@ public class InsertBigQueryDataAction {
 		this.deployment = deployment;
 	}
 
-	public KonigDeployment from(String path) throws FileNotFoundException, IOException {
+	public KonigDeployment from(String path) throws FileNotFoundException, IOException, InterruptedException, TimeoutException {
 
 		GoogleCloudService service = deployment.getService();
 		File file = deployment.file(path);
 		
 		String fileName = file.getName();
-		int dot = fileName.indexOf('.');
-		String datasetName = fileName.substring(0, dot);
-		String tableName = fileName.substring(dot+1);
+		String[] tableReference  = fileName.split("\\.");
+		String datasetName = tableReference[0];
+		String tableName =  tableReference[1];
 		TableId tableId = TableId.of(datasetName, tableName);
 		
 		WriteChannelConfiguration config = 
@@ -64,20 +69,25 @@ public class InsertBigQueryDataAction {
 		TableDataWriteChannel writer = bigquery.writer(config);
 		
 		try (FileInputStream fis = new FileInputStream(file)) {
-			FileChannel fci = fis.getChannel();
-			ByteBuffer buffer = ByteBuffer.allocate(1024);
-			
-			for (;;) {
-				int read = fci.read(buffer);
-				if (read == -1) {
-					break;
-				}
-				buffer.flip();
-				writer.write(buffer);
-				buffer.clear();
+			BufferedReader buf = new BufferedReader(new InputStreamReader(fis));
+	        
+			String line = buf.readLine();
+			StringBuilder sb = new StringBuilder();
+			        
+			while(line != null){
+			   sb.append(line).append("\n");
+			   line = buf.readLine();
 			}
-		}
-		
+			String fileAsString = sb.toString();
+			writer.write(ByteBuffer.wrap(fileAsString.getBytes(Charsets.UTF_8)));
+			buf.close();
+		} finally {
+	        writer.close();
+	    }
+		Job job = writer.getJob();
+	    job = job.waitFor();
+	    LoadStatistics stats = job.getStatistics();
+		deployment.setResponse(datasetName+"."+tableName + " - " + stats.getOutputRows() +" Rows Inserted");
 		return deployment;
 	}
 }
