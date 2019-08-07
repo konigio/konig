@@ -25,8 +25,8 @@ public class ReadAnimalSourceShapeFn
     extends DoFn<FileIO.ReadableFile, com.google.api.services.bigquery.model.TableRow>
 {
     private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
-    public static TupleTag<com.google.api.services.bigquery.model.TableRow> deadLetterTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
-    public static TupleTag<com.google.api.services.bigquery.model.TableRow> successTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
+    public static TupleTag<com.google.api.services.bigquery.model.TableRow> deadLetterTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>(){};
+    public static TupleTag<com.google.api.services.bigquery.model.TableRow> successTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>(){};
 
     @ProcessElement
     public void processElement(ProcessContext c, PipelineOptions options) {

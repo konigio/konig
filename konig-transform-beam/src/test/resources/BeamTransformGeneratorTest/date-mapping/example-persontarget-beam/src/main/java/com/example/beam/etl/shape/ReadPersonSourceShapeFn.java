@@ -31,8 +31,8 @@ public class ReadPersonSourceShapeFn
     extends DoFn<FileIO.ReadableFile, com.google.api.services.bigquery.model.TableRow>
 {
     private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
-    public static TupleTag<com.google.api.services.bigquery.model.TableRow> deadLetterTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
-    public static TupleTag<com.google.api.services.bigquery.model.TableRow> successTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
+    public static TupleTag<com.google.api.services.bigquery.model.TableRow> deadLetterTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>(){};
+    public static TupleTag<com.google.api.services.bigquery.model.TableRow> successTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>(){};
     private static final Pattern DATE_PATTERN = Pattern.compile("(\\d+-\\d+-\\d+)(.*)");
 
     @ProcessElement

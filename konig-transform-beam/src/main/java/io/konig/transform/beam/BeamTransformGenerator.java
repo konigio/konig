@@ -1285,7 +1285,7 @@ public class BeamTransformGenerator {
 		    AbstractJClass loggerClass = model.ref(Logger.class);
 		    AbstractJClass tableRowClass = model.ref(TableRow.class);
 		    AbstractJClass tupleTagClass = model.ref(TupleTag.class);
-		    AbstractJClass tupleTagTableRowClass = tupleTagClass.narrow(tableRowClass);
+		    AbstractJClass tupleTagTableRowClass =  tupleTagClass.narrow(tableRowClass);
 		    
 			JFieldVar logger = thisClass.field(JMod.PRIVATE | JMod.FINAL | JMod.STATIC , loggerClass, 
 					"LOGGER", 
