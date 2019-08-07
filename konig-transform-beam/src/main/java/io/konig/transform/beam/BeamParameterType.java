@@ -25,5 +25,6 @@ public enum BeamParameterType {
 	TABLE_ROW,
 	ERROR_BUILDER,
 	LIST_VALUE,
-	ENUM_VALUE
+	ENUM_VALUE,
+	MAPPED_VALUE
 }

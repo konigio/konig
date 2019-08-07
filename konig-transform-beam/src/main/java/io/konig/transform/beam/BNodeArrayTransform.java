@@ -8,11 +8,17 @@ import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.JBlock;
 import com.helger.jcodemodel.JCodeModel;
+import com.helger.jcodemodel.JDefinedClass;
+import com.helger.jcodemodel.JMethod;
+import com.helger.jcodemodel.JMod;
 import com.helger.jcodemodel.JVar;
 
 import io.konig.core.showl.ShowlArrayExpression;
+import io.konig.core.showl.ShowlDirectPropertyShape;
+import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlStructExpression;
 import io.konig.core.showl.ShowlUniqueKey;
 import io.konig.core.showl.ShowlUniqueKeyCollection;
 import io.konig.core.showl.UniqueKeyFactory;
@@ -59,7 +65,8 @@ public class BNodeArrayTransform {
 		}
 		
 		ShowlUniqueKey uniqueKey = keyCollection.get(0);
-		System.out.println(uniqueKey);
+		
+		
 		
 		
 		JBlock block = blockInfo.getBlock();
@@ -72,12 +79,76 @@ public class BNodeArrayTransform {
 		// ArrayList<TableRow> list = new ArrayList<>();
 		// Map<Object, TableRow> map = new HashMap<>();
 		
-		JVar list = block.decl(arrayListClass, blockInfo.varName("list")).init(arrayListClass._new());
+//		JVar list = block.decl(arrayListClass, blockInfo.varName("list")).init(arrayListClass._new());
 		JVar map = block.decl(mapClass, blockInfo.varName("map")).init(hashMapClass._new());
 		
+		int index = 0;
+		String baseMemberName = beamMethod.getMethod().name();
+		for (ShowlExpression member  : array.getMemberList()) {
+			if (member instanceof ShowlStructExpression) {
+				String memberMethodName = baseMemberName + (index++);
+				BeamMethod memberMethod = memberMethod(map, uniqueKey, memberMethodName, (ShowlStructExpression) member);
+			}
+		}
 		
 		
-		return list;
+		// TODO: don't return map!
+		return map;
 	}
+
+	private BeamMethod memberMethod(JVar callerMap, ShowlUniqueKey uniqueKey, String memberMethodName, ShowlStructExpression member) throws BeamTransformGenerationException {
+
+		JCodeModel model = etran.codeModel();
+		AbstractJClass tableRowClass = model.ref(TableRow.class);
+		
+		BlockInfo parentBlock = etran.peekBlockInfo();
+		BeamMethod parentMethod = parentBlock.getBeamMethod();
+		ShowlPropertyShape targetProperty = parentMethod.getTargetProperty();
+		RdfJavaType returnType = etran.getTypeManager().rdfJavaType(member.getPropertyShape());
+		
+		JDefinedClass targetClass = etran.getTargetClass();
+		JMethod method = targetClass.method(JMod.PRIVATE, returnType.getJavaType(), memberMethodName);
+		
+		
+		BeamMethod beamMethod = new BeamMethod(method);
+		beamMethod.setReturnType(returnType);
+		beamMethod.setTargetProperty(targetProperty);
+		BlockInfo blockInfo = etran.beginBlock(beamMethod);
+		try {		
+			JVar map = beamMethod.addParameter(BeamParameter.ofMappedValue(callerMap.type(), "map")).getVar();
+			parentBlock.putMappedVar(map, callerMap);
+			
+			JBlock block = blockInfo.getBlock();
+			BeamUniqueKeyGenerator keyGenerator = keyGenerator(uniqueKey);
+			
+			keyGenerator.createKeyVar(member);
+			
+			JVar row = block.decl(
+					tableRowClass, 
+					blockInfo.varName(targetProperty.getPredicate().getLocalName() + "Row"))
+					.init(tableRowClass._new());
+			
+			blockInfo.putPropertyValue(targetProperty.asGroup(), row);
+			
+			if (!(targetProperty instanceof ShowlDirectPropertyShape)) {
+				throw new BeamTransformGenerationException("Expected direct property shape: " + targetProperty.getPath());
+			}
+			etran.processStructPropertyList((ShowlDirectPropertyShape)targetProperty, member);
+			
+		
+			block._return(row);
+			
+		} finally {
+			etran.endBlock();
+		}
+		
+		return beamMethod;
+	}
+
+	private BeamUniqueKeyGenerator keyGenerator(ShowlUniqueKey uniqueKey) {
+		
+		return uniqueKey.size()==1 ? new BeamSingleKeyGenerator(etran, uniqueKey) : new BeamCompositeKeyGenerator(etran, uniqueKey);
+	}
+
 
 }

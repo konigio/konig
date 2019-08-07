@@ -112,7 +112,7 @@ public class BeamTransformGeneratorTest {
 		
 	}
 
-	@Test
+	@Ignore
 	public void testTrivialIriTemplate() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/trivial-iri-template", false);
@@ -264,7 +264,7 @@ public class BeamTransformGeneratorTest {
 		
 	}
 
-	@Ignore
+	@Test
 	public void testMergeByKey() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/merge-by-key", false);

@@ -232,13 +232,16 @@ public class BeamExpressionTransform  {
 		JBlock block = blockInfo.getBlock();
 		ShowlPropertyShapeGroup group = targetProperty.asGroup();
 		
-		JVar var = block.decl(fieldType, fieldName);
-		blockInfo.putPropertyValue(group, var);
+		JVar var = null;
+		
 		
 		
 		for (int i=0; i<e.size(); i++) {
 			IJExpression init = transform(e.get(i));
 			if (i == 0) {
+
+				var = block.decl(fieldType, fieldName);
+				blockInfo.putPropertyValue(group, var);
 				var.init(init);
 			} else {
 				block.assign(var, JExpr.cond(var.eqNull(), init, var));
@@ -582,6 +585,13 @@ public class BeamExpressionTransform  {
 			fail("BlockInfo stack is empty");
 		}
 		return  blockStack.get(blockStack.size()-1);
+	}
+	
+	public BlockInfo parentBlock() throws BeamTransformGenerationException {
+		if (blockStack == null || blockStack.size()<2) {
+			fail("Parent BlockInfo does not exist");
+		}
+		return blockStack.get(blockStack.size()-2);
 	}
 
 	private IJExpression caseStatement(ShowlCaseStatement e) throws BeamTransformGenerationException {
@@ -957,7 +967,7 @@ public class BeamExpressionTransform  {
 		
 	}
 
-	private void processStructPropertyList(ShowlDirectPropertyShape targetProperty, ShowlStructExpression struct) throws BeamTransformGenerationException {
+	public void processStructPropertyList(ShowlDirectPropertyShape targetProperty, ShowlStructExpression struct) throws BeamTransformGenerationException {
 		ShowlNodeShape targetNode = targetProperty.getValueShape();
 		
 		for (Entry<URI, ShowlExpression> entry : struct.entrySet()) {
@@ -1297,19 +1307,42 @@ public class BeamExpressionTransform  {
 		return enumVar;
 	}
 	
+	private String baseTableRowVarName(ShowlEffectiveNodeShape node) {
+
+		ShowlNodeShape canonical = node.canonicalNode();
+		String baseName = canonical.getAccessor()==null ? 
+				ShowlUtil.shortShapeName(canonical) : 
+				canonical.getAccessor().getPredicate().getLocalName();
+				
+		return baseName;
+	}
+	
+
 	public JVar addTableRowParam(BeamMethod beamMethod, ShowlEffectiveNodeShape node) throws BeamTransformGenerationException {
+		String varName = baseTableRowVarName(node) + "Row";
+		boolean withQualifier = false;
+		for (BeamParameter param : beamMethod.getParameters()) {
+			if (param.getVarName().equals(withQualifier = true)) {
+				break;
+			}
+		}
+		return addTableRowParam(beamMethod, node, withQualifier);
+	}
+	
+	public JVar addTableRowParam(BeamMethod beamMethod, ShowlEffectiveNodeShape node, boolean withQualifiedName) throws BeamTransformGenerationException {
 		BlockInfo blockInfo = peekBlockInfo();
 		JVar var = blockInfo.getTableRowVar(node);
 		if (var == null) {
 			AbstractJClass tableRowClass = model.ref(TableRow.class);
-			ShowlNodeShape canonical = node.canonicalNode();
-			String baseName = canonical.getAccessor()==null ? 
-					ShowlUtil.shortShapeName(canonical) : 
-					canonical.getAccessor().getPredicate().getLocalName();
-					
 			
-			String varName = StringUtil.firstLetterLowerCase(baseName) + "Row";
-			logger.trace("addTableRowParam: {} ({} {})", beamMethod.getMethod().name(), node.canonicalNode().getPath(), varName);
+			String baseName = baseTableRowVarName(node);
+					
+			ShowlNodeShape canonical = node.canonicalNode();
+			
+			String qualifier = withQualifiedName ? "_" + ShowlUtil.shortShapeName(canonical.getRoot()) : "Row";
+			
+			String varName = StringUtil.firstLetterLowerCase(baseName) + qualifier;
+			logger.trace("addTableRowParam: {} ({} {})", beamMethod.getMethod().name(), canonical.getPath(), varName);
 			
 			BeamParameter param  = BeamParameter.ofNodeRow(tableRowClass, varName, node);
 			if (beamMethod.addParameter(param)!=null) {
@@ -1456,14 +1489,30 @@ public class BeamExpressionTransform  {
 		addNodes(nodeSet, set);
 		
 		
-		
 		List<ShowlEffectiveNodeShape> paramList = new ArrayList<>(nodeSet);
 		Collections.sort(paramList);
 
+		boolean withQualifiedName = requiresQualifiedName(paramList);
+
 		for (ShowlEffectiveNodeShape node : paramList) {
-			addTableRowParam(beamMethod, node);
+			addTableRowParam(beamMethod, node, withQualifiedName);
 		}
 		
+	}
+
+	private boolean requiresQualifiedName(List<ShowlEffectiveNodeShape> nodeList) {
+		
+		Set<String> names = new HashSet<>();
+		
+		for (ShowlEffectiveNodeShape node : nodeList) {
+			String varName = baseTableRowVarName(node);
+			if (names.contains(varName)) {
+				return true;
+			}
+			names.add(varName);
+		}
+		
+		return false;
 	}
 
 	private void addNodes(Set<ShowlEffectiveNodeShape> nodeSet, Set<ShowlPropertyShape> set) throws BeamTransformGenerationException {

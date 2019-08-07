@@ -22,7 +22,9 @@ package io.konig.transform.beam;
 
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -161,14 +163,6 @@ public class BaseTargetFnGenerator {
 		
 	}
   
-  	private ShowlNodeShape sourceNode(ShowlNodeShape targetNode) {
-  		 for (ShowlChannel c : targetNode.getChannels()) {
-  	        if (c.getSourceNode() !=null) {
-  	          return c.getSourceNode();
-  	        }
-  	      }
-		return null;
-  	}
 
 	private void provideOutput(
 			JVar successTag,
@@ -185,8 +179,7 @@ public class BaseTargetFnGenerator {
 			._then().add(errorBuilder.invoke("addError").arg(JExpr.lit("record is empty")));
 		
 		JConditional ifStatement = tryBlock.body()._if(errorBuilder.invoke("isEmpty").not());
-		String rowName = StringUtil.javaIdentifier(StringUtil.firstLetterLowerCase(ShowlUtil.shortShapeName(sourceNode(targetNode)))) + "Row";
-		String sourceShapeName = ShowlUtil.shortShapeName(sourceNode(targetNode));	
+		
 		
 		AbstractJClass tableRowClass = model.ref(TableRow.class);
 		JVar errorRow = ifStatement._then().decl(tableRowClass, "errorRow").init(tableRowClass._new());
@@ -196,7 +189,13 @@ public class BaseTargetFnGenerator {
 		ifBlock.add(errorRow.invoke("set").arg("errorCreated").arg(model.ref(Date.class)._new().invoke("getTime").div(1000)));
 		ifBlock.add(errorRow.invoke("set").arg("errorMessage").arg(errorBuilder.invoke("toString")));
 		ifBlock.add(errorRow.invoke("set").arg("pipelineJobName").arg(JExpr.ref("options").invoke("getJobName")));
-		ifBlock.add(errorRow.invoke("set").arg(sourceShapeName).arg(JExpr.ref(rowName)));
+
+		List<ShowlNodeShape> sourceNodeList = listSourceNodes(targetNode);
+		for (ShowlNodeShape sourceNode : sourceNodeList) {
+			String sourceShapeName = ShowlUtil.shortShapeName(sourceNode);
+			String rowName = StringUtil.javaIdentifier(StringUtil.firstLetterLowerCase(sourceShapeName)) + "Row";
+			ifBlock.add(errorRow.invoke("set").arg(sourceShapeName).arg(JExpr.ref(rowName)));
+		}
 		ifBlock.add(c.invoke("output").arg(deadLetterTag).arg(errorRow));
 		    
 		ifStatement._else().add(c.invoke("output").arg(successTag).arg(outputRow));
@@ -206,6 +205,17 @@ public class BaseTargetFnGenerator {
 		JVar oops = catchBlock.param("oops");
 		catchBlock.body().add(oops.invoke("printStackTrace"));
 		
+	}
+
+	private List<ShowlNodeShape> listSourceNodes(ShowlNodeShape targetNode) {
+		List<ShowlNodeShape> list = new ArrayList<>();
+		for (ShowlChannel channel : targetNode.getChannels()) {
+			ShowlNodeShape sourceNode = channel.getSourceNode();
+			if (!reasoner.isEnumerationClass(sourceNode.getOwlClass().getId())) {
+				list.add(sourceNode);
+			}
+		}
+		return list;
 	}
 
 	protected void declareTableRow(JDefinedClass thisClass, BeamExpressionTransform etran, ShowlEffectiveNodeShape node, JVar c) throws BeamTransformGenerationException {

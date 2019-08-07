@@ -514,7 +514,7 @@ public abstract class ShowlPropertyShape implements Traversable {
 	 * Set the expression that was selected to construct the value for this property.
 	 */
 	public void setSelectedExpression(ShowlExpression selectedExpression) {
-		if (logger.isTraceEnabled()) {
+		if (selectedExpression!=null && logger.isTraceEnabled()) {
 			logger.trace("setSelectedExpression {} = {}", getPath(), selectedExpression.displayValue());
 			System.out.print("");
 		}

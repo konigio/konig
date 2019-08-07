@@ -1,14 +1,9 @@
 package io.konig.core.showl;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
-import org.openrdf.model.URI;
-
-import io.konig.datasource.DataSource;
-import io.konig.shacl.Shape;
 
 public class OverlayTransformService extends BasicTransformService {
 	
@@ -28,21 +23,23 @@ public class OverlayTransformService extends BasicTransformService {
 		OverlaySourceNodeFactory overlayFactory = new OverlaySourceNodeFactory(targetNode, sourceNodeFactory);
 		setSourceNodeFactory(overlayFactory);
 		
+		Map<ShowlDirectPropertyShape,ShowlExpression> expressionMap = new HashMap<>();
+		
 		try {
 		
-			List<ShowlNodeShape> targetNodeList = new ArrayList<>();
 			for (ShowlNodeShape sourceNode : candidates) {
 				overlayFactory.setSourceNode(sourceNode);
 				
-				ShowlNodeShape targetNodeClone = clone(targetNode);
-				targetNodeList.add(targetNodeClone);
-				basicComputeTransform(targetNodeClone);
+				basicComputeTransform(targetNode);
+				stashExpressions(targetNode, expressionMap);
 				
 			}
 			
-			Set<ShowlPropertyShapeGroup> unmapped = new HashSet<>();
 			
-			setSelectedExpressions(targetNode, targetNodeList, unmapped);
+			setSelectedExpressions(targetNode, expressionMap);
+			
+			Set<ShowlPropertyShapeGroup> unmapped = new HashSet<>();
+			collectUnmappedProperties(targetNode, unmapped);
 			
 			return unmapped;
 		} finally {
@@ -50,32 +47,40 @@ public class OverlayTransformService extends BasicTransformService {
 		}
 	}
 
-	private void setSelectedExpressions(ShowlNodeShape targetNode, List<ShowlNodeShape> targetNodeList,
-			Set<ShowlPropertyShapeGroup> unmapped) {
-		
-		for (ShowlNodeShape targetClone : targetNodeList) {
-			setSelectedExpressions(targetNode, targetClone, unmapped);
+	private void collectUnmappedProperties(ShowlNodeShape targetNode, Set<ShowlPropertyShapeGroup> unmapped) {
+		for (ShowlDirectPropertyShape p : targetNode.getProperties()) {
+			if (p.getSelectedExpression()==null) {
+				unmapped.add(p.asGroup());
+			}
+			if (p.getValueShape()!=null) {
+				collectUnmappedProperties(p.getValueShape(), unmapped);
+			}
 		}
 		
 	}
 
-	private void setSelectedExpressions(ShowlNodeShape targetNode, ShowlNodeShape targetClone,
-			Set<ShowlPropertyShapeGroup> unmapped) {
-				
-		for (ShowlDirectPropertyShape direct : targetNode.getProperties()) {
-			URI predicate = direct.getPredicate();
-			ShowlDirectPropertyShape cloneDirect = targetClone.getProperty(predicate);
+	/**
+	 * Stash the selected expressions from the given node into 
+	 * a map and set them as null in the node.  If the map already holds an expression for
+	 * a given property, merge it into an overlay expression.
+	 */
+	private void stashExpressions(ShowlNodeShape targetNode,
+			Map<ShowlDirectPropertyShape, ShowlExpression> map) {
+		
+		for (ShowlDirectPropertyShape p : targetNode.getProperties()) {
 			
-			ShowlExpression prior = direct.getSelectedExpression();
-			ShowlExpression e = cloneDirect.getSelectedExpression();
-
-			ShowlPropertyShapeGroup group = direct.asGroup();
-			if (e == null && prior==null) {
-				unmapped.add(group);
-			} else 	if (e!=null) {
-				unmapped.remove(group);
+			ShowlExpression e = p.getSelectedExpression();
+			if (e != null) {
+				p.setSelectedExpression(null);
+				ShowlExpression prior = map.get(p);
 				if (prior == null) {
-					direct.setSelectedExpression(e);
+					map.put(p, e);
+				} else if (prior instanceof ShowlArrayExpression && e instanceof ShowlArrayExpression) {
+					ShowlArrayExpression priorArray = (ShowlArrayExpression) prior;
+					ShowlArrayExpression newArray = (ShowlArrayExpression) e;
+					for (ShowlExpression member : newArray.getMemberList()) {
+						priorArray.addMember(member);
+					}
 				} else if (prior instanceof ShowlOverlayExpression) {
 					ShowlOverlayExpression overlay = (ShowlOverlayExpression) prior;
 					overlay.add(e);
@@ -83,24 +88,32 @@ public class OverlayTransformService extends BasicTransformService {
 					ShowlOverlayExpression overlay = new ShowlOverlayExpression();
 					overlay.add(prior);
 					overlay.add(e);
-					direct.setSelectedExpression(overlay);
+					map.put(p, overlay);
+				}
+				ShowlNodeShape valueShape = p.getValueShape();
+				if (valueShape != null) {
+					stashExpressions(valueShape, map);
 				}
 			}
-			
-			ShowlNodeShape targetValue = direct.getValueShape();
-			if (targetValue != null) {
-				ShowlNodeShape cloneValue = cloneDirect.getValueShape();
-				setSelectedExpressions(targetValue, cloneValue, unmapped);
-			}
-			
 		}
 		
 	}
 
-	private ShowlNodeShape clone(ShowlNodeShape targetNode) {
+	private void setSelectedExpressions(ShowlNodeShape targetNode, Map<ShowlDirectPropertyShape,ShowlExpression> map) {
 		
-		Shape shape = targetNode.getShape();
-		DataSource ds = targetNode.getShapeDataSource().getDataSource();
-		return getNodeService().createNodeShape(shape, ds);
+		for (Map.Entry<ShowlDirectPropertyShape, ShowlExpression> entry : map.entrySet()) {
+			ShowlDirectPropertyShape p = entry.getKey();
+			ShowlExpression e = entry.getValue();
+			if (e instanceof ShowlArrayExpression) {
+				ShowlOverlayExpression overlay = new ShowlOverlayExpression();
+				overlay.add(e);
+				e = overlay;
+			}
+			p.setSelectedExpression(e);
+		}
+		
 	}
+
+
+
 }

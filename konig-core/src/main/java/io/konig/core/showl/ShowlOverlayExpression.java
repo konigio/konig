@@ -29,6 +29,14 @@ public class ShowlOverlayExpression extends ArrayList<ShowlExpression> implement
 		}
 		return copy;
 	}
+	
+	@Override
+	public boolean add(ShowlExpression e) {
+		if (e instanceof ShowlDelegationExpression) {
+			return false;
+		}
+		return super.add(e);
+	}
 
 	@Override
 	public String displayValue() {

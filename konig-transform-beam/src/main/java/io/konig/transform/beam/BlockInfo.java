@@ -71,6 +71,7 @@ public class BlockInfo {
 	private Map<ShowlPropertyShapeGroup, JVar> propertyValueMap = new HashMap<>();
 	
 	private Map<ShowlEffectiveNodeShape, JVar> enumMemberMap = new HashMap<>();
+	private Map<JVar,JVar> varMap = new HashMap<>();
 	
 	
 	public BlockInfo(JBlock block) {
@@ -355,7 +356,13 @@ public class BlockInfo {
 		return null;
 	}
 
-	
+	public void putMappedVar(JVar key, JVar value) {
+		varMap.put(key, value);
+	}
+
+	public JVar getMappedVar(JVar key) {
+		return varMap.get(key);
+	}
 
 
 }
