@@ -16,8 +16,8 @@ import org.apache.beam.sdk.values.TupleTag;
 public class ToBqPersonShapeFn
     extends DoFn<KV<String, CoGbkResult> , TableRow>
 {
-    public static TupleTag<TableRow> deadLetterTag = new TupleTag<TableRow>();
-    public static TupleTag<TableRow> successTag = new TupleTag<TableRow>();
+    public static TupleTag<TableRow> deadLetterTag = (new TupleTag<TableRow>(){});
+    public static TupleTag<TableRow> successTag = (new TupleTag<TableRow>(){});
 
     @ProcessElement
     public void processElement(ProcessContext c, PipelineOptions options) {
@@ -25,10 +25,10 @@ public class ToBqPersonShapeFn
         try {
             TableRow outputRow = new TableRow();
             KV<String, CoGbkResult> e = c.element();
-            TableRow personAlumniOfRow = sourceRow(e, BqPersonShapeBeam.personAlumniOfTag);
+            TableRow personContactRow = sourceRow(e, BqPersonShapeBeam.personContactTag);
             TableRow personNameRow = sourceRow(e, BqPersonShapeBeam.personNameTag);
-            id(errorBuilder, outputRow, personNameRow);
-            alumniOf(errorBuilder, outputRow, personAlumniOfRow);
+            id(errorBuilder, outputRow, personContactRow);
+            phoneNumber(errorBuilder, outputRow, personContactRow);
             givenName(errorBuilder, outputRow, personNameRow);
             if (outputRow.isEmpty()) {
                 errorBuilder.addError("record is empty");
@@ -39,6 +39,7 @@ public class ToBqPersonShapeFn
                 errorRow.set("errorCreated", (new Date().getTime()/ 1000));
                 errorRow.set("errorMessage", errorBuilder.toString());
                 errorRow.set("pipelineJobName", options.getJobName());
+                errorRow.set("PersonContact", personContactRow);
                 errorRow.set("PersonName", personNameRow);
                 c.output(deadLetterTag, errorRow);
             } else {
@@ -49,8 +50,8 @@ public class ToBqPersonShapeFn
         }
     }
 
-    private String id(ErrorBuilder errorBuilder, TableRow bqPersonRow, TableRow personNameRow) {
-        String id = ((String) personNameRow.get("id"));
+    private String id(ErrorBuilder errorBuilder, TableRow bqPersonRow, TableRow personContactRow) {
+        String id = ((String) personContactRow.get("id"));
         if (id!= null) {
             bqPersonRow.set("id", id);
         } else {
@@ -59,12 +60,12 @@ public class ToBqPersonShapeFn
         return id;
     }
 
-    private String alumniOf(ErrorBuilder errorBuilder, TableRow bqPersonRow, TableRow personAlumniOfRow) {
-        TableRow alumniOf = ((TableRow) personAlumniOfRow.get("alumni_of"));
-        if (alumniOf!= null) {
-            bqPersonRow.set("alumniOf", alumniOf);
+    private String phoneNumber(ErrorBuilder errorBuilder, TableRow bqPersonRow, TableRow personContactRow) {
+        String phoneNumber = ((String) personContactRow.get("phone_number"));
+        if (phoneNumber!= null) {
+            bqPersonRow.set("phoneNumber", phoneNumber);
         }
-        return alumniOf;
+        return phoneNumber;
     }
 
     private String givenName(ErrorBuilder errorBuilder, TableRow bqPersonRow, TableRow personNameRow) {

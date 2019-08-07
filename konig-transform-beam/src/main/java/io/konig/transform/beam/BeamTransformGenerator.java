@@ -202,7 +202,6 @@ public class BeamTransformGenerator {
     rewriteRuleList.add(new RewriteRule("@DoFn$", "@"));
     rewriteRuleList.add(new RewriteRule("@DoFn.", "@"));
     rewriteRuleList.add(new RewriteRule(".DoFn$", ".DoFn."));
-    rewriteRuleList.add(new RewriteRule(".{}()", "{}"));
     rewriteRuleList.add(new RewriteRule("import org.apache.beam.sdk.transforms.DoFn;", 
     		"import org.apache.beam.sdk.transforms.DoFn;\n" +
         "import org.apache.beam.sdk.transforms.DoFn.ProcessElement;\n" +
@@ -1233,11 +1232,10 @@ public class BeamTransformGenerator {
 
 				JVar deadLetterTag = fnClass.field(JMod.PUBLIC | JMod.STATIC,
 						tupleTagClass.narrow(model.ref(String.class)), "deadLetterTag")
-						.init(tupleTagClass._new().narrow(model.ref(String.class)).invoke("{}"));
+						.init(JExpr.direct("new TupleTag<String>(){}"));
 				
-				JVar successTag = fnClass
-						.field(JMod.PUBLIC | JMod.STATIC, tupleTagClass.narrow(outputClass), "successTag")
-						.init(model.ref(TupleTag.class)._new().narrow(outputClass).invoke("{}"));
+				JVar successTag = fnClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(outputClass), 
+						"successTag").init(JExpr.direct("new TupleTag<"+outputClass.name()+">(){}"));
 				
 				JMethod method = fnClass.method(JMod.PUBLIC, model.VOID, "processElement");
 				method.annotate(model.directClass(ProcessElement.class.getName()));
@@ -1285,17 +1283,17 @@ public class BeamTransformGenerator {
 		    AbstractJClass loggerClass = model.ref(Logger.class);
 		    AbstractJClass tableRowClass = model.ref(TableRow.class);
 		    AbstractJClass tupleTagClass = model.ref(TupleTag.class);
-		    AbstractJClass tupleTagTableRowClass =  tupleTagClass.narrow(tableRowClass);
+		    AbstractJClass tupleTagTableRowClass =  model.ref(TupleTag.class).narrow(tableRowClass);
 		    
 			JFieldVar logger = thisClass.field(JMod.PRIVATE | JMod.FINAL | JMod.STATIC , loggerClass, 
 					"LOGGER", 
 					model.ref(LoggerFactory.class).staticInvoke("getLogger").arg("ReadFn"));
 			
 			JVar deadLetterTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagTableRowClass, 
-					"deadLetterTag").init(tupleTagTableRowClass._new().invoke("{}"));
+					"deadLetterTag").init(JExpr.direct("new TupleTag<TableRow>(){}"));
 			
 			JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(outputClass), 
-					"successTag").init(tupleTagClass._new().narrow(outputClass).invoke("{}"));
+					"successTags").init(JExpr.direct("new TupleTag<"+outputClass.name()+">(){}"));
 			
 		    // @ProcessElement
 		    // public void processElement(ProcessContext c, PipelineOptions options) {
@@ -2338,10 +2336,10 @@ public class BeamTransformGenerator {
 						JMethod method = thisClass.method(JMod.PUBLIC, model.VOID, "processElement");
 						JVar deadLetterTag = thisClass
 								.field(JMod.PUBLIC | JMod.STATIC, tupleTagClass.narrow(model.ref(String.class)), "deadLetterTag")
-								.init(tupleTagClass._new().narrow(model.ref(String.class)).invoke("{}"));
+								.init(tupleTagClass._new().narrow(model.ref(String.class)));
 		
 						JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC, tupleTagClass.narrow(tableRowClass), "successTag")
-								.init(tupleTagClass._new().narrow(tableRowClass).invoke("{}"));
+								.init(tupleTagClass._new().narrow(tableRowClass));
 		
 						BlockInfo blockInfo = etran().beginBlock(method.body());
 						
@@ -3032,10 +3030,10 @@ public class BeamTransformGenerator {
 				AbstractJClass tupleTagClass = model.ref(TupleTag.class);
 				
 		JVar deadLetterTag = fnClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(model.ref(String.class)), 
-				"deadLetterTag").init(tupleTagClass._new().narrow(model.ref(String.class)).invoke("{}"));
+				"deadLetterTag").init(tupleTagClass._new().narrow(model.ref(String.class)));
 		
 		JVar successTag = fnClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(tableRowClass), 
-				"successTag").init(tupleTagClass._new().narrow(model.ref(TableRow.class)).invoke("{}"));		
+				"successTag").init(tupleTagClass._new().narrow(model.ref(TableRow.class)));		
         JMethod method = 
             fnClass.method(JMod.PUBLIC, model.VOID, "processElement");
         method.annotate(model.directClass(ProcessElement.class.getName()));
@@ -3450,11 +3448,12 @@ public class BeamTransformGenerator {
         sourceBeamChannel.setReadFileFn(thisClass);
         
         
-        
-        
-        AbstractJClass superClass =  model.directClass(DoFn.class.getName()).narrow(ReadableFile.class, TableRow.class);
+        AbstractJClass tableRowClass = model.ref(TableRow.class);
+        AbstractJClass readableFileClass = model.ref(ReadableFile.class);
+	    AbstractJClass doFnClass = model.ref(DoFn.class).narrow(readableFileClass).narrow(tableRowClass);
+	    
       
-        thisClass._extends(superClass);
+        thisClass._extends(doFnClass);
         
         processElement(model.ref(TableRow.class));
       }
@@ -4347,10 +4346,10 @@ public class BeamTransformGenerator {
 						JVar targetTag = targetChannel.getTupleTag();
 						
 						JVar deadLetterTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(model.ref(String.class)), 
-								"deadLetterTag").init(tupleTagClass._new().narrow(model.ref(String.class)).invoke("{}"));
+								"deadLetterTag").init(tupleTagClass._new().narrow(model.ref(String.class)));
 						
 						JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(tableRowClass), 
-								"successTag").init(tupleTagClass._new().narrow(model.ref(TableRow.class)).invoke("{}"));
+								"successTag").init(tupleTagClass._new().narrow(model.ref(TableRow.class)));
 						
 		//			@ProcessElement 
 		//			public void processElement(ProcessContext c) {

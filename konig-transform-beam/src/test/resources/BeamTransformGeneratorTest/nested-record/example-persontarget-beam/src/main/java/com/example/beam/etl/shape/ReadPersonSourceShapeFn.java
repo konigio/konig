@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import com.fasterxml.uuid.Generators;
+import com.google.api.services.bigquery.model.TableRow;
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -22,11 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ReadPersonSourceShapeFn
-    extends DoFn<FileIO.ReadableFile, com.google.api.services.bigquery.model.TableRow>
+    extends DoFn<FileIO.ReadableFile, TableRow>
 {
     private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
-    public static TupleTag<com.google.api.services.bigquery.model.TableRow> deadLetterTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>(){};
-    public static TupleTag<com.google.api.services.bigquery.model.TableRow> successTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>(){};
+    public static TupleTag<TableRow> deadLetterTag = (new TupleTag<TableRow>(){});
+    public static TupleTag<TableRow> successTags = (new TupleTag<TableRow>(){});
 
     @ProcessElement
     public void processElement(ProcessContext c, PipelineOptions options) {
@@ -39,7 +40,7 @@ public class ReadPersonSourceShapeFn
                 validateHeaders(csv);
                 for (CSVRecord record: csv) {
                     StringBuilder builder = new StringBuilder();
-                    com.google.api.services.bigquery.model.TableRow row = new com.google.api.services.bigquery.model.TableRow();
+                    TableRow row = new TableRow();
                     String address_id = stringValue(csv, "address_id", record, builder);
                     if (address_id!= null) {
                         row.set("address_id", address_id);
@@ -60,7 +61,7 @@ public class ReadPersonSourceShapeFn
                         builder.append("record is empty");
                     }
                     if (builder.length()> 0) {
-                        com.google.api.services.bigquery.model.TableRow errorRow = new com.google.api.services.bigquery.model.TableRow();
+                        TableRow errorRow = new TableRow();
                         errorRow.set("errorId", Generators.timeBasedGenerator().generate().toString());
                         errorRow.set("errorCreated", (new Date().getTime()/ 1000));
                         errorRow.set("errorMessage", builder.toString());
@@ -68,7 +69,7 @@ public class ReadPersonSourceShapeFn
                         errorRow.set("PersonSource", row);
                         c.output(deadLetterTag, errorRow);
                     } else {
-                        c.output(successTag, row);
+                        c.output(successTags, row);
                     }
                 }
             } finally {

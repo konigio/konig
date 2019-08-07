@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import com.fasterxml.uuid.Generators;
+import com.google.api.services.bigquery.model.TableRow;
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -15,7 +16,6 @@ import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -23,12 +23,12 @@ import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ReadPersonNameFn
-    extends DoFn<FileIO.ReadableFile, KV<String, com.google.api.services.bigquery.model.TableRow>>
+public class ReadPersonContactFn
+    extends DoFn<FileIO.ReadableFile, KV<String, TableRow>>
 {
     private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
-    public static TupleTag<com.google.api.services.bigquery.model.TableRow> deadLetterTag = new TupleTag<com.google.api.services.bigquery.model.TableRow>();
-    public static TupleTag<KV<String, com.google.api.services.bigquery.model.TableRow>> successTag = new TupleTag<KV<String,TableRow>>();
+    public static TupleTag<TableRow> deadLetterTag = (new TupleTag<TableRow>(){});
+    public static TupleTag<KV<String, TableRow>> successTags = (new TupleTag<KV<String,TableRow>>(){});
 
     @ProcessElement
     public void processElement(ProcessContext c, PipelineOptions options) {
@@ -41,29 +41,29 @@ public class ReadPersonNameFn
                 validateHeaders(csv);
                 for (CSVRecord record: csv) {
                     StringBuilder builder = new StringBuilder();
-                    com.google.api.services.bigquery.model.TableRow row = new com.google.api.services.bigquery.model.TableRow();
-                    String first_name = stringValue(csv, "first_name", record, builder);
-                    if (first_name!= null) {
-                        row.set("first_name", first_name);
-                    }
+                    TableRow row = new TableRow();
                     String id = stringValue(csv, "id", record, builder);
                     if (id!= null) {
                         row.set("id", id);
                     }
-                    String id = id;
+                    String phone_number = stringValue(csv, "phone_number", record, builder);
+                    if (phone_number!= null) {
+                        row.set("phone_number", phone_number);
+                    }
+                    String idKey = id;
                     if (row.isEmpty()) {
                         builder.append("record is empty");
                     }
                     if (builder.length()> 0) {
-                        com.google.api.services.bigquery.model.TableRow errorRow = new com.google.api.services.bigquery.model.TableRow();
+                        TableRow errorRow = new TableRow();
                         errorRow.set("errorId", Generators.timeBasedGenerator().generate().toString());
                         errorRow.set("errorCreated", (new Date().getTime()/ 1000));
                         errorRow.set("errorMessage", builder.toString());
                         errorRow.set("pipelineJobName", options.getJobName());
-                        errorRow.set("PersonName", row);
+                        errorRow.set("PersonContact", row);
                         c.output(deadLetterTag, errorRow);
                     } else {
-                        c.output(successTag, KV.of(id.toString(), row));
+                        c.output(successTags, KV.of(idKey.toString(), row));
                     }
                 }
             } finally {
@@ -77,8 +77,8 @@ public class ReadPersonNameFn
     private void validateHeaders(CSVParser csv) {
         HashMap<String, Integer> headerMap = ((HashMap<String, Integer> ) csv.getHeaderMap());
         StringBuilder builder = new StringBuilder();
-        validateHeader(headerMap, "first_name", builder);
         validateHeader(headerMap, "id", builder);
+        validateHeader(headerMap, "phone_number", builder);
         if (builder.length()> 0) {
             LOGGER.warn("Mapping for {} not found", builder.toString());
         }

@@ -6,14 +6,13 @@ import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
 
-public class PersonAlumniOfToKvFn
+public class PersonContactToKvFn
     extends DoFn<TableRow, KV<String, TableRow>>
 {
-    public static TupleTag<String> deadLetterTag = new TupleTag<String>();
-    public static TupleTag<KV<String, TableRow>> successTag = new TupleTag<KV<String,TableRow>>();
+    public static TupleTag<String> deadLetterTag = (new TupleTag<String>(){});
+    public static TupleTag<KV<String, TableRow>> successTag = (new TupleTag<KV<String,TableRow>>(){});
 
     @ProcessElement
     public void processElement(ProcessContext c) {

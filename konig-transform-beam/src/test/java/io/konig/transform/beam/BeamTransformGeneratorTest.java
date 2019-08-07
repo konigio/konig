@@ -113,7 +113,7 @@ public class BeamTransformGeneratorTest {
 	@Test
 	public void testGCSMultipleSources() throws Exception {
 		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/gcs-multiple-source", false);
+		generateAll("src/test/resources/BeamTransformGeneratorTest/gcs-multiple-source", true);
 		
 	}
 	
@@ -126,7 +126,7 @@ public class BeamTransformGeneratorTest {
 	@Test
 	public void testBQMultipleSources() throws Exception {
 		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/bq-multiple-source", false);
+		generateAll("src/test/resources/BeamTransformGeneratorTest/bq-multiple-source", true);
 		
 	}
 	

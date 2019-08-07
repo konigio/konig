@@ -13,8 +13,8 @@ import org.apache.beam.sdk.values.TupleTag;
 public class ToPersonTargetShapeFn
     extends DoFn<TableRow, TableRow>
 {
-    public static TupleTag<TableRow> deadLetterTag = new TupleTag<TableRow>(){};
-    public static TupleTag<TableRow> successTag = new TupleTag<TableRow>(){};
+    public static TupleTag<TableRow> deadLetterTag = (new TupleTag<TableRow>(){});
+    public static TupleTag<TableRow> successTag = (new TupleTag<TableRow>(){});
 
     @ProcessElement
     public void processElement(ProcessContext c, PipelineOptions options) {
