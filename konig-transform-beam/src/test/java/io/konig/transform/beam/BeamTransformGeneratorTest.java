@@ -104,7 +104,46 @@ public class BeamTransformGeneratorTest {
 	private URI uri(String stringValue) {
 		return new URIImpl(stringValue);
 	}
+	/**
+	 * Test Case for Multiple Sources 
+	 * PersonName from gcs
+	 * PersonContact from gcs
+	 * @throws Exception
+	 */
+	@Test
+	public void testGCSMultipleSources() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/gcs-multiple-source", false);
+		
+	}
+	
+	/**
+	 * Test Case for Multiple Sources 
+	 * PersonName from BQ
+	 * PersonContact from BQ
+	 * @throws Exception
+	 */
+	@Test
+	public void testBQMultipleSources() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/bq-multiple-source", false);
+		
+	}
+	
+	/**
+	 * Test Case for Multiple Sources 
+	 * PersonName from GCS
+	 * PersonContact from BQ
+	 * @throws Exception
+	 */
+	@Test
+	public void testMultipleSource() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/multiple-source", false);
+		
+	}
 
+	
 	@Ignore
 	public void testOverlay() throws Exception {
 		
@@ -176,13 +215,6 @@ public class BeamTransformGeneratorTest {
 		
 	}
 	
-	@Test
-	public void testMultipleSource() throws Exception {
-		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/multiple-source", false);
-		
-	}
-
 	@Test
 	public void testTabularMapping() throws Exception {
 		
@@ -291,7 +323,7 @@ public class BeamTransformGeneratorTest {
 				.groupId("com.example")
 				.artifactBaseId("example")
 				.version("1.0")
-				.konigVersion("2.7.0")
+				.konigVersion("2.7.0-SNAPSHOT")
 				.projectDir(projectDir)
 				.nodeList(consumer.getList())
 				.build();

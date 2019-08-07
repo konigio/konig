@@ -19,14 +19,15 @@ $.givenName''' ;
 		sh:datatype xsd:string ; 
 		rdf:predicate alias:first_name ]  ; 
 	a sh:Shape ; 
-	konig:shapeDataSource <gs://example-inbound-${environmentName}/inbound/application/vnd.pearson.person+csv> ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonNameShape> ; 
 	sh:targetClass schema:Person ; 
 	sh:nodeKind sh:IRI . 
 
 	
-<gs://example-inbound-${environmentName}/inbound/application/vnd.pearson.person+csv> gcp:name "example-inbound-${environmentName}" ; 
-	gcp:location "us" ; 
-	gcp:projectId "${gcpProjectId}" ; 
-	gcp:storageClass "multi_regional" ; 
-	a konig:GoogleCloudStorageFolder , konig:DataSource ; 
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonNameShape> gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:datasetId "schema" ; 
+		gcp:tableId "PersonNameShape" ]  ; 
+	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	a konig:GoogleBigQueryTable , konig:DataSource ;
 	schema:isPartOf sys:WarehouseStaging .

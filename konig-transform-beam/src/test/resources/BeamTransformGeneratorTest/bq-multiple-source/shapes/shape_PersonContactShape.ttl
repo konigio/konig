@@ -8,38 +8,37 @@
 @prefix sys: <http://example.com/ns/sys/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-shape:PersonAlumniOfShape sh:property  [ 
-		sh:path alias:ID ; 
+shape:PersonContactShape sh:property  [ 
+		sh:path alias:id ; 
 		sh:class schema:Person ; 
 		sh:minCount 1 ; 
 		sh:maxCount 1 ; 
 		sh:nodeKind sh:IRI ; 
-		rdf:predicate alias:ID
+		rdf:predicate alias:id
 	 ]  ,  [ 
-		sh:path alias:alumni_of ; 
+		sh:path alias:phone_number ; 
 		konig:formula '''
-@term alumniOf <http://schema.org/alumniOf>
+@term phoneNumber <http://schema.org/phoneNumber>
 
-$.alumniOf''' ; 
-		sh:class schema:Organization ; 
+$.phoneNumber''' ; 
 		sh:minCount 0 ; 
 		sh:maxCount 1 ; 
-		sh:nodeKind sh:IRI ; 
-		rdf:predicate alias:alumni_of ]  ; 
+		sh:datatype xsd:string ; 
+		rdf:predicate alias:phone_number ]  ; 
 	a sh:Shape ; 
 	konig:iriTemplate '''@context {
    "alias" : "http://example.com/ns/alias/",
-   "ID" : "alias:ID"
+   "id" : "alias:id"
 }
 
-<{ID}>''' ; 
-	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonAlumniOfShape> ; 
+<{id}>''' ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonContactShape> ; 
 	sh:targetClass schema:Person . 
 
-<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonAlumniOfShape> gcp:tableReference  [ 
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonContactShape> gcp:tableReference  [ 
 		gcp:projectId "${gcpProjectId}" ; 
 		gcp:datasetId "schema" ; 
-		gcp:tableId "PersonAlumniOfShape" ]  ; 
+		gcp:tableId "PersonContactShape" ]  ; 
 	konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
 	a konig:GoogleBigQueryTable , konig:DataSource ;
 	schema:isPartOf sys:WarehouseStaging .

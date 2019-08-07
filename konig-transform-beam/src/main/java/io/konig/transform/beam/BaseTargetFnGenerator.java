@@ -116,10 +116,10 @@ public class BaseTargetFnGenerator {
 		
 		JVar deadLetterTag = thisClass
 				.field(JMod.PUBLIC | JMod.STATIC, tupleTagTableRowClass, "deadLetterTag")
-				.init(tupleTagTableRowClass._new());
+				.init(tupleTagTableRowClass._new().invoke("{}"));
 
 		JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC, tupleTagTableRowClass, "successTag")
-				.init(tupleTagTableRowClass._new());
+				.init(tupleTagTableRowClass._new().invoke("{}"));
 
 
 		JVar errorBuilder = method.body().decl(errorBuilderClass, "errorBuilder").init(errorBuilderClass._new());

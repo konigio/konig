@@ -202,6 +202,7 @@ public class BeamTransformGenerator {
     rewriteRuleList.add(new RewriteRule("@DoFn$", "@"));
     rewriteRuleList.add(new RewriteRule("@DoFn.", "@"));
     rewriteRuleList.add(new RewriteRule(".DoFn$", ".DoFn."));
+    rewriteRuleList.add(new RewriteRule(".{}()", "{}"));
     rewriteRuleList.add(new RewriteRule("import org.apache.beam.sdk.transforms.DoFn;", 
     		"import org.apache.beam.sdk.transforms.DoFn;\n" +
         "import org.apache.beam.sdk.transforms.DoFn.ProcessElement;\n" +
@@ -1232,11 +1233,11 @@ public class BeamTransformGenerator {
 
 				JVar deadLetterTag = fnClass.field(JMod.PUBLIC | JMod.STATIC,
 						tupleTagClass.narrow(model.ref(String.class)), "deadLetterTag")
-						.init(tupleTagClass._new().narrow(model.ref(String.class)));
-
+						.init(tupleTagClass._new().narrow(model.ref(String.class)).invoke("{}"));
+				
 				JVar successTag = fnClass
 						.field(JMod.PUBLIC | JMod.STATIC, tupleTagClass.narrow(outputClass), "successTag")
-						.init(tupleTagClass._new().narrow(outputClass));
+						.init(model.ref(TupleTag.class)._new().narrow(outputClass).invoke("{}"));
 				
 				JMethod method = fnClass.method(JMod.PUBLIC, model.VOID, "processElement");
 				method.annotate(model.directClass(ProcessElement.class.getName()));
@@ -1282,17 +1283,19 @@ public class BeamTransformGenerator {
 		    
 		    // private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
 		    AbstractJClass loggerClass = model.ref(Logger.class);
+		    AbstractJClass tableRowClass = model.ref(TableRow.class);
 		    AbstractJClass tupleTagClass = model.ref(TupleTag.class);
+		    AbstractJClass tupleTagTableRowClass = tupleTagClass.narrow(tableRowClass);
 		    
 			JFieldVar logger = thisClass.field(JMod.PRIVATE | JMod.FINAL | JMod.STATIC , loggerClass, 
 					"LOGGER", 
 					model.ref(LoggerFactory.class).staticInvoke("getLogger").arg("ReadFn"));
 			
-			JVar deadLetterTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(model.ref(TableRow.class)), 
-					"deadLetterTag").init(tupleTagClass._new().narrow(model.directClass(TableRow.class.getName())));
+			JVar deadLetterTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagTableRowClass, 
+					"deadLetterTag").init(tupleTagTableRowClass._new().invoke("{}"));
 			
 			JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(outputClass), 
-					"successTag").init(tupleTagClass._new().narrow(outputClass));
+					"successTag").init(tupleTagClass._new().narrow(outputClass).invoke("{}"));
 			
 		    // @ProcessElement
 		    // public void processElement(ProcessContext c, PipelineOptions options) {
@@ -1385,7 +1388,6 @@ public class BeamTransformGenerator {
 		    
 		    //         TableRow row = new TableRow();
 		    
-		    AbstractJClass tableRowClass = model.ref(TableRow.class);
 		    JVar row = forEachRecord.decl(tableRowClass, "row").init(tableRowClass._new());
 		    
 		    List<ShowlPropertyShape> sourceProperties = sourceProperties();
@@ -2336,10 +2338,10 @@ public class BeamTransformGenerator {
 						JMethod method = thisClass.method(JMod.PUBLIC, model.VOID, "processElement");
 						JVar deadLetterTag = thisClass
 								.field(JMod.PUBLIC | JMod.STATIC, tupleTagClass.narrow(model.ref(String.class)), "deadLetterTag")
-								.init(tupleTagClass._new().narrow(model.ref(String.class)));
+								.init(tupleTagClass._new().narrow(model.ref(String.class)).invoke("{}"));
 		
 						JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC, tupleTagClass.narrow(tableRowClass), "successTag")
-								.init(tupleTagClass._new().narrow(tableRowClass));
+								.init(tupleTagClass._new().narrow(tableRowClass).invoke("{}"));
 		
 						BlockInfo blockInfo = etran().beginBlock(method.body());
 						
@@ -3030,10 +3032,10 @@ public class BeamTransformGenerator {
 				AbstractJClass tupleTagClass = model.ref(TupleTag.class);
 				
 		JVar deadLetterTag = fnClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(model.ref(String.class)), 
-				"deadLetterTag").init(tupleTagClass._new().narrow(model.ref(String.class)));
+				"deadLetterTag").init(tupleTagClass._new().narrow(model.ref(String.class)).invoke("{}"));
 		
 		JVar successTag = fnClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(tableRowClass), 
-				"successTag").init(tupleTagClass._new().narrow(model.ref(TableRow.class)));		
+				"successTag").init(tupleTagClass._new().narrow(model.ref(TableRow.class)).invoke("{}"));		
         JMethod method = 
             fnClass.method(JMod.PUBLIC, model.VOID, "processElement");
         method.annotate(model.directClass(ProcessElement.class.getName()));
@@ -3094,7 +3096,8 @@ public class BeamTransformGenerator {
 
         AbstractJClass stringClass = model.ref(String.class);
         AbstractJClass readableFileClass = model.ref(ReadableFile.class);
-        AbstractJClass tableRowClass = model.ref(TableRow.class);
+        AbstractJClass tableRowClass = model.ref(TableRow.class.getName());
+        
         AbstractJClass kvClass = model.ref(KV.class).narrow(stringClass).narrow(tableRowClass);
         AbstractJClass doFnClass = model.ref(DoFn.class).narrow(readableFileClass).narrow(kvClass);
         
@@ -3135,9 +3138,9 @@ public class BeamTransformGenerator {
 
 					if(e != null) {
 						IJExpression initValue = etran().transform(e);
-					keyPropertyVar = block.decl(stringClass, keyProperty.getPredicate().getLocalName()).init(initValue);
+					keyPropertyVar = block.decl(stringClass, keyProperty.getPredicate().getLocalName()+ "Key").init(initValue);
 					} else {
-						keyPropertyVar = block.decl(stringClass, keyProperty.getPredicate().getLocalName());
+						keyPropertyVar = block.decl(stringClass, keyProperty.getPredicate().getLocalName()+ "Key");
 						
 					}
 					BlockInfo blockInfo = etran().peekBlockInfo();
@@ -3500,55 +3503,49 @@ public class BeamTransformGenerator {
     }
 
 
-    private void multipleSourceUriMethod() throws BeamTransformGenerationException {
-      
-      // private String sourceUri(String pattern, Options options) {
+		private void multipleSourceUriMethod() throws BeamTransformGenerationException {
+			/*
+			 * We assume that all datasources have the same variable name for
+			 * the environment name.
+			 * 
+			 * Scan all datasources and confirm this assumption; throw an
+			 * exception if the assumption is not true.
+			 */
+			String varName = null;
+			String datasourceId = null;
+			for (ShowlChannel channel : targetNode.getChannels()) {
+				DataSource ds = channel.getSourceNode().getShapeDataSource().getDataSource();
+				if (ds.isA(Konig.GoogleCloudStorageFolder) || ds.isA(Konig.GoogleCloudStorageBucket)) {
+					datasourceId = ds.getId().stringValue();
+					int varStart = datasourceId.lastIndexOf('$');
+					int varEnd = datasourceId.indexOf('}', varStart) + 1;
+					String varName2 = datasourceId.substring(varStart, varEnd);
+					if (varName == null) {
+						varName = varName2;
+					} else if (!varName.equals(varName2)) {
+						String msg = MessageFormat.format("Conflicting variables for environment data sources for {0}",
+								targetNode.getPath());
+						throw new BeamTransformGenerationException(msg);
+					}
+					if (varName == null) {
+						throw new BeamTransformGenerationException(
+								"Environment name variable not found for target " + targetNode.getPath());
+					}
+				}
+			}
 
-      AbstractJClass stringClass = model.ref(String.class);
-      JMethod method = mainClass.method(JMod.PRIVATE | JMod.STATIC, stringClass, "sourceURI");
-      JVar pattern = method.param(stringClass, "pattern");
-      JVar options = method.param(optionsClass, "options");
-      
-      //   return pattern.replace("${environmentName}", options.getEnvironment());
-      
-      
-      /*
-       * We assume that all datasources have the same variable name for the environment name.
-       * 
-       * Scan all datasources and confirm this assumption; throw an exception if 
-       * the assumption is not true.
-       */
-      
-      String varName = null;
-      String datasourceId = null;
-      for (ShowlChannel channel : targetNode.getChannels()) {
-        DataSource ds =  channel.getSourceNode().getShapeDataSource().getDataSource();
-    	if(ds.isA(Konig.GoogleCloudStorageFolder) || ds.isA(Konig.GoogleCloudStorageBucket)) {
-    		datasourceId = ds.getId().stringValue();
-	        int varStart = datasourceId.lastIndexOf('$');
-	        int varEnd = datasourceId.indexOf('}', varStart)+1;
-	        String varName2 = datasourceId.substring(varStart, varEnd);
-	        if (varName == null) {
-	          varName = varName2;
-	        } else if (!varName.equals(varName2)) {
-	          String msg = MessageFormat.format("Conflicting variables for environment data sources for {0}", targetNode.getPath());
-	          throw new BeamTransformGenerationException(msg);
-	        }
-    	}
-      }
+			if (varName != null) {
+				// private String sourceUri(String pattern, Options options) {
+				// return pattern.replace("${environmentName}", options.getEnvironment());
+				AbstractJClass stringClass = model.ref(String.class);
+				JMethod method = mainClass.method(JMod.PRIVATE | JMod.STATIC, stringClass, "sourceURI");
+				JVar pattern = method.param(stringClass, "pattern");
+				JVar options = method.param(optionsClass, "options");
+				method.body()._return(
+						pattern.invoke("replace").arg(JExpr.lit(varName)).arg(options.invoke("getEnvironment")));
+			}
 
-      if (varName == null) {
-        throw new BeamTransformGenerationException("Environment name variable not found for target " + targetNode.getPath());
-      }
-      
-      
-      method.body()._return(pattern.invoke("replace")
-              .arg(JExpr.lit(varName))
-              .arg(options.invoke("getEnvironment")));
-      
-      // }
-      
-    }
+		}
 
 
 
@@ -3793,20 +3790,23 @@ public class BeamTransformGenerator {
 		for (BeamChannel source : groupInfo.getSourceList()) {
 			if (invoke == null) {
 				if(source.getTupleTag() != null){
-					invoke = keyedPCollectionTupleClass.staticInvoke("of").arg(source.getTupleTag()).arg(source
-						.getPcollection());
+					JInvocation invocation = null;
 					if(source.getReadFileFn() != null){
-						invoke.invoke("get").arg(source.getReadFileFn().staticRef("successTag"));
-					}
+						invocation = source.getPcollection().invoke("get").arg(source.getReadFileFn().staticRef("successTag"));
+					} 
+					invoke = keyedPCollectionTupleClass.staticInvoke("of").arg(source.getTupleTag()).arg(invocation==null?source.getPcollection():invocation);
+					
 				} else {
 					invoke = keyedPCollectionTupleClass.staticInvoke("of").arg(source.getPcollection());
 				}
 			} else {
 				if(source.getTupleTag() != null){
-					invoke = invoke.invoke("and").arg(source.getTupleTag()).arg(source.getPcollection());
+					JInvocation invocation = null;
+					
 					if(source.getReadFileFn() != null){
-						invoke.invoke("get").arg(source.getReadFileFn().staticRef("successTag"));
+						invocation = source.getPcollection().invoke("get").arg(source.getReadFileFn().staticRef("successTag"));
 					}
+					invoke = invoke.invoke("and").arg(source.getTupleTag()).arg(invocation==null?source.getPcollection():invocation);
 				}else {
 					invoke = invoke.invoke("and").arg(source.getPcollection());
 				}
@@ -3957,9 +3957,13 @@ public class BeamTransformGenerator {
 
     		JVar targetTableCollection = block.decl(pCollectionTupleClass, shapeName, pipeline
                     .invoke("apply").arg(bigQueryIoClass.staticInvoke("readTableRows").invoke("from")
-                    		.arg(targetTableRef)).invoke("apply").arg(parDoClass.staticInvoke("of").arg(targetTableToKvFile._new())));
+                    		.arg(targetTableRef)).invoke("apply").arg(parDoClass.staticInvoke("of").arg(targetTableToKvFile._new())
+                    .invoke("withOutputTags").arg(targetTableToKvFile.staticRef("successTag"))
+    				  .arg(tupleTagListClass.staticInvoke("of").arg(targetTableToKvFile.staticRef("deadLetterTag")))));
+    		
         	sourceInfo.setTupleTag(tagVar);
         	sourceInfo.setPcollection(targetTableCollection);
+        	sourceInfo.setReadFileFn(targetTableToKvFile);
         }
         
       }
@@ -4343,10 +4347,10 @@ public class BeamTransformGenerator {
 						JVar targetTag = targetChannel.getTupleTag();
 						
 						JVar deadLetterTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(model.ref(String.class)), 
-								"deadLetterTag").init(tupleTagClass._new().narrow(model.ref(String.class)));
+								"deadLetterTag").init(tupleTagClass._new().narrow(model.ref(String.class)).invoke("{}"));
 						
 						JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(tableRowClass), 
-								"successTag").init(tupleTagClass._new().narrow(model.ref(TableRow.class)));
+								"successTag").init(tupleTagClass._new().narrow(model.ref(TableRow.class)).invoke("{}"));
 						
 		//			@ProcessElement 
 		//			public void processElement(ProcessContext c) {
