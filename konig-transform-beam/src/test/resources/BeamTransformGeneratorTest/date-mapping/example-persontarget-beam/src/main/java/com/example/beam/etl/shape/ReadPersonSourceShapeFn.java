@@ -33,7 +33,7 @@ public class ReadPersonSourceShapeFn
 {
     private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
     public static TupleTag<TableRow> deadLetterTag = (new TupleTag<TableRow>(){});
-    public static TupleTag<TableRow> successTags = (new TupleTag<TableRow>(){});
+    public static TupleTag<TableRow> successTag = (new TupleTag<TableRow>(){});
     private static final Pattern DATE_PATTERN = Pattern.compile("(\\d+-\\d+-\\d+)(.*)");
 
     @ProcessElement
@@ -72,7 +72,7 @@ public class ReadPersonSourceShapeFn
                         errorRow.set("PersonSource", row);
                         c.output(deadLetterTag, errorRow);
                     } else {
-                        c.output(successTags, row);
+                        c.output(successTag, row);
                     }
                 }
             } finally {

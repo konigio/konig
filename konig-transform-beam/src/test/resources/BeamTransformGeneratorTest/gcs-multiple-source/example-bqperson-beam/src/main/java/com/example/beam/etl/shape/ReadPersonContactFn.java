@@ -28,7 +28,7 @@ public class ReadPersonContactFn
 {
     private static final Logger LOGGER = LoggerFactory.getLogger("ReadFn");
     public static TupleTag<TableRow> deadLetterTag = (new TupleTag<TableRow>(){});
-    public static TupleTag<KV<String, TableRow>> successTags = (new TupleTag<KV<String,TableRow>>(){});
+    public static TupleTag<KV<String, TableRow>> successTag = (new TupleTag<KV<String,TableRow>>(){});
 
     @ProcessElement
     public void processElement(ProcessContext c, PipelineOptions options) {
@@ -63,7 +63,7 @@ public class ReadPersonContactFn
                         errorRow.set("PersonContact", row);
                         c.output(deadLetterTag, errorRow);
                     } else {
-                        c.output(successTags, KV.of(idKey.toString(), row));
+                        c.output(successTag, KV.of(idKey.toString(), row));
                     }
                 }
             } finally {

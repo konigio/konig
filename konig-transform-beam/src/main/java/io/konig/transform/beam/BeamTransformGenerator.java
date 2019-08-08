@@ -1293,7 +1293,7 @@ public class BeamTransformGenerator {
 					"deadLetterTag").init(JExpr.direct("new TupleTag<TableRow>(){}"));
 			
 			JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(outputClass), 
-					"successTags").init(JExpr.direct("new TupleTag<"+outputClass.name()+">(){}"));
+					"successTag").init(JExpr.direct("new TupleTag<"+outputClass.name()+">(){}"));
 			
 		    // @ProcessElement
 		    // public void processElement(ProcessContext c, PipelineOptions options) {

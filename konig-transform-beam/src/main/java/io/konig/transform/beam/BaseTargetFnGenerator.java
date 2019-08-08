@@ -23,6 +23,8 @@ package io.konig.transform.beam;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -223,6 +225,12 @@ public class BaseTargetFnGenerator {
 				list.add(sourceNode);
 			}
 		}
+		Collections.sort(list, new Comparator<ShowlNodeShape>() {
+			@Override
+			public int compare(ShowlNodeShape a, ShowlNodeShape b) {
+				return a.getId().stringValue().compareTo(b.getId().stringValue());
+			}
+		});
 		return list;
 	}
 
