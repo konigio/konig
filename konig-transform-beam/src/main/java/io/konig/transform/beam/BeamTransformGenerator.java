@@ -1214,14 +1214,40 @@ public class BeamTransformGenerator {
 					JMethod method = fnClass.method(JMod.PRIVATE, stringClass, "getKey");
 					JVar row = method.param(tableRowClass, "row");
 
-					method.body()._return(row.invoke("get").arg(JExpr.lit("id")).castTo(stringClass));
+					createKeyGenerator(method, row);
 
 				} catch (JClassAlreadyExistsException e) {
 					fail("Failed to create {fnClassName} ", e);
 				}
 				return fnClass;
 			}
-
+			
+			private void createKeyGenerator(JMethod method, JVar row) throws BeamTransformGenerationException{
+				AbstractJClass stringClass = model.ref(String.class);
+				for(ShowlDirectPropertyShape p : sourceNode.getProperties()) {	
+					URI predicate = p.getPredicate();
+					if (Konig.id.equals(predicate) || p.getNodeKind() == NodeKind.IRI) {
+						method.body()._return(row.invoke("get").arg(JExpr.lit("id")).castTo(stringClass));
+						return;
+					}
+					
+					URI keyType = p.getValueType(reasoner);
+					if (keyType != null && reasoner.isInverseFunctionalProperty(keyType)) {
+						method.body()._return(row.invoke("get").arg(predicate.getLocalName()).invoke("toString"));
+						return;
+					}
+					
+					PropertyConstraint pC = p.getPropertyConstraint();
+					if(pC.getDatatype() != null && pC.getStereotype() != null 
+							&& (pC.getStereotype().equals(Konig.uniqueKey) 
+								|| pC.getStereotype().equals(Konig.primaryKey) 
+								|| pC.getStereotype().equals(Konig.syntheticKey))){
+							method.body()._return(row.invoke("get").arg(predicate.getLocalName()).invoke("toString"));
+							return;
+					}
+				}
+				fail("Key not found for the source node {0}", sourceNode.getPath());
+			}
 			private void processElement(AbstractJClass outputClass) {
 				AbstractJClass processContextClass = model.ref(ProcessContext.class);
 				AbstractJClass tableRowClass = model.ref(TableRow.class);
