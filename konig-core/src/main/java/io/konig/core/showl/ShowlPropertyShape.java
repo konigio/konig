@@ -69,6 +69,7 @@ public abstract class ShowlPropertyShape implements Traversable {
 	private Set<ShowlExpression> usedIn;
 	
 	private List<ShowlExpression> expressionList = new ArrayList<>();
+	private ShowlPropertyShapeGroup targetProperty;
 	
 	public ShowlPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property, PropertyConstraint propertyConstraint) {
 		this.declaringShape = declaringShape;
@@ -592,4 +593,14 @@ public abstract class ShowlPropertyShape implements Traversable {
 		SynsetNode node = getDeclaringShape().synsetNode();
 		return node.findPropertyByPredicate(getPredicate());
 	}
+
+	public ShowlPropertyShapeGroup getTargetProperty() {
+		return targetProperty;
+	}
+
+	public void setTargetProperty(ShowlPropertyShapeGroup targetProperty) {
+		this.targetProperty = targetProperty;
+	}
+	
+	
 }

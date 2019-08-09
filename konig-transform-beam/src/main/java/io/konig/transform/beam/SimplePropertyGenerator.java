@@ -53,6 +53,8 @@ public class SimplePropertyGenerator extends TargetPropertyGenerator {
 		
 		JVar var = declareVariable(targetProperty);
 		captureValue(targetProperty, var);
+
+		etran.peekBlockInfo().getBlock()._return(var);
 		
 	}
 

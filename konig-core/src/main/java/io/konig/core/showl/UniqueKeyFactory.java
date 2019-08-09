@@ -41,7 +41,9 @@ public class UniqueKeyFactory {
 			keyCollection = new ShowlUniqueKeyCollection(node);
 			
 			for (ShowlPropertyShape p : node.getProperties()) {
+				
 				if (
+						Konig.id.equals(p.getPredicate()) ||
 						isShowlUniqueKey(p) ||
 						isInverseFunctional(p)
 				) {
@@ -63,7 +65,6 @@ public class UniqueKeyFactory {
 		}
 
 	
-
 		private void addNestedKeys(ShowlUniqueKey key) throws ShowlProcessingException {
 			for (UniqueKeyElement e : key) {
 				ShowlPropertyShape p = e.getPropertyShape();
@@ -157,7 +158,7 @@ public class UniqueKeyFactory {
 		 * @param p
 		 * @throws ShowlProcessingException
 		 */
-		private void singleKey(ShowlPropertyShape p) throws ShowlProcessingException {
+		private ShowlUniqueKey singleKey(ShowlPropertyShape p) throws ShowlProcessingException {
 			
 			// Scan the current collection of keys to see if we already have a key that includes p.
 			
@@ -172,7 +173,7 @@ public class UniqueKeyFactory {
 						
 						if (key.size()==1) {
 							// We have already listed p as a single key, so we can return immediately
-							return;
+							return null;
 						} else {
 							// p is listed as an element within a tuple key.
 							// But now we know that p is also a single key, so there is no point
@@ -185,7 +186,7 @@ public class UniqueKeyFactory {
 									sequence.remove();
 								}
 							}
-							return;
+							return null;
 						}
 					}
 				}
@@ -193,8 +194,9 @@ public class UniqueKeyFactory {
 			
 			// No existing key including p as an element was found.  
 			// Create the key now, and add it to the collection.
-		
-			keyCollection.add(new ShowlUniqueKey(element(p)));
+			ShowlUniqueKey key = new ShowlUniqueKey(element(p));
+			keyCollection.add(key);
+			return key;
 			
 		}
 

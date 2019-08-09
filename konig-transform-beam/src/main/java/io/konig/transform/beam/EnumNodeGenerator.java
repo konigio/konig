@@ -72,7 +72,7 @@ public class EnumNodeGenerator extends TargetPropertyGenerator {
 		}
 	
 		
-		captureValue(targetProperty, enumRow.invoke("isEmpty").not(), enumRow);
+		captureValue(targetProperty, enumRow);
 		beamMethod.getMethod().body()._return(enumRow);
 		
 	}

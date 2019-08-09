@@ -79,7 +79,17 @@ abstract public class ShowlStructExpression extends LinkedHashMap<URI, ShowlExpr
 		return propertyShape.maybeDirect().getValueType(reasoner);
 	}
 	
-	abstract protected ShowlStructExpression copy();
+	protected abstract ShowlStructExpression copy();
+	
+	public ShowlStructExpression shallowClone() {
+		ShowlStructExpression clone = copy();
+
+		for (Map.Entry<URI,ShowlExpression> entry : entrySet()) {
+			clone.put(entry.getKey(), entry.getValue());
+		}
+		
+		return clone;
+	}
 	
 	
 	@Override 

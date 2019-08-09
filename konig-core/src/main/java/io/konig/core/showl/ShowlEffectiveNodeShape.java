@@ -59,6 +59,37 @@ public class ShowlEffectiveNodeShape implements Comparable<ShowlEffectiveNodeSha
 		
 	}
 	
+	public boolean isAncestorOf(ShowlPropertyShapeGroup group) {
+		Set<ShowlEffectiveNodeShape> memory = new HashSet<>();
+		return isAncestor(memory, this, group);
+	}
+
+	private boolean isAncestor(Set<ShowlEffectiveNodeShape> memory, ShowlEffectiveNodeShape node,
+			ShowlPropertyShapeGroup group) {
+		ShowlEffectiveNodeShape parent = group.getDeclaringShape();
+		if (parent == node) {
+			return true;
+		}
+		if (!memory.contains(parent)) {
+			memory.add(parent);
+			ShowlPropertyShapeGroup accessor = node.getAccessor();
+			if (accessor != null && isAncestor(memory, node, accessor)) {
+				return true;
+			}
+			SynsetProperty synset = group.get(0).asSynsetProperty();
+			URI predicate = group.getPredicate();
+			for (ShowlPropertyShape p : synset) {
+				if (!predicate.equals(p.getPredicate())) {
+					ShowlPropertyShapeGroup otherGroup = p.asGroup();
+					if (isAncestor(memory, node, otherGroup)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
 	public ShowlNodeShape canonicalNode() {
 		for (ShowlPropertyShapeGroup g : propertyMap.values()) {
 			ShowlPropertyShape p = g.direct();
@@ -261,10 +292,12 @@ public class ShowlEffectiveNodeShape implements Comparable<ShowlEffectiveNodeSha
 		ShowlNodeShape thisCanonical = canonicalNode();
 		ShowlNodeShape otherCanonical = other.canonicalNode();
 		
-		String thisName = RdfUtil.uri(thisCanonical.getId()).getLocalName();
-		String otherName = RdfUtil.uri(otherCanonical.getId()).getLocalName();
+		URI thisId =  RdfUtil.uri(thisCanonical.getId());
+		URI otherId = RdfUtil.uri(otherCanonical.getId());
 		
-		return thisName.compareTo(otherName);
+		int result = thisId.getLocalName().compareTo(otherId.getLocalName());
+		
+		return result==0 ? thisId.getNamespace().compareTo(otherId.getNamespace()) : result;
 	}
 
 

@@ -71,7 +71,7 @@ public class ToPersonTargetShapeFn
         address_id(errorBuilder, addressRow, personSourceRow);
         address_addressLocality(errorBuilder, addressRow, personSourceRow);
         address_addressRegion(errorBuilder, addressRow, personSourceRow);
-        if (addressRow!= null) {
+        if (!addressRow.isEmpty()) {
             personTargetRow.set("address", addressRow);
         }
         return addressRow;

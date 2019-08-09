@@ -4,7 +4,6 @@ package io.konig.transform.beam;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.JBlock;
 import com.helger.jcodemodel.JCodeModel;

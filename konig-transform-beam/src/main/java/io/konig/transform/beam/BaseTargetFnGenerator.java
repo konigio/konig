@@ -161,6 +161,27 @@ public class BaseTargetFnGenerator {
 			etran.endBlock();
 		}
 		
+		// The 'processElement' method should have only two parameters of type ProcessContext and PipelineOptions, respectively.
+		// If there are more than two parameters, then something went wrong while propagating parameters
+		// required by methods invoked from within 'processElement'.
+		
+		if (method.params().size()>2) {
+			StringBuilder builder = new StringBuilder();
+			builder.append("The method ");
+			builder.append(thisClass.name());
+			builder.append(".processElement contains the following extra parameters: ");
+			List<JVar> paramList = method.params();
+			String comma = "";
+			for (int i=2; i<paramList.size(); i++) {
+				JVar var = paramList.get(i);
+				builder.append(comma);
+				comma = ", ";
+				builder.append(var.name());
+			}
+//			throw new BeamTransformGenerationException(builder.toString());
+		}
+		
+		
 	}
   
 

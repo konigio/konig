@@ -34,7 +34,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.shacl.PropertyConstraint;
 
 @SuppressWarnings("serial")
-public class ShowlPropertyShapeGroup extends ArrayList<ShowlPropertyShape> {
+public class ShowlPropertyShapeGroup extends ArrayList<ShowlPropertyShape> implements Comparable<ShowlPropertyShapeGroup> {
 
 	private ShowlEffectiveNodeShape declaringShape;
 	private URI predicate;
@@ -70,7 +70,8 @@ public class ShowlPropertyShapeGroup extends ArrayList<ShowlPropertyShape> {
 		return set;
 		
 	}
-
+	
+	
 	public ShowlEffectiveNodeShape getDeclaringShape() {
 		return declaringShape;
 	}
@@ -280,6 +281,12 @@ public class ShowlPropertyShapeGroup extends ArrayList<ShowlPropertyShape> {
 
 	public ShowlNodeShape rootNode() {
 		return isEmpty() ? null : get(0).getRootNode();
+	}
+
+	@Override
+	public int compareTo(ShowlPropertyShapeGroup other) {
+		int result = getPredicate().getLocalName().compareTo(other.getPredicate().getLocalName());
+		return result==0 ? getPredicate().getNamespace().compareTo(other.getPredicate().getNamespace()) : result;
 	}
 
 	

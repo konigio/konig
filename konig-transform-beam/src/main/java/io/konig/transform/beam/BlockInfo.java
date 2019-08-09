@@ -86,7 +86,12 @@ public class BlockInfo {
 		this.beamMethod = beamMethod;
 		return this;
 	}
+	
+	
 
+	public void setBlock(JBlock block) {
+		this.block = block;
+	}
 
 	/**
 	 * The row that this block is expected to populate.
@@ -360,9 +365,29 @@ public class BlockInfo {
 		varMap.put(key, value);
 	}
 
-	public JVar getMappedVar(JVar key) {
-		return varMap.get(key);
+	public JVar getMappedVar(JVar key) throws BeamTransformGenerationException {
+		JVar result = varMap.get(key);
+		if (result == null) {
+			String msg = MessageFormat.format("In {0} method , variable not mapped: {1}", currentMethodName(), key.name());
+			throw new BeamTransformGenerationException(msg);
+		}
+		return result;
 	}
+
+	private String currentMethodName() {
+	
+		return beamMethod==null ? "unknown" : beamMethod.getMethod().name();
+	}
+
+	public JVar getPropertyValueOrFail(ShowlPropertyShapeGroup group) throws BeamTransformGenerationException {
+		JVar result = getPropertyValue(group);
+		if (result == null) {
+			throw new BeamTransformGenerationException("Property value not found: " + group.pathString());
+		}
+		return result;
+	}
+
+
 
 
 }

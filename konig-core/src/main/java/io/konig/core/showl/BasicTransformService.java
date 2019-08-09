@@ -138,8 +138,48 @@ public class BasicTransformService implements ShowlTransformService {
 
 		handleTargetFormulas(state);
 		handleTeleportFormulas(state);
+		setTargetProperties(state.targetNode);
 
 		return state.propertyPool;
+	}
+
+	private void setTargetProperties(ShowlNodeShape targetNode) {
+		
+		for (ShowlChannel channel : targetNode.getChannels()) {
+			ShowlNodeShape sourceNode = channel.getSourceNode();
+			setTargetProperties(sourceNode, sourceNode.getTargetNode().effectiveNode());
+		}
+	}
+
+	private void setTargetProperties(ShowlNodeShape sourceNode, ShowlEffectiveNodeShape targetNode) {
+		
+		setTargetProperties(sourceNode.getProperties(), targetNode);
+		for (ShowlDerivedPropertyList list : sourceNode.getDerivedProperties()) {
+			setTargetProperties(list, targetNode);
+		}
+	}
+
+	private void setTargetProperties(Collection<? extends ShowlPropertyShape> sourceProperties,	ShowlEffectiveNodeShape targetNode) {
+		
+		for (ShowlPropertyShape p : sourceProperties) {
+			ShowlPropertyShapeGroup targetGroup = targetNode.findPropertyByPredicate(p.getPredicate());
+			if (targetGroup != null) {
+				setTargetProperty(p, targetGroup);
+				for (ShowlPropertyShape q : p.synonyms()) {
+					setTargetProperty(q, targetGroup);
+				}
+			}
+		}
+		
+	}
+
+	private void setTargetProperty(ShowlPropertyShape p, ShowlPropertyShapeGroup targetGroup) {
+
+		p.setTargetProperty(targetGroup);
+		if (p.getValueShape()!=null && targetGroup.getValueShape()!=null) {
+			setTargetProperties(p.getValueShape(), targetGroup.getValueShape());
+		}
+		
 	}
 
 	@Override
