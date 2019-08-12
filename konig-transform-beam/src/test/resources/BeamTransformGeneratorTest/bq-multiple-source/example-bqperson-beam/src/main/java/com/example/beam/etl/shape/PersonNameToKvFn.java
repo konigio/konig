@@ -18,14 +18,12 @@ public class PersonNameToKvFn
     public void processElement(ProcessContext c) {
         try {
             TableRow row = c.element();
-            String key = getKey(row);
-            c.output(successTag, KV.of(key, row));
+            String id = ((row!= null)?((String) row.get("id")):null);
+            if (id!= null) {
+                c.output(successTag, KV.of(id, row));
+            }
         } catch (final Throwable oops) {
             c.output(deadLetterTag, oops.getMessage());
         }
-    }
-
-    private String getKey(TableRow row) {
-        return ((String) row.get("id"));
     }
 }

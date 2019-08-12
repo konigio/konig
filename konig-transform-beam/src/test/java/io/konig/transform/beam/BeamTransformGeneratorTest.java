@@ -126,7 +126,7 @@ public class BeamTransformGeneratorTest {
 	@Test
 	public void testBQMultipleSources() throws Exception {
 		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/bq-multiple-source", true);
+		generateAll("src/test/resources/BeamTransformGeneratorTest/bq-multiple-source", false);
 		
 	}
 	
@@ -139,7 +139,7 @@ public class BeamTransformGeneratorTest {
 	@Test
 	public void testMultipleSource() throws Exception {
 		
-		generateAll("src/test/resources/BeamTransformGeneratorTest/multiple-source", true);
+		generateAll("src/test/resources/BeamTransformGeneratorTest/multiple-source", false);
 		
 	}
 
@@ -244,7 +244,7 @@ public class BeamTransformGeneratorTest {
 	}
 
 	
-	@Test
+	
 	public void testEnumIriReference() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/enum-iri-reference");
@@ -252,7 +252,7 @@ public class BeamTransformGeneratorTest {
 	}
 	
 
-	@Test
+	@Ignore
 	public void testJoinNestedRecord() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/join-nested-record", false);
@@ -260,7 +260,7 @@ public class BeamTransformGeneratorTest {
 	}
 
 
-	@Test
+	@Ignore
 	public void testJoinNestedRecordViaInverse() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/join-nested-record-via-inverse", false);
@@ -293,6 +293,13 @@ public class BeamTransformGeneratorTest {
 	public void testRepeatedRecord() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/repeated-record", false);
+		
+	}
+
+	@Test
+	public void testMergeByKey() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/merge-by-key", false);
 		
 	}
 

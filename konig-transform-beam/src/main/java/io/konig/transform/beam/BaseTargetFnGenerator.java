@@ -107,9 +107,7 @@ public class BaseTargetFnGenerator {
 	  	AbstractJClass errorBuilderClass = errorBuilderClass();
 		AbstractJClass processContextClass = model.ref(ProcessContext.class);
 		AbstractJClass tableRowClass = model.ref(TableRow.class);
-		AbstractJClass stringClass = model.ref(String.class);
 		
-		AbstractJClass tupleTagStringClass = model.ref(TupleTag.class).narrow(stringClass);
 		AbstractJClass tupleTagTableRowClass = model.ref(TupleTag.class).narrow(tableRowClass);
 		AbstractJClass pipelineOptionsClass = model.directClass(PipelineOptions.class.getName());
 		
@@ -163,16 +161,29 @@ public class BaseTargetFnGenerator {
 			etran.endBlock();
 		}
 		
+		// The 'processElement' method should have only two parameters of type ProcessContext and PipelineOptions, respectively.
+		// If there are more than two parameters, then something went wrong while propagating parameters
+		// required by methods invoked from within 'processElement'.
+		
+		if (method.params().size()>2) {
+			StringBuilder builder = new StringBuilder();
+			builder.append("The method ");
+			builder.append(thisClass.name());
+			builder.append(".processElement contains the following extra parameters: ");
+			List<JVar> paramList = method.params();
+			String comma = "";
+			for (int i=2; i<paramList.size(); i++) {
+				JVar var = paramList.get(i);
+				builder.append(comma);
+				comma = ", ";
+				builder.append(var.name());
+			}
+//			throw new BeamTransformGenerationException(builder.toString());
+		}
+		
+		
 	}
   
-  	private ShowlNodeShape sourceNode(ShowlNodeShape targetNode) {
-  		 for (ShowlChannel c : targetNode.getChannels()) {
-  	        if (c.getSourceNode() !=null) {
-  	          return c.getSourceNode();
-  	        }
-  	      }
-		return null;
-  	}
 
   	private void provideOutput(
 			JVar successTag,
@@ -189,7 +200,6 @@ public class BaseTargetFnGenerator {
 			._then().add(errorBuilder.invoke("addError").arg(JExpr.lit("record is empty")));
 		
 		JConditional ifStatement = tryBlock.body()._if(errorBuilder.invoke("isEmpty").not());
-		
 		
 		AbstractJClass tableRowClass = model.ref(TableRow.class);
 		JVar errorRow = ifStatement._then().decl(tableRowClass, "errorRow").init(tableRowClass._new());
@@ -217,22 +227,23 @@ public class BaseTargetFnGenerator {
 		
 	}
 
-	private List<ShowlNodeShape> listSourceNodes(ShowlNodeShape targetNode) {
-		List<ShowlNodeShape> list = new ArrayList<>();
-		for (ShowlChannel channel : targetNode.getChannels()) {
-			ShowlNodeShape sourceNode = channel.getSourceNode();
-			if (!reasoner.isEnumerationClass(sourceNode.getOwlClass().getId())) {
-				list.add(sourceNode);
-			}
-		}
-		Collections.sort(list, new Comparator<ShowlNodeShape>() {
-			@Override
-			public int compare(ShowlNodeShape a, ShowlNodeShape b) {
-				return a.getId().stringValue().compareTo(b.getId().stringValue());
-			}
-		});
-		return list;
-	}
+  	private List<ShowlNodeShape> listSourceNodes(ShowlNodeShape targetNode) {
+  		List<ShowlNodeShape> list = new ArrayList<>();
+  		for (ShowlChannel channel : targetNode.getChannels()) {
+  			ShowlNodeShape sourceNode = channel.getSourceNode();
+  			if (!reasoner.isEnumerationClass(sourceNode.getOwlClass().getId())) {
+  				list.add(sourceNode);
+  			}
+  		}
+  		Collections.sort(list, new Comparator<ShowlNodeShape>() {
+  			@Override
+  			public int compare(ShowlNodeShape a, ShowlNodeShape b) {
+  				return a.getId().stringValue().compareTo(b.getId().stringValue());
+  			}
+  		});
+  		return list;
+  	}
+
 
 	protected void declareTableRow(JDefinedClass thisClass, BeamExpressionTransform etran, ShowlEffectiveNodeShape node, JVar c) throws BeamTransformGenerationException {
 		
@@ -278,6 +289,7 @@ public class BaseTargetFnGenerator {
   protected BeamTransformGenerationException fail(String pattern, Object...args) throws BeamTransformGenerationException {
     throw new BeamTransformGenerationException(MessageFormat.format(pattern, args));
   }
+ 
   
   protected JDefinedClass errorBuilderClass() throws BeamTransformGenerationException {
 		String errorBuilderClassName = errorBuilderClassName();

@@ -24,8 +24,10 @@ package io.konig.transform.beam;
 import java.text.MessageFormat;
 
 import com.helger.jcodemodel.IJExpression;
+import com.helger.jcodemodel.JBlock;
 import com.helger.jcodemodel.JConditional;
 import com.helger.jcodemodel.JExpr;
+import com.helger.jcodemodel.JInvocation;
 import com.helger.jcodemodel.JMethod;
 import com.helger.jcodemodel.JMod;
 import com.helger.jcodemodel.JVar;
@@ -42,10 +44,44 @@ public abstract class TargetPropertyGenerator {
 		this.etran = etran;
 	}
 	
-	protected void captureValue(ShowlPropertyShape targetProperty, IJExpression ifTrue, JVar var) throws BeamTransformGenerationException {
+	/**
+	 * Set the value of a target property in the output row, but only if the value is well-defined.
+	 * The value is well-defined if it is not null and, in the case of a TableRow or List, not empty.
+	 * If the target property is required and the value is not well-defined, add an error message to the ErrorBuilder.
+	 */
+	protected void captureValue(ShowlPropertyShape targetProperty, JVar var) throws BeamTransformGenerationException {
 
 		BlockInfo blockInfo = etran.peekBlockInfo();
-		JConditional ifStatement = blockInfo.getBlock()._if(ifTrue);
+		
+		boolean requiresNullCheck = true;
+		IJExpression varInit = var.init();
+		if (varInit instanceof JInvocation) {
+			JInvocation invoke = (JInvocation) varInit;
+			if (invoke.isConstructor()) {
+				// Since var was initialized by a constructor, we know that it is not null.
+				// Hence, we do not need to perform a null check.
+				requiresNullCheck = false;
+			}
+		}
+		
+		IJExpression wellDefined = requiresNullCheck ? var.neNull() : null;
+		
+		// If the value is a TableRow or a List, we need to confirm that it is not empty.
+		// There are probably some cases where this check is not necessary since it is provably not empty.
+		// But it certainly won't hurt to always perform the check.
+		
+		String varName = var.type().name();
+		
+		if (varName.equals("TableRow") || varName.startsWith("List") || varName.endsWith("List")) {
+			IJExpression notEmpty = var.invoke("isEmpty").not();
+			wellDefined = (wellDefined==null) ? notEmpty : wellDefined.cand(notEmpty);
+		}
+		
+				
+		// If wellDefined is null, then it must be the case that the value is provably well-defined and we
+		// don't have to use an if statement to check whether it is well-defined.
+		
+		JConditional ifStatement = wellDefined!=null ? blockInfo.getBlock()._if(wellDefined) : null;
 		
 		ShowlEffectiveNodeShape node = targetProperty.getDeclaringShape().effectiveNode();
 		
@@ -53,9 +89,11 @@ public abstract class TargetPropertyGenerator {
 		
 		String fieldName = targetProperty.getPredicate().getLocalName();
 		
-		ifStatement._then().add(outputRow.invoke("set").arg(JExpr.lit(fieldName)).arg(var));
+		JBlock thenBlock = ifStatement==null ? blockInfo.getBlock() : ifStatement._then();
 		
-		if (targetProperty.isRequired()) {
+		thenBlock.add(outputRow.invoke("set").arg(JExpr.lit(fieldName)).arg(var));
+		
+		if (targetProperty.isRequired() && ifStatement!=null) {
 
 			JVar errorBuilder = blockInfo.getErrorBuilderVar();
 			String path = targetProperty.fullPath();
@@ -66,10 +104,6 @@ public abstract class TargetPropertyGenerator {
 
 	}
 
-	protected void captureValue(ShowlPropertyShape targetProperty, JVar var) throws BeamTransformGenerationException {
-		captureValue(targetProperty, var.neNull(), var);
-		etran.peekBlockInfo().getBlock()._return(var);
-	}
 	
 	protected void fail(String pattern, Object...arguments) throws BeamTransformGenerationException {
 		String msg = MessageFormat.format(pattern, arguments);
@@ -96,6 +130,7 @@ public abstract class TargetPropertyGenerator {
 		String methodName = builder.toString();
 		JMethod method = etran.getTargetClass().method(JMod.PRIVATE, returnType.getJavaType(), methodName);
 		BeamMethod beamMethod = new BeamMethod(method);
+		beamMethod.setTargetProperty(targetProperty);
 		etran.beginBlock(beamMethod);
 		try {
 

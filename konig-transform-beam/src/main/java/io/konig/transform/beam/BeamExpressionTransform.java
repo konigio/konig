@@ -60,6 +60,7 @@ import com.helger.jcodemodel.JStringLiteral;
 import com.helger.jcodemodel.JVar;
 
 import io.konig.core.OwlReasoner;
+import io.konig.core.showl.ShowlArrayExpression;
 import io.konig.core.showl.ShowlBasicStructExpression;
 import io.konig.core.showl.ShowlBinaryRelationalExpression;
 import io.konig.core.showl.ShowlCaseStatement;
@@ -78,14 +79,17 @@ import io.konig.core.showl.ShowlFunctionExpression;
 import io.konig.core.showl.ShowlIriReferenceExpression;
 import io.konig.core.showl.ShowlListRelationalExpression;
 import io.konig.core.showl.ShowlNodeShape;
+import io.konig.core.showl.ShowlOverlayExpression;
 import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlPropertyShapeGroup;
 import io.konig.core.showl.ShowlStatement;
 import io.konig.core.showl.ShowlStructExpression;
 import io.konig.core.showl.ShowlSystimeExpression;
 import io.konig.core.showl.ShowlTeleportExpression;
 import io.konig.core.showl.ShowlUtil;
 import io.konig.core.showl.ShowlWhenThenClause;
+import io.konig.core.showl.SynsetProperty;
 import io.konig.core.showl.expression.ShowlLiteralExpression;
 import io.konig.core.util.StringUtil;
 import io.konig.core.vocab.Konig;
@@ -126,6 +130,13 @@ public class BeamExpressionTransform  {
 		literalFactory = new BeamLiteralFactory(model);
 	}
 	
+	
+	public void setTargetClass(JDefinedClass targetClass) {
+		this.targetClass = targetClass;
+	}
+
+
+
 	public IJExpression transform(ShowlExpression e) throws BeamTransformGenerationException {
 		
 		if (e instanceof ShowlLiteralExpression) {
@@ -182,9 +193,70 @@ public class BeamExpressionTransform  {
 			return teleport((ShowlTeleportExpression) e);
 		}
 		
-		throw new BeamTransformGenerationException("Failed to tranform " + e.toString());
+		if (e instanceof ShowlOverlayExpression) {
+			return overlay((ShowlOverlayExpression)e);
+		}
+		
+		if (e instanceof ShowlArrayExpression) {
+			return array((ShowlArrayExpression)e);
+		}
+		throw new BeamTransformGenerationException("Failed to transform " + e.toString());
 	}
 	
+
+	private IJExpression array(ShowlArrayExpression e) throws BeamTransformGenerationException {
+		
+		BeamMethod method = peekBlockInfo().getBeamMethod();
+		ShowlPropertyShape targetProperty = method==null ? null : method.getTargetProperty();
+		if (targetProperty != null) {
+			if (targetProperty.getValueShape()!=null) {
+				ResourceArrayTransform worker = new ResourceArrayTransform(this);
+				return worker.transform(e);
+			}
+		}
+		
+		throw new BeamTransformGenerationException("Expression not supported: " + e.displayValue());
+	}
+
+	private IJExpression overlay(ShowlOverlayExpression e) throws BeamTransformGenerationException {
+		
+		BlockInfo blockInfo = peekBlockInfo();
+		
+		BeamMethod method = blockInfo.getBeamMethod();
+		if (method == null) {
+			fail("Cannot produce overlay expression {0} because BeamMethod is null", e.displayValue());
+		}
+		
+		ShowlPropertyShape targetProperty = method.getTargetProperty();
+		if (targetProperty == null) {
+			fail("Cannot produce overlay expression {0} because targetProperty is null", e.displayValue());
+		}
+		
+
+		String fieldName = blockInfo.varName(targetProperty.getPredicate().getLocalName());
+		AbstractJType fieldType = method.getReturnType().getJavaType();
+		
+		JBlock block = blockInfo.getBlock();
+		ShowlPropertyShapeGroup group = targetProperty.asGroup();
+		
+		JVar var = null;
+		
+		
+		
+		for (int i=0; i<e.size(); i++) {
+			IJExpression init = transform(e.get(i));
+			if (i == 0) {
+
+				var = block.decl(fieldType, fieldName);
+				blockInfo.putPropertyValue(group, var);
+				var.init(init);
+			} else {
+				block.assign(var, JExpr.cond(var.eqNull(), init, var));
+			}
+		}
+		
+		return var;
+	}
 
 	private IJExpression teleport(ShowlTeleportExpression e) throws BeamTransformGenerationException {
 		ShowlExpression delegate = e.getDelegate();
@@ -520,6 +592,13 @@ public class BeamExpressionTransform  {
 			fail("BlockInfo stack is empty");
 		}
 		return  blockStack.get(blockStack.size()-1);
+	}
+	
+	public BlockInfo parentBlock() throws BeamTransformGenerationException {
+		if (blockStack == null || blockStack.size()<2) {
+			fail("Parent BlockInfo does not exist");
+		}
+		return blockStack.get(blockStack.size()-2);
 	}
 
 	private IJExpression caseStatement(ShowlCaseStatement e) throws BeamTransformGenerationException {
@@ -895,7 +974,7 @@ public class BeamExpressionTransform  {
 		
 	}
 
-	private void processStructPropertyList(ShowlDirectPropertyShape targetProperty, ShowlStructExpression struct) throws BeamTransformGenerationException {
+	public void processStructPropertyList(ShowlDirectPropertyShape targetProperty, ShowlStructExpression struct) throws BeamTransformGenerationException {
 		ShowlNodeShape targetNode = targetProperty.getValueShape();
 		
 		for (Entry<URI, ShowlExpression> entry : struct.entrySet()) {
@@ -1235,19 +1314,44 @@ public class BeamExpressionTransform  {
 		return enumVar;
 	}
 	
+	private String baseTableRowVarName(ShowlEffectiveNodeShape node) {
+
+		ShowlNodeShape canonical = node.canonicalNode();
+		String baseName = canonical.getAccessor()==null ? 
+				StringUtil.firstLetterLowerCase(ShowlUtil.shortShapeName(canonical)) : 
+				canonical.getAccessor().getPredicate().getLocalName();
+				
+		return StringUtil.javaIdentifier(baseName);
+	}
+	
+
 	public JVar addTableRowParam(BeamMethod beamMethod, ShowlEffectiveNodeShape node) throws BeamTransformGenerationException {
+		
+		return addTableRowParam(beamMethod, node, false);
+	}
+	
+	public JVar addTableRowParam(BeamMethod beamMethod, ShowlEffectiveNodeShape node, boolean withQualifiedName) throws BeamTransformGenerationException {
+		
+
+		for (BeamParameter param : beamMethod.getParameters()) {
+			if (param.getParamType() == BeamParameterType.TABLE_ROW && param.getNode()==node) {
+				return param.getVar();
+			}
+		}
+		
 		BlockInfo blockInfo = peekBlockInfo();
 		JVar var = blockInfo.getTableRowVar(node);
 		if (var == null) {
 			AbstractJClass tableRowClass = model.ref(TableRow.class);
-			ShowlNodeShape canonical = node.canonicalNode();
-			String baseName = canonical.getAccessor()==null ? 
-					ShowlUtil.shortShapeName(canonical) : 
-					canonical.getAccessor().getPredicate().getLocalName();
-					
 			
-			String varName = StringUtil.firstLetterLowerCase(baseName) + "Row";
-			logger.trace("addTableRowParam: {} ({} {})", beamMethod.getMethod().name(), node.canonicalNode().getPath(), varName);
+			String baseName = baseTableRowVarName(node);
+					
+			ShowlNodeShape canonical = node.canonicalNode();
+			
+			String qualifier = withQualifiedName ? "_" + ShowlUtil.shortShapeName(canonical.getRoot()) : "Row";
+			
+			String varName = StringUtil.firstLetterLowerCase(baseName) + qualifier;
+			logger.trace("addTableRowParam: {} ({} {})", beamMethod.getMethod().name(), canonical.getPath(), varName);
 			
 			BeamParameter param  = BeamParameter.ofNodeRow(tableRowClass, varName, node);
 			if (beamMethod.addParameter(param)!=null) {
@@ -1312,6 +1416,10 @@ public class BeamExpressionTransform  {
 				invoke.arg(blockInfo.getErrorBuilderVar());
 				break;
 				
+			case MAPPED_VALUE :
+				invoke.arg(blockInfo.getMappedVar(param.getVar()));
+				break;
+				
 			default:
 				fail("Parameter type not supported: {0}", param.getParamType());
 			}
@@ -1338,35 +1446,39 @@ public class BeamExpressionTransform  {
 
 	
 	public JVar declarePropertyValue(ShowlPropertyShape property, IJExpression fieldValue, AbstractJType fieldType) throws BeamTransformGenerationException {
-		
-		
-		if (fieldType == null) {
-		
-			if (Konig.id.equals(property.getPredicate())) {
-				fieldType = model.ref(String.class);
-				if (fieldValue instanceof JVar) {
-					JVar fieldValueVar = (JVar) fieldValue;
-					String fieldValueType = fieldValueVar.type().fullName();
-					if (!String.class.getName().equals(fieldValueType)) {
-						fieldValue = fieldValue.invoke("getId").invoke("getLocalName");
-					}
-							
-				}
-			} else {
-				ShowlExpression e = property.getSelectedExpression();
-				fieldType = getTypeManager().javaType(e);
-			}
-		}
 
 		BlockInfo blockInfo = peekBlockInfo();
-		String fieldName = blockInfo.varName(property.getPredicate().getLocalName());
+		ShowlPropertyShapeGroup group = property.asGroup();
+		JVar var = blockInfo.getPropertyValue(group);
 		
-		
-		
-		
-		JVar var = blockInfo.getBlock().decl(fieldType, fieldName).init(fieldValue.castTo(fieldType));
-		
-		blockInfo.putPropertyValue(property.asGroup(), var);
+		if (var == null) {
+			if (fieldType == null) {
+			
+				if (Konig.id.equals(property.getPredicate())) {
+					fieldType = model.ref(String.class);
+					if (fieldValue instanceof JVar) {
+						JVar fieldValueVar = (JVar) fieldValue;
+						String fieldValueType = fieldValueVar.type().fullName();
+						if (!String.class.getName().equals(fieldValueType)) {
+							fieldValue = fieldValue.invoke("getId").invoke("getLocalName");
+						}
+								
+					}
+				} else {
+					ShowlExpression e = property.getSelectedExpression();
+					fieldType = getTypeManager().javaType(e);
+				}
+			}
+	
+			String fieldName = blockInfo.varName(property.getPredicate().getLocalName());
+			
+			
+			
+			
+			var = blockInfo.getBlock().decl(fieldType, fieldName).init(fieldValue.castTo(fieldType));
+			
+			blockInfo.putPropertyValue(property.asGroup(), var);
+		}
 		
 		
 		return var;
@@ -1384,20 +1496,144 @@ public class BeamExpressionTransform  {
 
 	public void addParametersFromPropertySet(BeamMethod beamMethod, ShowlPropertyShape targetProperty, Set<ShowlPropertyShape> set)
 			throws BeamTransformGenerationException {
+		
+		// This method is similar to BNodeArrayTransform.addSourceRowParameters
+		// We should consider refactoring BNodeArrayTransform to use this method.
 
-		Set<ShowlEffectiveNodeShape> nodeSet = new HashSet<>();
+		List<ShowlEffectiveNodeShape> nodeList = declaringNodes(targetProperty, set);
 		
-		addNodes(nodeSet, set);
-		
-		
-		
-		List<ShowlEffectiveNodeShape> paramList = new ArrayList<>(nodeSet);
-		Collections.sort(paramList);
 
-		for (ShowlEffectiveNodeShape node : paramList) {
-			addTableRowParam(beamMethod, node);
+		boolean withQualifiedName = requiresQualifiedName(nodeList);
+
+		for (ShowlEffectiveNodeShape node : nodeList) {
+			addTableRowParam(beamMethod, node, withQualifiedName);
 		}
 		
+		BlockInfo blockInfo = peekBlockInfo();
+		
+		for (ShowlEffectiveNodeShape node : nodeList) {
+			
+			JVar var = blockInfo.getTableRowVar(node);
+			if (var == null) {
+				ShowlPropertyShapeGroup accessor = node.getAccessor();
+				if (accessor == null) {
+					// The declaring node is the root of a source channel.
+					// Demand that it be passed along as a parameter
+					
+					var = addTableRowParam(beamMethod, node, withQualifiedName);
+					
+					
+				} else {
+					// The declaring node is NOT the root of a source channel.
+					// Demand that its parent is passed as a parameter and fetch the value from the parent.
+					
+					ShowlEffectiveNodeShape parentNode = accessor.getDeclaringShape();
+					addTableRowParam(beamMethod, parentNode, withQualifiedName);
+				}
+			}
+			
+			
+		}
+		
+	}
+	
+	/**
+	 * Get the set of effective nodes that declare a given collection of properties, excluding enumeration node shapes and nodes
+	 * that are not ancestors of the target property.
+	 * @param targetProperty 
+	 * @param collection The properties to be considered
+	 * @return A List containing the effective nodes, sorted alphabetically by the node Shape name.  This collection has
+	 * Set semantics (i.e. each node appears exactly once in the collection), but we return a List since the order is
+	 * important.
+	 */
+	private List<ShowlEffectiveNodeShape> declaringNodes(ShowlPropertyShape targetProperty, Collection<ShowlPropertyShape> collection) {
+		List<ShowlEffectiveNodeShape> list = new ArrayList<>();
+		ShowlEffectiveNodeShape targetParentNode = targetProperty.getValueShape() == null ? null :
+				targetProperty.getValueShape().effectiveNode();
+		for (ShowlPropertyShape p : collection) {
+			
+			
+			// We want to include the parent of the direct property associated with 'p' because
+			// that is ultimately the record from which 'p' will be derived.
+			
+			ShowlPropertyShape q = p.asGroup().direct();
+			if (q != null) {
+				p = q;
+			} else {
+				p = p.maybeDirect();
+			}
+			ShowlNodeShape enumNode = ShowlUtil.parentEnumNode(p, reasoner);
+			if (enumNode == null) {
+				ShowlEffectiveNodeShape node = p.getDeclaringShape().effectiveNode();
+				if (!list.contains(node) && (targetParentNode==null || !isTargetAncestor(targetParentNode, p))) {
+					list.add(node);
+				}
+			}
+			
+		}
+		
+		Collections.sort(list);
+		return list;
+	}
+
+	private boolean isTargetAncestor(ShowlEffectiveNodeShape targetParentNode, ShowlPropertyShape sourceProperty) {
+		
+		// Is sourceProperty mapped to a property within targetParentNode?
+		
+		ShowlPropertyShapeGroup targetProperty = sourceProperty.getTargetProperty();
+		if (targetProperty != null) {
+			return targetParentNode.isAncestorOf(targetProperty);
+		} 
+		
+		// Is a synonym for sourceProperty mapped to a property within targetParentNode?
+		
+		SynsetProperty synset = sourceProperty.asSynsetProperty();
+		Set<URI> memory = new HashSet<>();
+		for (ShowlPropertyShape q : synset) {
+			ShowlPropertyShapeGroup qTarget = q.getTargetProperty();
+			if (qTarget!=null) {
+				URI predicate = q.getPredicate();
+				if (!memory.contains(predicate)) {
+					memory.add(predicate);
+					if (targetParentNode.isAncestorOf(qTarget)) {
+						return false;
+					}
+				}
+			}
+		}
+		
+		// Is a child property within sourceProperty mapped to some property within targetParentNode?
+		if (sourceProperty.getValueShape()!=null) {
+			for (ShowlPropertyShape q : sourceProperty.getValueShape().allOutwardProperties()) {
+				if (isTargetAncestor(targetParentNode, q)) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+
+	private boolean requiresQualifiedName(List<ShowlEffectiveNodeShape> nodeList) throws BeamTransformGenerationException {
+		
+		Set<String> names = new HashSet<>();
+		
+		BeamMethod method = peekBlockInfo().getBeamMethod();
+		if (method != null) {
+			for (JVar var : method.getMethod().params()) {
+				names.add(var.name());
+			}
+		}
+		
+		for (ShowlEffectiveNodeShape node : nodeList) {
+			String varName = baseTableRowVarName(node);
+			if (names.contains(varName)) {
+				return true;
+			}
+			names.add(varName);
+		}
+		
+		return false;
 	}
 
 	private void addNodes(Set<ShowlEffectiveNodeShape> nodeSet, Set<ShowlPropertyShape> set) throws BeamTransformGenerationException {
@@ -1579,4 +1815,93 @@ public class BeamExpressionTransform  {
 		return false;
 	}
 
+	public JVar declareTableRowList(ShowlPropertyShapeGroup group) throws BeamTransformGenerationException {
+		BlockInfo blockInfo = peekBlockInfo();
+		ShowlEffectiveNodeShape valueShape = group.getValueShape();
+		if (valueShape == null) {
+			fail("Value shape is null at {0}", group.pathString());
+		}
+		
+		AbstractJClass tableRowClass = model.ref(TableRow.class);
+		AbstractJClass listClass = model.ref(List.class).narrow(tableRowClass);
+		String varName = blockInfo.varName(group.getPredicate().getLocalName() + "List");
+		IJExpression init = null;
+		ShowlDirectPropertyShape direct = group.direct();
+		if (direct != null && direct.getSelectedExpression()!=null) {
+			init = transform(direct.getSelectedExpression());
+		} else if (direct!=null){
+			ShowlEffectiveNodeShape parentNode = group.getDeclaringShape();
+			JVar parentVar = blockInfo.getTableRowVar(parentNode);
+			if (parentVar == null) {
+				fail("Cannot construct value for {0} because the TableRow for the parent node is not found.", group.pathString());
+			}
+			init = parentVar.invoke("get").arg(direct.getPredicate().getLocalName()).castTo(listClass);
+		} else {
+			fail("Don''t know how to construct TableRow List for {0}", group.pathString());
+		}
+		
+		JVar var = blockInfo.getBlock().decl(listClass, varName).init(init);
+		
+		blockInfo.putPropertyValue(group, var);
+		
+			
+		return var;
+	}
+
+	public JVar declareSourcePropertyValue(ShowlPropertyShape p) throws BeamTransformGenerationException {
+		BlockInfo blockInfo = peekBlockInfo();
+		ShowlPropertyShapeGroup group = p.asGroup();
+		
+		JVar var = blockInfo.getPropertyValue(group);
+		
+		if (var == null) {
+		
+			RdfJavaType type = typeManager.rdfJavaType(p);
+
+			String localName = p.getPredicate().getLocalName();
+			IJExpression initValue = null;
+			if (p.isDirect()) {
+				JVar parentNode = declareSourceTableRow(p.getDeclaringShape());
+				initValue = JExpr.cond(
+						parentNode.neNull(), 
+						parentNode.invoke("get").arg(localName).castTo(type.getJavaType()), 
+						JExpr._null());
+			} else {
+				ShowlExpression formula = p.getFormula();
+				if (formula == null) {
+					formula = p.getSelectedExpression();
+				}
+				if (formula == null) {
+					fail("Formula not declared for {0}", p.getPath());
+				}
+				initValue = transform(formula);
+			}
+			
+			var = blockInfo.getBlock().decl(type.getJavaType(), blockInfo.varName(localName))
+					.init(initValue);
+		}
+		
+		
+		return var;
+	}
+
+	private JVar declareSourceTableRow(ShowlNodeShape node) throws BeamTransformGenerationException {
+		BlockInfo blockInfo = peekBlockInfo();
+		ShowlEffectiveNodeShape enode = node.effectiveNode();
+		JVar var = blockInfo.getTableRowVar(enode);
+		if (var == null) {
+			ShowlPropertyShape accessor = node.getAccessor();
+			if (accessor == null) {
+				fail("TableRow for {0} has not been declared.", node.getPath());
+			}
+			JVar parent = declareSourceTableRow(node.getAccessor().getDeclaringShape());
+			AbstractJClass tableRowClass = model.ref(TableRow.class);
+			String localName = accessor.getPredicate().getLocalName();
+			var = blockInfo.getBlock().decl(tableRowClass, blockInfo.varName(localName));
+			var.init(JExpr.cond(parent.eqNull(), JExpr._null(), parent.invoke("get").arg(localName).castTo(tableRowClass)));
+			blockInfo.putTableRow(enode, var);
+			blockInfo.putPropertyValue(accessor.asGroup(), var);
+		}
+		return var;
+	}
 }

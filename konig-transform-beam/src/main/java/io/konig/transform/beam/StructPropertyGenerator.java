@@ -132,6 +132,7 @@ public class StructPropertyGenerator extends TargetPropertyGenerator {
 	
 		
 		captureValue(targetProperty, valueShapeRow);
+		etran.peekBlockInfo().getBlock()._return(valueShapeRow);
 
 	}
 

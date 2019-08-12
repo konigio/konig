@@ -50,5 +50,14 @@ public class ShowlDerivedPropertyList extends ArrayList<ShowlDerivedPropertyShap
 		}
 		return null;
 	}
+	
+	public ShowlDerivedPropertyShape withFormula() {
+		for (ShowlDerivedPropertyShape p : this) {
+			if (p.getFormula()!=null) {
+				return p;
+			}
+		}
+		return null;
+	}
 
 }

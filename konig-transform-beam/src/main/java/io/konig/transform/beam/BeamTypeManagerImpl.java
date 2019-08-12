@@ -1,6 +1,5 @@
 package io.konig.transform.beam;
 
-import java.awt.List;
 
 /*
  * #%L
@@ -24,7 +23,7 @@ import java.awt.List;
 
 
 import java.text.MessageFormat;
-import java.util.Date;
+import java.util.List;
 
 import org.openrdf.model.Namespace;
 import org.openrdf.model.URI;

@@ -23,7 +23,9 @@ package io.konig.core.showl;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.model.URI;
 
@@ -32,7 +34,7 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.shacl.PropertyConstraint;
 
 @SuppressWarnings("serial")
-public class ShowlPropertyShapeGroup extends ArrayList<ShowlPropertyShape> {
+public class ShowlPropertyShapeGroup extends ArrayList<ShowlPropertyShape> implements Comparable<ShowlPropertyShapeGroup> {
 
 	private ShowlEffectiveNodeShape declaringShape;
 	private URI predicate;
@@ -53,6 +55,23 @@ public class ShowlPropertyShapeGroup extends ArrayList<ShowlPropertyShape> {
 		this.valueShape = valueShape;
 	}
 
+	public ShowlPropertyShapeSynSet synonyms() {
+
+		// TODO:  Should we be computing the transitive closure of the synonym relationship?
+		
+		ShowlPropertyShapeSynSet set = new ShowlPropertyShapeSynSet();
+		for (ShowlPropertyShape p : this) {
+			Set<ShowlPropertyShape> synset = p.synonyms();
+			for (ShowlPropertyShape q : synset) {
+				set.add(q.asGroup());
+			}
+		}
+		
+		return set;
+		
+	}
+	
+	
 	public ShowlEffectiveNodeShape getDeclaringShape() {
 		return declaringShape;
 	}
@@ -61,6 +80,28 @@ public class ShowlPropertyShapeGroup extends ArrayList<ShowlPropertyShape> {
 		return predicate;
 	}
 	
+	public ShowlPropertyShape bestTarget() {
+		ShowlPropertyShape result = direct();
+		if (result != null) {
+			return result;
+		}
+		result = withSelectedExpression();
+		if (result != null) {
+			return result;
+		}
+		
+		return withFormula();
+	}
+	
+	private ShowlPropertyShape withFormula() {
+		for (ShowlPropertyShape p : this) {
+			if (p.getFormula()!=null) {
+				return p;
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * Find the ShowlPropertyShape that has a selected expression.
 	 * @return
@@ -262,6 +303,12 @@ public class ShowlPropertyShapeGroup extends ArrayList<ShowlPropertyShape> {
 
 	public ShowlNodeShape rootNode() {
 		return isEmpty() ? null : get(0).getRootNode();
+	}
+
+	@Override
+	public int compareTo(ShowlPropertyShapeGroup other) {
+		int result = getPredicate().getLocalName().compareTo(other.getPredicate().getLocalName());
+		return result==0 ? getPredicate().getNamespace().compareTo(other.getPredicate().getNamespace()) : result;
 	}
 
 	

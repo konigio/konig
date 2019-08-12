@@ -27,7 +27,7 @@ public class ToBqPersonShapeFn
             KV<String, CoGbkResult> e = c.element();
             TableRow personContactRow = sourceRow(e, BqPersonShapeBeam.personContactTag);
             TableRow personNameRow = sourceRow(e, BqPersonShapeBeam.personNameTag);
-            id(errorBuilder, outputRow, personNameRow);
+            id(errorBuilder, outputRow, personContactRow, personNameRow);
             phoneNumber(errorBuilder, outputRow, personContactRow);
             givenName(errorBuilder, outputRow, personNameRow);
             if (outputRow.isEmpty()) {
@@ -50,8 +50,12 @@ public class ToBqPersonShapeFn
         }
     }
 
-    private String id(ErrorBuilder errorBuilder, TableRow bqPersonRow, TableRow personNameRow) {
-        String id = ((String) personNameRow.get("id"));
+    private String id(ErrorBuilder errorBuilder,
+        TableRow bqPersonRow,
+        TableRow personContactRow,
+        TableRow personNameRow) {
+        String id = personContactRow.get("id");
+        id = ((id == null)?personNameRow.get("id"):id);
         if (id!= null) {
             bqPersonRow.set("id", id);
         } else {

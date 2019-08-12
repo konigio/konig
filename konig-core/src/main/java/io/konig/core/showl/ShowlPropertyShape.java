@@ -69,6 +69,7 @@ public abstract class ShowlPropertyShape implements Traversable {
 	private Set<ShowlExpression> usedIn;
 	
 	private List<ShowlExpression> expressionList = new ArrayList<>();
+	private ShowlPropertyShapeGroup targetProperty;
 	
 	public ShowlPropertyShape(ShowlNodeShape declaringShape, ShowlProperty property, PropertyConstraint propertyConstraint) {
 		this.declaringShape = declaringShape;
@@ -446,6 +447,14 @@ public abstract class ShowlPropertyShape implements Traversable {
 		
 		if (!set.contains(p)) {
 			set.add(p);
+			
+			ShowlExpression formula = p.getFormula();
+			
+			if (formula instanceof ShowlPropertyExpression) {
+				ShowlPropertyShape q = ((ShowlPropertyExpression) formula).getSourceProperty();
+				set.add(q);
+			}
+			
 			for (ShowlExpression e : p.getExpressionList()) {
 				if (e instanceof ShowlPropertyExpression) {
 					ShowlPropertyShape other = ((ShowlPropertyExpression) e).getSourceProperty();
@@ -506,7 +515,7 @@ public abstract class ShowlPropertyShape implements Traversable {
 	 * Set the expression that was selected to construct the value for this property.
 	 */
 	public void setSelectedExpression(ShowlExpression selectedExpression) {
-		if (logger.isTraceEnabled()) {
+		if (selectedExpression!=null && logger.isTraceEnabled()) {
 			logger.trace("setSelectedExpression {} = {}", getPath(), selectedExpression.displayValue());
 			System.out.print("");
 		}
@@ -579,4 +588,23 @@ public abstract class ShowlPropertyShape implements Traversable {
 		
 		return node.findPropertyByPredicate(getPredicate());
 	}
+
+	public SynsetProperty asSynsetProperty() {
+		SynsetNode node = getDeclaringShape().synsetNode();
+		return node.findPropertyByPredicate(getPredicate());
+	}
+
+	public ShowlPropertyShapeGroup getTargetProperty() {
+		return targetProperty;
+	}
+
+	public void setTargetProperty(ShowlPropertyShapeGroup targetProperty) {
+		this.targetProperty = targetProperty;
+	}
+
+	public boolean isRepeated() {
+		return propertyConstraint != null && propertyConstraint.getMaxCount()==null;
+	}
+	
+	
 }

@@ -53,6 +53,10 @@ public class BeamParameter implements Comparable<BeamParameter> {
 		return new BeamParameter(varType, BeamParameterType.ERROR_BUILDER, "errorBuilder", null);
 	}
 	
+	public static BeamParameter ofMappedValue(AbstractJType varType, String varName) {
+		return new BeamParameter(varType, BeamParameterType.MAPPED_VALUE, varName, null);
+	}
+	
 	public static BeamParameter ofEnumValue(AbstractJType varType, String varName, ShowlEffectiveNodeShape node) {
 		return new BeamParameter(varType, varName, node, BeamParameterType.ENUM_VALUE);
 	}
@@ -125,5 +129,6 @@ public class BeamParameter implements Comparable<BeamParameter> {
 	public BeamParameter copy(JVar var) {
 		return new BeamParameter(node, paramType, sourceNode, var);
 	}
+
 
 }

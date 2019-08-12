@@ -1,0 +1,145 @@
+package io.konig.transform.beam;
+
+/*
+ * #%L
+ * Konig Transform Beam
+ * %%
+ * Copyright (C) 2015 - 2019 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
+
+import com.helger.jcodemodel.JCodeModel;
+
+import io.konig.core.Graph;
+import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
+import io.konig.core.impl.MemoryGraph;
+import io.konig.core.impl.MemoryNamespaceManager;
+import io.konig.core.impl.RdfUtil;
+import io.konig.core.showl.ShowlClassProcessor;
+import io.konig.core.showl.ShowlNodeListingConsumer;
+import io.konig.core.showl.ShowlNodeShape;
+import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlService;
+import io.konig.core.showl.ShowlServiceImpl;
+import io.konig.core.showl.ShowlUniqueKey;
+import io.konig.core.showl.ShowlUniqueKeyCollection;
+import io.konig.core.showl.UniqueKeyFactory;
+import io.konig.core.util.IOUtil;
+import io.konig.datasource.DataSourceManager;
+import io.konig.gcp.datasource.GcpShapeConfig;
+import io.konig.shacl.Shape;
+import io.konig.shacl.ShapeManager;
+import io.konig.shacl.impl.MemoryShapeManager;
+import io.konig.transform.beam.BeamTypeManager;
+import io.konig.transform.beam.BeamTypeManagerImpl;
+
+public class UniqueKeyFactoryTest {
+
+	private NamespaceManager nsManager;
+	private Graph graph;
+	private ShapeManager shapeManager;
+	private OwlReasoner reasoner;
+	private ShowlService showlService;
+	
+	private UniqueKeyFactory keyFactory;
+	
+	
+	@Before
+	public void setUp() {
+		nsManager = new MemoryNamespaceManager();
+		graph = new MemoryGraph(nsManager);
+		shapeManager = new MemoryShapeManager();
+		reasoner = new OwlReasoner(graph);
+		showlService = new ShowlServiceImpl(reasoner);
+
+		
+		
+		keyFactory = new UniqueKeyFactory(reasoner);
+	}
+
+	private URI uri(String stringValue) {
+		return new URIImpl(stringValue);
+	}
+	
+	public ShowlNodeShape loadNode(String path, URI nodeShapeId) throws Exception {
+		
+		DataSourceManager.getInstance().clear();
+		
+		File rdfDir = new File(path);
+		assertTrue(rdfDir.exists());
+		
+		GcpShapeConfig.init();
+		RdfUtil.loadTurtle(rdfDir, graph, shapeManager);
+
+		ShowlClassProcessor classProcessor = new ShowlClassProcessor(showlService, showlService);
+		classProcessor.buildAll(shapeManager);
+		
+		
+		File projectDir = new File("target/test/UniqueKeyFactoryTest/" + rdfDir.getName());		
+
+		IOUtil.recursiveDelete(projectDir);
+	
+		Shape shape = shapeManager.getShapeById(nodeShapeId);
+		
+		return showlService.createNodeShape(shape);
+		
+	}
+	
+	@Test
+	public void test() throws Exception {
+		URI shapeId = uri("http://example.com/ns/shape/PersonTargetShape");
+		ShowlNodeShape node = loadNode("src/test/resources/UniqueKeyFactoryTest/merge-by-key", shapeId);
+		assertTrue(node != null);
+		
+		ShowlUniqueKeyCollection keyCollection = keyFactory.createKeyCollection(node);
+		assertTrue(keyCollection.size()==2);
+		
+		ShowlUniqueKey key = keyCollection.get(1);
+		assertTrue(key.size()==1);
+		
+		URI expectedPredicate = uri("http://example.com/ns/core/identifiedBy");
+		ShowlPropertyShape identifiedBy = key.get(0).getPropertyShape();
+		assertEquals(expectedPredicate, identifiedBy.getPredicate());
+		
+		ShowlUniqueKeyCollection valueKeys = key.get(0).getValueKeys();
+		assertTrue(valueKeys != null);
+		assertTrue(valueKeys.size()==1);
+		key = valueKeys.get(0);
+		assertEquals(2, key.size());
+		
+		URI identifier = uri("http://example.com/ns/core/identifier");
+		URI identityProvider = uri("http://example.com/ns/core/identityProvider");
+		
+		assertEquals(identifier, key.get(0).getPropertyShape().getPredicate());
+		assertEquals(identityProvider, key.get(1).getPropertyShape().getPredicate());
+		
+		
+		
+	}
+
+}

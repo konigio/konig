@@ -48,6 +48,7 @@ public class BeamMethod implements Comparable<BeamMethod> {
 	private Set<BeamMethod> invocationSet = null;
 	
 	private Set<BeamParameter> excludeParam;
+	private ShowlPropertyShape targetProperty;
 	
 	public BeamMethod(JMethod method) {
 		this.method = method;
@@ -76,6 +77,14 @@ public class BeamMethod implements Comparable<BeamMethod> {
 	}
 	public JMethod getMethod() {
 		return method;
+	}
+
+	public ShowlPropertyShape getTargetProperty() {
+		return targetProperty;
+	}
+
+	public void setTargetProperty(ShowlPropertyShape targetProperty) {
+		this.targetProperty = targetProperty;
 	}
 
 	public List<BeamParameter> getParameters() {

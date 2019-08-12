@@ -71,6 +71,7 @@ public class BlockInfo {
 	private Map<ShowlPropertyShapeGroup, JVar> propertyValueMap = new HashMap<>();
 	
 	private Map<ShowlEffectiveNodeShape, JVar> enumMemberMap = new HashMap<>();
+	private Map<JVar,JVar> varMap = new HashMap<>();
 	
 	
 	public BlockInfo(JBlock block) {
@@ -85,7 +86,12 @@ public class BlockInfo {
 		this.beamMethod = beamMethod;
 		return this;
 	}
+	
+	
 
+	public void setBlock(JBlock block) {
+		this.block = block;
+	}
 
 	/**
 	 * The row that this block is expected to populate.
@@ -355,7 +361,33 @@ public class BlockInfo {
 		return null;
 	}
 
+	public void putMappedVar(JVar key, JVar value) {
+		varMap.put(key, value);
+	}
+
+	public JVar getMappedVar(JVar key) throws BeamTransformGenerationException {
+		JVar result = varMap.get(key);
+		if (result == null) {
+			String msg = MessageFormat.format("In {0} method , variable not mapped: {1}", currentMethodName(), key.name());
+			throw new BeamTransformGenerationException(msg);
+		}
+		return result;
+	}
+
+	private String currentMethodName() {
 	
+		return beamMethod==null ? "unknown" : beamMethod.getMethod().name();
+	}
+
+	public JVar getPropertyValueOrFail(ShowlPropertyShapeGroup group) throws BeamTransformGenerationException {
+		JVar result = getPropertyValue(group);
+		if (result == null) {
+			throw new BeamTransformGenerationException("Property value not found: " + group.pathString());
+		}
+		return result;
+	}
+
+
 
 
 }
