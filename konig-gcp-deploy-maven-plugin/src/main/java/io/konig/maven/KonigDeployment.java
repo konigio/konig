@@ -37,9 +37,12 @@ public class KonigDeployment {
 	
 	public KonigDeployment(String baseDir) throws InvalidGoogleCredentialsException, IOException {
 		SystemConfig.init();
-		String credentials=System.getProperty("google.credentials");
-		if(credentials==null){
-			throw new InvalidGoogleCredentialsException("Please set the deployment property \"google.credentials\"");
+		String credentials = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
+		if(credentials == null) {
+			credentials=System.getProperty("google.credentials");
+			if(credentials==null){
+				throw new InvalidGoogleCredentialsException("Please set the deployment property \"google.credentials\"");
+			}
 		}
 		credentials=credentials.replace("\\", "/");
 		File credentialsFile = new File(credentials);

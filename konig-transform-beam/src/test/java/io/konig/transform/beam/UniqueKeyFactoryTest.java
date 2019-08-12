@@ -1,5 +1,26 @@
 package io.konig.transform.beam;
 
+/*
+ * #%L
+ * Konig Transform Beam
+ * %%
+ * Copyright (C) 2015 - 2019 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -96,9 +117,9 @@ public class UniqueKeyFactoryTest {
 		assertTrue(node != null);
 		
 		ShowlUniqueKeyCollection keyCollection = keyFactory.createKeyCollection(node);
-		assertTrue(keyCollection.size()==1);
+		assertTrue(keyCollection.size()==2);
 		
-		ShowlUniqueKey key = keyCollection.get(0);
+		ShowlUniqueKey key = keyCollection.get(1);
 		assertTrue(key.size()==1);
 		
 		URI expectedPredicate = uri("http://example.com/ns/core/identifiedBy");
@@ -117,13 +138,7 @@ public class UniqueKeyFactoryTest {
 		assertEquals(identifier, key.get(0).getPropertyShape().getPredicate());
 		assertEquals(identityProvider, key.get(1).getPropertyShape().getPredicate());
 		
-		List<ShowlPropertyShape> flatList = keyCollection.flatten();
 		
-		assertTrue(flatList != null);
-		assertEquals(2, flatList.size());
-
-		assertEquals(identifier, flatList.get(0).getPredicate());
-		assertEquals(identityProvider, flatList.get(1).getPredicate());
 		
 	}
 

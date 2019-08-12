@@ -1492,6 +1492,11 @@ public class BasicTransformService implements ShowlTransformService {
 				}
 				if (rank == 0) {
 					sequence.remove();
+				} else if(rank == bestRank) {
+					if (candidate.getId().stringValue().length() < result.getId().stringValue().length()) {
+						bestRank = rank;
+						result = candidate;
+					}					
 				} else if (rank > bestRank) {
 					bestRank = rank;
 					result = candidate;

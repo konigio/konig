@@ -601,6 +601,10 @@ public abstract class ShowlPropertyShape implements Traversable {
 	public void setTargetProperty(ShowlPropertyShapeGroup targetProperty) {
 		this.targetProperty = targetProperty;
 	}
+
+	public boolean isRepeated() {
+		return propertyConstraint != null && propertyConstraint.getMaxCount()==null;
+	}
 	
 	
 }

@@ -130,6 +130,13 @@ public class BeamExpressionTransform  {
 		literalFactory = new BeamLiteralFactory(model);
 	}
 	
+	
+	public void setTargetClass(JDefinedClass targetClass) {
+		this.targetClass = targetClass;
+	}
+
+
+
 	public IJExpression transform(ShowlExpression e) throws BeamTransformGenerationException {
 		
 		if (e instanceof ShowlLiteralExpression) {
@@ -1838,6 +1845,63 @@ public class BeamExpressionTransform  {
 		blockInfo.putPropertyValue(group, var);
 		
 			
+		return var;
+	}
+
+	public JVar declareSourcePropertyValue(ShowlPropertyShape p) throws BeamTransformGenerationException {
+		BlockInfo blockInfo = peekBlockInfo();
+		ShowlPropertyShapeGroup group = p.asGroup();
+		
+		JVar var = blockInfo.getPropertyValue(group);
+		
+		if (var == null) {
+		
+			RdfJavaType type = typeManager.rdfJavaType(p);
+
+			String localName = p.getPredicate().getLocalName();
+			IJExpression initValue = null;
+			if (p.isDirect()) {
+				JVar parentNode = declareSourceTableRow(p.getDeclaringShape());
+				initValue = JExpr.cond(
+						parentNode.neNull(), 
+						parentNode.invoke("get").arg(localName).castTo(type.getJavaType()), 
+						JExpr._null());
+			} else {
+				ShowlExpression formula = p.getFormula();
+				if (formula == null) {
+					formula = p.getSelectedExpression();
+				}
+				if (formula == null) {
+					fail("Formula not declared for {0}", p.getPath());
+				}
+				initValue = transform(formula);
+			}
+			
+			var = blockInfo.getBlock().decl(type.getJavaType(), blockInfo.varName(localName))
+					.init(initValue);
+		}
+		
+		
+		return var;
+	}
+
+	private JVar declareSourceTableRow(ShowlNodeShape node) throws BeamTransformGenerationException {
+		BlockInfo blockInfo = peekBlockInfo();
+		ShowlEffectiveNodeShape enode = node.effectiveNode();
+		JVar var = blockInfo.getTableRowVar(enode);
+		if (var == null) {
+			ShowlPropertyShape accessor = node.getAccessor();
+			if (accessor == null) {
+				fail("TableRow for {0} has not been declared.", node.getPath());
+			}
+			JVar parent = declareSourceTableRow(node.getAccessor().getDeclaringShape());
+			AbstractJClass tableRowClass = model.ref(TableRow.class);
+			String localName = accessor.getPredicate().getLocalName();
+			var = blockInfo.getBlock().decl(tableRowClass, blockInfo.varName(localName));
+			var.init(JExpr.cond(parent.eqNull(), JExpr._null(), parent.invoke("get").arg(localName).castTo(tableRowClass)));
+			blockInfo.putTableRow(enode, var);
+			blockInfo.putPropertyValue(accessor.asGroup(), var);
+		}
 		return var;
 	}
 }

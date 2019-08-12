@@ -80,6 +80,28 @@ public class ShowlPropertyShapeGroup extends ArrayList<ShowlPropertyShape> imple
 		return predicate;
 	}
 	
+	public ShowlPropertyShape bestTarget() {
+		ShowlPropertyShape result = direct();
+		if (result != null) {
+			return result;
+		}
+		result = withSelectedExpression();
+		if (result != null) {
+			return result;
+		}
+		
+		return withFormula();
+	}
+	
+	private ShowlPropertyShape withFormula() {
+		for (ShowlPropertyShape p : this) {
+			if (p.getFormula()!=null) {
+				return p;
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * Find the ShowlPropertyShape that has a selected expression.
 	 * @return

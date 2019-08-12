@@ -1,5 +1,26 @@
 package io.konig.core.showl;
 
+/*
+ * #%L
+ * Konig Core
+ * %%
+ * Copyright (C) 2015 - 2019 Gregory McFall
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,18 +61,17 @@ public class UniqueKeyFactory {
 		ShowlUniqueKeyCollection createKeyList(ShowlNodeShape node) throws ShowlProcessingException {
 			keyCollection = new ShowlUniqueKeyCollection(node);
 			
-			for (ShowlPropertyShape p : node.getProperties()) {
-				
+			SynsetNode snode = node.synsetNode();
+			for (SynsetProperty p : snode.getProperties()) {
 				if (
-						Konig.id.equals(p.getPredicate()) ||
+						isKonigId(p) ||
 						isShowlUniqueKey(p) ||
 						isInverseFunctional(p)
 				) {
-					singleKey(p);
+					singleKey(p.select());
 				}
-				
 			}
-
+			
 			buildOwlKeys(node);
 			
 		
@@ -65,6 +85,52 @@ public class UniqueKeyFactory {
 		}
 
 	
+		private boolean isInverseFunctional(SynsetProperty synset) {
+			for (ShowlPropertyShape p : synset) {
+				if (isInverseFunctional(p) || isShowlInverseFunctional(p.getTargetProperty())) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+
+		private boolean isShowlInverseFunctional(ShowlPropertyShapeGroup group) {
+			if (group!=null) {
+				return isInverseFunctional(group.bestTarget());
+			}
+			return false;
+		}
+
+
+		private boolean isShowlUniqueKey(SynsetProperty synset) {
+			for (ShowlPropertyShape p : synset) {
+				if (isShowlUniqueKey(p) || isShowlUniqueKey(p.getTargetProperty())) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+
+		private boolean isShowlUniqueKey(ShowlPropertyShapeGroup group) {
+			if (group!=null) {
+				return isShowlUniqueKey(group.bestTarget());
+			}
+			return false;
+		}
+
+
+		private boolean isKonigId(SynsetProperty synset) {
+			for (URI predicate : synset.getPredicates()) {
+				if (Konig.id.equals(predicate)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+
 		private void addNestedKeys(ShowlUniqueKey key) throws ShowlProcessingException {
 			for (UniqueKeyElement e : key) {
 				ShowlPropertyShape p = e.getPropertyShape();
@@ -99,6 +165,9 @@ public class UniqueKeyFactory {
 		 * Add the key to the collection only if it is not already in the collection
 		 */
 		private void addKey(ShowlUniqueKey key) {
+			if (key == null) {
+				return;
+			}
 		
 			Iterator<ShowlUniqueKey> sequence = keyCollection.iterator();
 			while (sequence.hasNext()) {
@@ -125,6 +194,15 @@ public class UniqueKeyFactory {
 			ShowlUniqueKey key = new ShowlUniqueKey();
 			for (URI predicate : keyPredicates) {
 				ShowlPropertyShape p = node.getProperty(predicate);
+				if (p == null) {
+					ShowlDerivedPropertyList list = node.getDerivedProperty(predicate);
+					if (list != null && !list.isEmpty()) {
+						p = list.withFormula();
+					}
+				}
+				if (p == null) {
+					return null;
+				}
 				key.add(element(p));
 			}
 			
@@ -211,12 +289,14 @@ public class UniqueKeyFactory {
 
 		private boolean isShowlUniqueKey(ShowlPropertyShape p) {
 			
-			PropertyConstraint constraint = p.getPropertyConstraint();
+			PropertyConstraint constraint = p==null ? null : p.getPropertyConstraint();
 			URI stereotype = constraint==null ? null : constraint.getStereotype();
 			if (
-				Konig.primaryKey.equals(stereotype) ||
-				Konig.syntheticKey.equals(stereotype) ||
-				Konig.uniqueKey.equals(stereotype)
+				stereotype!=null && (
+					Konig.primaryKey.equals(stereotype) ||
+					Konig.syntheticKey.equals(stereotype) ||
+					Konig.uniqueKey.equals(stereotype)
+				)
 			) {
 				return true;
 			}

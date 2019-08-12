@@ -23,6 +23,8 @@ package io.konig.transform.beam;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -105,9 +107,7 @@ public class BaseTargetFnGenerator {
 	  	AbstractJClass errorBuilderClass = errorBuilderClass();
 		AbstractJClass processContextClass = model.ref(ProcessContext.class);
 		AbstractJClass tableRowClass = model.ref(TableRow.class);
-		AbstractJClass stringClass = model.ref(String.class);
 		
-		AbstractJClass tupleTagStringClass = model.ref(TupleTag.class).narrow(stringClass);
 		AbstractJClass tupleTagTableRowClass = model.ref(TupleTag.class).narrow(tableRowClass);
 		AbstractJClass pipelineOptionsClass = model.directClass(PipelineOptions.class.getName());
 		
@@ -118,10 +118,10 @@ public class BaseTargetFnGenerator {
 		
 		JVar deadLetterTag = thisClass
 				.field(JMod.PUBLIC | JMod.STATIC, tupleTagTableRowClass, "deadLetterTag")
-				.init(tupleTagTableRowClass._new());
+				.init(JExpr.direct("new TupleTag<TableRow>(){}"));
 
 		JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC, tupleTagTableRowClass, "successTag")
-				.init(tupleTagTableRowClass._new());
+				.init(JExpr.direct("new TupleTag<TableRow>(){}"));
 
 
 		JVar errorBuilder = method.body().decl(errorBuilderClass, "errorBuilder").init(errorBuilderClass._new());
@@ -185,7 +185,7 @@ public class BaseTargetFnGenerator {
 	}
   
 
-	private void provideOutput(
+  	private void provideOutput(
 			JVar successTag,
 			JVar deadLetterTag,
 			JTryBlock tryBlock, 
@@ -200,7 +200,6 @@ public class BaseTargetFnGenerator {
 			._then().add(errorBuilder.invoke("addError").arg(JExpr.lit("record is empty")));
 		
 		JConditional ifStatement = tryBlock.body()._if(errorBuilder.invoke("isEmpty").not());
-		
 		
 		AbstractJClass tableRowClass = model.ref(TableRow.class);
 		JVar errorRow = ifStatement._then().decl(tableRowClass, "errorRow").init(tableRowClass._new());
@@ -228,16 +227,23 @@ public class BaseTargetFnGenerator {
 		
 	}
 
-	private List<ShowlNodeShape> listSourceNodes(ShowlNodeShape targetNode) {
-		List<ShowlNodeShape> list = new ArrayList<>();
-		for (ShowlChannel channel : targetNode.getChannels()) {
-			ShowlNodeShape sourceNode = channel.getSourceNode();
-			if (!reasoner.isEnumerationClass(sourceNode.getOwlClass().getId())) {
-				list.add(sourceNode);
-			}
-		}
-		return list;
-	}
+  	private List<ShowlNodeShape> listSourceNodes(ShowlNodeShape targetNode) {
+  		List<ShowlNodeShape> list = new ArrayList<>();
+  		for (ShowlChannel channel : targetNode.getChannels()) {
+  			ShowlNodeShape sourceNode = channel.getSourceNode();
+  			if (!reasoner.isEnumerationClass(sourceNode.getOwlClass().getId())) {
+  				list.add(sourceNode);
+  			}
+  		}
+  		Collections.sort(list, new Comparator<ShowlNodeShape>() {
+  			@Override
+  			public int compare(ShowlNodeShape a, ShowlNodeShape b) {
+  				return a.getId().stringValue().compareTo(b.getId().stringValue());
+  			}
+  		});
+  		return list;
+  	}
+
 
 	protected void declareTableRow(JDefinedClass thisClass, BeamExpressionTransform etran, ShowlEffectiveNodeShape node, JVar c) throws BeamTransformGenerationException {
 		
@@ -283,6 +289,7 @@ public class BaseTargetFnGenerator {
   protected BeamTransformGenerationException fail(String pattern, Object...args) throws BeamTransformGenerationException {
     throw new BeamTransformGenerationException(MessageFormat.format(pattern, args));
   }
+ 
   
   protected JDefinedClass errorBuilderClass() throws BeamTransformGenerationException {
 		String errorBuilderClassName = errorBuilderClassName();
