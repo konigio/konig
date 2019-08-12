@@ -143,8 +143,8 @@ public class BeamTransformGeneratorTest {
 		
 	}
 
-	
-	@Ignore
+// TODO: restore as test case	
+//	@Test
 	public void testOverlay() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/overlay");
@@ -252,7 +252,8 @@ public class BeamTransformGeneratorTest {
 	}
 	
 
-	@Ignore
+//TODO: restore as test case
+//	@Test
 	public void testJoinNestedRecord() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/join-nested-record", false);
@@ -260,7 +261,8 @@ public class BeamTransformGeneratorTest {
 	}
 
 
-	@Ignore
+//TODO: restore as test case
+//	@Test
 	public void testJoinNestedRecordViaInverse() throws Exception {
 		
 		generateAll("src/test/resources/BeamTransformGeneratorTest/join-nested-record-via-inverse", false);

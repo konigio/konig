@@ -33,24 +33,29 @@ import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.IJExpression;
 import com.helger.jcodemodel.JBlock;
 import com.helger.jcodemodel.JCodeModel;
+import com.helger.jcodemodel.JConditional;
 import com.helger.jcodemodel.JDefinedClass;
 import com.helger.jcodemodel.JExpr;
 import com.helger.jcodemodel.JMethod;
 import com.helger.jcodemodel.JMod;
 import com.helger.jcodemodel.JVar;
+import com.helger.jcodemodel.JWhileLoop;
 
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
 import io.konig.core.showl.ShowlEffectiveNodeShape;
+import io.konig.core.showl.ShowlNodeShape;
 import io.konig.core.showl.ShowlUtil;
 import io.konig.core.util.StringUtil;
+import io.konig.core.vocab.Konig;
 
 public class MergeTargetFnGenerator extends BaseTargetFnGenerator {
 	
 	private Map<ShowlEffectiveNodeShape, IJExpression> tupleTagMap;
 	
 	private JVar keyValueVar = null;
-	private JMethod sourceRowMethod = null;
+	private JMethod defaultSourceRowMethod = null;
+	private JMethod latestSourceRowMethod = null;
 
 	public MergeTargetFnGenerator(Map<ShowlEffectiveNodeShape, IJExpression> tupleTagMap, String basePackage, NamespaceManager nsManager, JCodeModel model, OwlReasoner reasoner,
 			BeamTypeManager typeManager) {
@@ -62,7 +67,8 @@ public class MergeTargetFnGenerator extends BaseTargetFnGenerator {
 	@Override
 	protected void declareTableRow(JDefinedClass thisClass, BeamExpressionTransform etran, ShowlEffectiveNodeShape node, JVar c) throws BeamTransformGenerationException {
 
-		if (node.canonicalNode().isTargetNode()) {
+		ShowlNodeShape sourceNode = node.canonicalNode();
+		if (sourceNode.isTargetNode()) {
 			return;
 		}
 		
@@ -81,7 +87,7 @@ public class MergeTargetFnGenerator extends BaseTargetFnGenerator {
 		}
 		AbstractJClass tableRowClass = model.ref(TableRow.class);
 		
-		JMethod sourceRowMethod = sourceRowMethod(thisClass);
+		JMethod sourceRowMethod = sourceRowMethod(thisClass, sourceNode);
 
 		IJExpression tupleTagField = tupleTagMap.get(node);
 		if (tupleTagField == null) {
@@ -100,8 +106,16 @@ public class MergeTargetFnGenerator extends BaseTargetFnGenerator {
 	}
 
 
-	private JMethod sourceRowMethod(JDefinedClass thisClass) {
-		if (sourceRowMethod == null) {
+	private JMethod sourceRowMethod(JDefinedClass thisClass, ShowlNodeShape sourceNode) {
+		if (hasModifiedProperty(sourceNode)) {
+			return latestSourceRowMethod(thisClass);
+		}
+		return defaultSourceRowMethod(thisClass);
+	}
+
+
+	private JMethod latestSourceRowMethod(JDefinedClass thisClass) {
+		if (latestSourceRowMethod == null) {
 
 			AbstractJClass stringClass = model.ref(String.class);
 			AbstractJClass coGbkResultClass = model.ref(CoGbkResult.class);
@@ -110,11 +124,55 @@ public class MergeTargetFnGenerator extends BaseTargetFnGenerator {
 			AbstractJClass tupleTagClass = model.ref(TupleTag.class).narrow(tableRowClass);
 			AbstractJClass iteratorClass = model.ref(Iterator.class).narrow(tableRowClass);
 			
-			sourceRowMethod = thisClass.method(JMod.PRIVATE, tableRowClass, "sourceRow");
+			latestSourceRowMethod = thisClass.method(JMod.PRIVATE, tableRowClass, "latestSourceRow");
 			
-			JVar e = sourceRowMethod.param(kvClass, "e");
-			JVar tag = sourceRowMethod.param(tupleTagClass, "tag");
-			JBlock body = sourceRowMethod.body();
+			JVar e = latestSourceRowMethod.param(kvClass, "e");
+			JVar tag = latestSourceRowMethod.param(tupleTagClass, "tag");
+			JBlock body = latestSourceRowMethod.body();
+			
+			
+			JVar latest = body.decl(stringClass, "latest").init(JExpr._null());
+			JVar result = body.decl(tableRowClass, "result").init(JExpr._null());
+			
+			JVar sequence = body.decl(iteratorClass, "sequence").init(e.invoke("getValue").invoke("getAll").arg(tag).invoke("iterator"));
+			JWhileLoop loop = body._while(sequence.invoke("hasNext"));
+			JBlock block = loop.body();
+			
+			JVar row = block.decl(tableRowClass, "row").init(sequence.invoke("next"));
+			JVar modified = block.decl(stringClass, "modified").init(row.invoke("get").arg("modified").invoke("toString"));
+			
+			JConditional ifStatement = block._if(latest.eqNull().cor((modified.invoke("compareTo").arg(latest).lt(0))));
+			ifStatement._then().assign(latest, modified);
+			ifStatement._then().assign(result, row);
+			
+			
+			
+			body._return(result);
+		}
+		return latestSourceRowMethod;
+	}
+
+
+	private boolean hasModifiedProperty(ShowlNodeShape sourceNode) {
+		return sourceNode.getProperty(Konig.modified)!=null;
+	}
+
+
+	private JMethod defaultSourceRowMethod(JDefinedClass thisClass) {
+		if (defaultSourceRowMethod == null) {
+
+			AbstractJClass stringClass = model.ref(String.class);
+			AbstractJClass coGbkResultClass = model.ref(CoGbkResult.class);
+			AbstractJClass kvClass = model.ref(KV.class).narrow(stringClass).narrow(coGbkResultClass);
+			AbstractJClass tableRowClass = model.ref(TableRow.class);
+			AbstractJClass tupleTagClass = model.ref(TupleTag.class).narrow(tableRowClass);
+			AbstractJClass iteratorClass = model.ref(Iterator.class).narrow(tableRowClass);
+			
+			defaultSourceRowMethod = thisClass.method(JMod.PRIVATE, tableRowClass, "sourceRow");
+			
+			JVar e = defaultSourceRowMethod.param(kvClass, "e");
+			JVar tag = defaultSourceRowMethod.param(tupleTagClass, "tag");
+			JBlock body = defaultSourceRowMethod.body();
 			
 			JVar sequence = body.decl(iteratorClass, "sequence").init(e.invoke("getValue").invoke("getAll").arg(tag).invoke("iterator"));
 			body._return(JExpr.cond(sequence.invoke("hasNext"), sequence.invoke("next"), JExpr._null()));
@@ -122,6 +180,6 @@ public class MergeTargetFnGenerator extends BaseTargetFnGenerator {
 			
 			
 		}
-		return sourceRowMethod;
+		return defaultSourceRowMethod;
 	}
 }
