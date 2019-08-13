@@ -32,6 +32,7 @@ import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
 import org.slf4j.Logger;
@@ -49,6 +50,7 @@ import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.Schema;
 import io.konig.datasource.DataSource;
 import io.konig.gcp.datasource.GoogleBigQueryTable;
+import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 import io.konig.shacl.ShapeManager;
 import io.konig.shacl.io.json.JsonWriter;
@@ -75,11 +77,37 @@ public class BigQueryEnumGenerator {
 
 	public void generate(Graph graph, DataFileMapper dataFileMapper) throws IOException {
 		List<Vertex> enumClassList = graph.v(Schema.Enumeration).in(RDFS.SUBCLASSOF).toVertexList();
+		validate(enumClassList);
 		for (Vertex owlClass : enumClassList) {
 			generate(owlClass, dataFileMapper);
 		}
 	}
-
+	
+	private void validate(List<Vertex> enumClassList) {
+		StringBuilder errorBuilder = new StringBuilder();
+		for (Vertex owlClass : enumClassList) {
+			Resource id = owlClass.getId();
+			if (id instanceof URI) {
+				final URI enumClassId = (URI) id;
+				Shape shape = getBigQueryTableShape(enumClassId);
+				if(shape != null && shape.getProperty() != null){
+					for (PropertyConstraint p : shape.getProperty()) {
+						Integer maxCount = p.getMaxCount();
+						boolean isMultiValue = maxCount==null || maxCount>1;					
+						if (isMultiValue) {
+							errorBuilder.append("\n");
+							errorBuilder.append(new URIImpl(shape.getId().stringValue()).getLocalName());
+							errorBuilder.append(".");
+							errorBuilder.append(p.getPredicate().getLocalName());
+						}
+					}
+				}
+			}
+		}
+		if(errorBuilder.length() > 0) {
+			throw new KonigException("Enum Generator - Multiple values not supported yet, for the below property :" +  errorBuilder.toString());		
+		}
+	}
 	private void generate(Vertex owlClass, DataFileMapper dataFileMapper) throws IOException {
 		
 		OwlReasoner reasoner = new OwlReasoner(owlClass.getGraph());
@@ -92,7 +120,6 @@ public class BigQueryEnumGenerator {
 
 			
 			if (shape != null) {
-		
 				
 				List<Vertex> list = null;
 				
@@ -124,7 +151,7 @@ public class BigQueryEnumGenerator {
 						try {
 
 							for (Vertex v : list) {
-								selector.setVertex(v);
+								selector.setVertex(v);								
 								jsonWriter.write(shape, v);
 								generator.flush();
 								out.write('\n');
