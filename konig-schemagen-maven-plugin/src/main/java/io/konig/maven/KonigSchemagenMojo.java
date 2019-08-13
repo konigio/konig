@@ -1495,8 +1495,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 					ProjectFolder viewFolder = project.createFolder(bigQuery.getView());
 					resourceGenerator.addBigQueryViewGenerator(viewFolder);
 				}
-				
-				resourceGenerator.add(labelGenerator());
+				// resourceGenerator.add(labelGenerator());
 			}
 			if (cloudStorage != null) {
 				resourceGenerator.addCloudStorageBucketWriter(cloudStorage.getDirectory());
