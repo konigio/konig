@@ -55,5 +55,9 @@ public class AnimalTargetShapeBeam {
         public String getWorkerMachineType();
 
         public void setWorkerMachineType(String workerMachineType);
+
+        public String getModifiedDate();
+
+        public void setModifiedDate(String modifiedDate);
     }
 }

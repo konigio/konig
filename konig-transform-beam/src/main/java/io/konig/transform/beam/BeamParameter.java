@@ -61,6 +61,9 @@ public class BeamParameter implements Comparable<BeamParameter> {
 		return new BeamParameter(varType, varName, node, BeamParameterType.ENUM_VALUE);
 	}
 	
+	public static BeamParameter ofPipelineOptions(AbstractJType varType) {
+		return new BeamParameter(varType, BeamParameterType.PIPELINE_OPTIONS, "options", null);
+	}
 	
 	public String toString() {
 		return "BeamParameter(" + varName + ")";
@@ -86,9 +89,7 @@ public class BeamParameter implements Comparable<BeamParameter> {
 		this.sourceNode = sourceNode;
 		this.var = var;
 	}
-	
-	
-
+		
 	public String getVarName() {
 		return varName;
 	}

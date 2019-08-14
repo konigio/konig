@@ -47,6 +47,8 @@ public interface BeamTypeManager {
 	AbstractJType javaType(URI rdfType) throws BeamTransformGenerationException;
 	AbstractJClass errorBuilderClass() throws BeamTransformGenerationException;
 	AbstractJClass enumClass(URI owlClass) throws BeamTransformGenerationException;
+	AbstractJClass mainClass(URI shapeId) throws BeamTransformGenerationException;
+	AbstractJClass pipelineOptionsClass(URI shapeId) throws BeamTransformGenerationException;
 	URI enumClassOfIndividual(URI iri) throws BeamTransformGenerationException;
 	AbstractJType javaType(ShowlExpression e) throws BeamTransformGenerationException;
 	

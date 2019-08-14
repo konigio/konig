@@ -164,5 +164,7 @@ public class BeamMethod implements Comparable<BeamMethod> {
 		return copy;
 	}
 	
-	
+	public void throwsException(AbstractJType type) {
+		method._throws((AbstractJClass) type);
+	}
 }
