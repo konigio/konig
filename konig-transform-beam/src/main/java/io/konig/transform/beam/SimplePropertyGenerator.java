@@ -24,6 +24,7 @@ package io.konig.transform.beam;
 import com.helger.jcodemodel.JVar;
 
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.vocab.Konig;
 
 public class SimplePropertyGenerator extends TargetPropertyGenerator {
 
@@ -40,7 +41,7 @@ public class SimplePropertyGenerator extends TargetPropertyGenerator {
 
 		etran.addOutputRowAndErrorBuilderParams(beamMethod, targetProperty);
 		etran.addTableRowParameters(beamMethod, targetProperty);
-		
+		etran.addPipelineOptionsParameters(beamMethod, targetProperty);
 		
 	}
 

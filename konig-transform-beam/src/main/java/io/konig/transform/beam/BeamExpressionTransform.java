@@ -42,6 +42,7 @@ import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.AbstractJType;
 import com.helger.jcodemodel.IJExpression;
+import com.helger.jcodemodel.JAssignment;
 import com.helger.jcodemodel.JAtomDouble;
 import com.helger.jcodemodel.JAtomFloat;
 import com.helger.jcodemodel.JAtomInt;
@@ -56,10 +57,13 @@ import com.helger.jcodemodel.JForLoop;
 import com.helger.jcodemodel.JInvocation;
 import com.helger.jcodemodel.JMethod;
 import com.helger.jcodemodel.JMod;
+import com.helger.jcodemodel.JOp;
+import com.helger.jcodemodel.JOpTernary;
 import com.helger.jcodemodel.JStringLiteral;
 import com.helger.jcodemodel.JVar;
 
 import io.konig.core.OwlReasoner;
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.ShowlArrayExpression;
 import io.konig.core.showl.ShowlBasicStructExpression;
 import io.konig.core.showl.ShowlBinaryRelationalExpression;
@@ -1396,7 +1400,15 @@ public class BeamExpressionTransform  {
 		
 	}
 
-
+	public void addPipelineOptionsParameters(BeamMethod beamMethod, ShowlPropertyShape targetProperty) throws BeamTransformGenerationException {
+		if (Konig.modified.equals(targetProperty.getPredicate())) { 
+			URI shapeId = (URI) targetProperty.getDeclaringShape().getShape().getId();
+			AbstractJClass pipelineOptionsClass = typeManager.pipelineOptionsClass(RdfUtil.uri(shapeId));
+			BeamParameter param = BeamParameter.ofPipelineOptions(pipelineOptionsClass);
+			beamMethod.addParameter(param);
+		}
+	}
+	
 	public JInvocation createInvocation(BeamMethod method) throws BeamTransformGenerationException {
 		if (logger.isTraceEnabled()) {
 			logger.trace("invoke: {}", method.getMethod().name());
@@ -1435,6 +1447,11 @@ public class BeamExpressionTransform  {
 				
 			case MAPPED_VALUE :
 				invoke.arg(blockInfo.getMappedVar(param.getVar()));
+				break;
+				
+			case PIPELINE_OPTIONS :	
+				invoke.arg(param.getVar());
+				method.throwsException(model.ref(Exception.class));
 				break;
 				
 			default:
@@ -1489,10 +1506,17 @@ public class BeamExpressionTransform  {
 	
 			String fieldName = blockInfo.varName(property.getPredicate().getLocalName());
 			
+			JInvocation invocation = null;
+			if (Konig.modified.equals(property.getPredicate())) { 
+				invocation = JExpr.invoke("temporalValue").arg(JExpr.ref("options").invoke("getModifiedDate")) ;
+			}
 			
+			var = blockInfo.getBlock().decl(fieldType, fieldName).init(invocation==null?fieldValue.castTo(fieldType):invocation);
 			
-			
-			var = blockInfo.getBlock().decl(fieldType, fieldName).init(fieldValue.castTo(fieldType));
+			if(invocation != null) {
+				JOpTernary assign = JOp.cond(JExpr.ref(var).eq(JExpr._null()),fieldValue,var);
+				blockInfo.getBlock().add(var.assign(assign)); 
+			}
 			
 			blockInfo.putPropertyValue(property.asGroup(), var);
 		}
@@ -1725,7 +1749,8 @@ public class BeamExpressionTransform  {
 		addErrorBuilderParam(beamMethod);
 		addTableRowParam(beamMethod, targetProperty.getDeclaringShape().effectiveNode());
 	}
-
+	
+	
 	public void generateSourceProperty(ShowlPropertyShape p) throws BeamTransformGenerationException {
 		
 		BlockInfo blockInfo = peekBlockInfo();

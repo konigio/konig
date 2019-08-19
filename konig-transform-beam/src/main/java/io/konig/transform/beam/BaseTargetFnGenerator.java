@@ -22,22 +22,29 @@ package io.konig.transform.beam;
 
 
 import java.text.MessageFormat;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.values.TupleTag;
+import org.apache.commons.csv.CSVParser;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
 import com.fasterxml.uuid.Generators;
+import com.google.api.client.util.DateTime;
 import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.JBlock;
@@ -47,6 +54,7 @@ import com.helger.jcodemodel.JCodeModel;
 import com.helger.jcodemodel.JConditional;
 import com.helger.jcodemodel.JDefinedClass;
 import com.helger.jcodemodel.JExpr;
+import com.helger.jcodemodel.JFieldVar;
 import com.helger.jcodemodel.JMethod;
 import com.helger.jcodemodel.JMod;
 import com.helger.jcodemodel.JTryBlock;
@@ -58,8 +66,10 @@ import io.konig.core.impl.RdfUtil;
 import io.konig.core.showl.ShowlChannel;
 import io.konig.core.showl.ShowlEffectiveNodeShape;
 import io.konig.core.showl.ShowlNodeShape;
+import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlUtil;
 import io.konig.core.util.StringUtil;
+import io.konig.core.vocab.Konig;
 
 public class BaseTargetFnGenerator {
 	
@@ -108,10 +118,10 @@ public class BaseTargetFnGenerator {
 		AbstractJClass processContextClass = model.ref(ProcessContext.class);
 		AbstractJClass tableRowClass = model.ref(TableRow.class);
 		
+		AbstractJClass pipelineOptionsClass = typeManager.pipelineOptionsClass(RdfUtil.uri(targetNode.getId()));
 		AbstractJClass tupleTagTableRowClass = model.ref(TupleTag.class).narrow(tableRowClass);
-		AbstractJClass pipelineOptionsClass = model.directClass(PipelineOptions.class.getName());
 		
-  	JMethod method = thisClass.method(JMod.PUBLIC, model.VOID, "processElement");
+		JMethod method = thisClass.method(JMod.PUBLIC, model.VOID, "processElement");
 		
 		StructPropertyGenerator struct = new StructPropertyGenerator(etran);
 		BeamMethod beamMethod = new BeamMethod(method);
@@ -150,7 +160,10 @@ public class BaseTargetFnGenerator {
 			}
 			
 			for (BeamMethod propertyMethod : structInfo.getMethodList()) {
-				etran.invoke(propertyMethod);
+				etran.invoke(propertyMethod);				
+				if (Konig.modified.equals(propertyMethod.getTargetProperty().getPredicate())) { 
+					validateTemporalValue(thisClass, propertyMethod.getTargetProperty());					
+				}
 			}
 			
 			
@@ -183,8 +196,66 @@ public class BaseTargetFnGenerator {
 		
 		
 	}
-  
+  	
+	private void validateTemporalValue(JDefinedClass thisClass, ShowlPropertyShape property) {
+		AbstractJClass exception = model.ref(Exception.class);
+		AbstractJClass stringClass = model.ref(String.class);
+		JMethod temporalValueMethod = thisClass.method(JMod.PRIVATE, model.ref(Long.class), "temporalValue")
+				._throws(exception);
+		JVar stringValue = temporalValueMethod.param(model.ref(String.class), "stringValue");
+		JBlock block = temporalValueMethod.body()._if(stringValue.invoke("length").gt(JExpr.lit(0)))._then();
+		JTryBlock tryBlock = block._try();
+		JBlock tryBody = tryBlock.body();
+		AbstractJClass patternClass = model.ref(Pattern.class);
+		JFieldVar datePattern = thisClass.field(JMod.PRIVATE | JMod.FINAL | JMod.STATIC, patternClass, "DATE_PATTERN",
+				patternClass.staticInvoke("compile").arg(JExpr.lit("(\\d+-\\d+-\\d+)(.*)")));
 
+		AbstractJClass dateTime = model.ref(DateTime.class);
+		JVar dateTimeVar = tryBody.decl(dateTime, "dateTimeValue").init(dateTime._new().arg(stringValue));
+		JConditional isDateIf = tryBody._if(dateTimeVar.invoke("isDateOnly"));
+		isDateIf._then()._return(dateTimeVar.invoke("getValue").div(1000));
+
+		AbstractJClass instantClass = model.ref(Instant.class);
+		AbstractJClass offsetDateTimeClass = model.ref(OffsetDateTime.class);
+		AbstractJClass matcherClass = model.ref(Matcher.class);
+		AbstractJClass zonedDateTimeClass = model.ref(ZonedDateTime.class);
+		JConditional outerIf = tryBody._if(stringValue.invoke("contains").arg(JExpr.lit("T")));
+
+		JConditional innerIf = outerIf._then()._if(stringValue.invoke("contains").arg(JExpr.lit("/")));
+
+		innerIf._then()._return(instantClass.staticInvoke("from")
+				.arg(zonedDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli").div(1000));
+
+		innerIf._elseif(stringValue.invoke("contains").arg("Z"))._then()
+				._return(instantClass.staticInvoke("parse").arg(stringValue).invoke("toEpochMilli").div(1000));
+
+		innerIf._else()._return(instantClass.staticInvoke("from")
+				.arg(offsetDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli").div(1000));
+
+		JVar matcher = tryBody.decl(matcherClass, "matcher", datePattern.invoke("matcher").arg(stringValue));
+
+		JConditional ifMatches = tryBody._if(matcher.invoke("matches"));
+
+		JBlock ifMatchesBlock = ifMatches._then();
+
+		JVar datePart = ifMatchesBlock.decl(stringClass, "datePart", matcher.invoke("group").arg(JExpr.lit(1)));
+
+		JVar zoneOffset = ifMatchesBlock.decl(stringClass, "zoneOffset", matcher.invoke("group").arg(JExpr.lit(2)));
+
+		ifMatchesBlock
+				._if(zoneOffset.invoke("length").eq(JExpr.lit(0)).cor(zoneOffset.invoke("equals").arg(JExpr.lit("Z"))))
+				._then().add(JExpr.assign(stringValue, datePart.plus("T00:00:00.000").plus(zoneOffset)));
+
+		ifMatchesBlock._return(instantClass.staticInvoke("from")
+				.arg(offsetDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli").div(1000));
+		AbstractJClass exceptionClass = model.ref(Exception.class);
+		JCatchBlock catchBlock = tryBlock._catch(exceptionClass);
+	    JVar message = catchBlock.body().decl(model._ref(String.class), "message");
+        message.init(model.directClass("String").staticInvoke("format").arg("Invalid "+property.getPath()+" date %s;").arg(JExpr.ref(stringValue)));
+	    catchBlock.body()._throw(exceptionClass._new().arg(message));
+	    temporalValueMethod.body()._return(JExpr._null());
+	}
+  
   	private void provideOutput(
 			JVar successTag,
 			JVar deadLetterTag,

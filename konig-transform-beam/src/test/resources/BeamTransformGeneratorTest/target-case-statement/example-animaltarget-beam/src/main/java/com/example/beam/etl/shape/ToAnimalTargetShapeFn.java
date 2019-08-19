@@ -5,9 +5,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import com.example.beam.etl.common.ErrorBuilder;
+import com.example.beam.etl.shape.AnimalTargetShapeBeam.Options;
 import com.fasterxml.uuid.Generators;
 import com.google.api.services.bigquery.model.TableRow;
-import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
@@ -20,7 +20,7 @@ public class ToAnimalTargetShapeFn
     public static TupleTag<TableRow> successTag = (new TupleTag<TableRow>(){});
 
     @ProcessElement
-    public void processElement(ProcessContext c, PipelineOptions options) {
+    public void processElement(ProcessContext c, Options options) {
         ErrorBuilder errorBuilder = new ErrorBuilder();
         try {
             TableRow outputRow = new TableRow();

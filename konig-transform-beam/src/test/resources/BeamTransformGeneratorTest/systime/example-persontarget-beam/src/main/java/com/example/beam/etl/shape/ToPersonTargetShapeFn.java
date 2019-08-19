@@ -1,10 +1,16 @@
 package com.example.beam.etl.shape;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import com.example.beam.etl.common.ErrorBuilder;
+import com.example.beam.etl.shape.PersonTargetShapeBeam.Options;
 import com.fasterxml.uuid.Generators;
+import com.google.api.client.util.DateTime;
 import com.google.api.services.bigquery.model.TableRow;
-import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
@@ -15,16 +21,17 @@ public class ToPersonTargetShapeFn
 {
     public static TupleTag<TableRow> deadLetterTag = (new TupleTag<TableRow>(){});
     public static TupleTag<TableRow> successTag = (new TupleTag<TableRow>(){});
+    private static final Pattern DATE_PATTERN = Pattern.compile("(\\d+-\\d+-\\d+)(.*)");
 
     @ProcessElement
-    public void processElement(ProcessContext c, PipelineOptions options) {
+    public void processElement(ProcessContext c, Options options) {
         ErrorBuilder errorBuilder = new ErrorBuilder();
         try {
             TableRow outputRow = new TableRow();
             TableRow personSourceRow = ((TableRow) c.element());
             id(errorBuilder, outputRow, personSourceRow);
             givenName(errorBuilder, outputRow, personSourceRow);
-            modified(errorBuilder, outputRow);
+            modified(errorBuilder, outputRow, options);
             if (outputRow.isEmpty()) {
                 errorBuilder.addError("record is empty");
             }
@@ -75,13 +82,52 @@ public class ToPersonTargetShapeFn
         return givenName;
     }
 
-    private Long modified(ErrorBuilder errorBuilder, TableRow personTargetRow) {
-        Long modified = ((Long) new Long((new Date().getTime()/ 1000L)));
+    private Long modified(ErrorBuilder errorBuilder, TableRow personTargetRow, Options options)
+        throws Exception
+    {
+        Long modified = temporalValue(options.getModifiedDate());
+        modified = ((modified == null)?new Long((new Date().getTime()/ 1000L)):modified);
         if (modified!= null) {
             personTargetRow.set("modified", modified);
         } else {
             errorBuilder.addError("Required property 'modified' is null");
         }
         return modified;
+    }
+
+    private Long temporalValue(String stringValue)
+        throws Exception
+    {
+        if (stringValue.length()> 0) {
+            try {
+                DateTime dateTimeValue = new DateTime(stringValue);
+                if (dateTimeValue.isDateOnly()) {
+                    return (dateTimeValue.getValue()/ 1000);
+                }
+                if (stringValue.contains("T")) {
+                    if (stringValue.contains("/")) {
+                        return (Instant.from(ZonedDateTime.parse(stringValue)).toEpochMilli()/ 1000);
+                    } else {
+                        if (stringValue.contains("Z")) {
+                            return (Instant.parse(stringValue).toEpochMilli()/ 1000);
+                        }
+                        return (Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli()/ 1000);
+                    }
+                }
+                Matcher matcher = DATE_PATTERN.matcher(stringValue);
+                if (matcher.matches()) {
+                    String datePart = matcher.group(1);
+                    String zoneOffset = matcher.group(2);
+                    if ((zoneOffset.length() == 0)||zoneOffset.equals("Z")) {
+                        stringValue = ((datePart +"T00:00:00.000")+ zoneOffset);
+                    }
+                    return (Instant.from(OffsetDateTime.parse(stringValue)).toEpochMilli()/ 1000);
+                }
+            } catch (final Exception ex) {
+                String message = String.format("Invalid {PersonTargetShape}.modified date %s;", stringValue);
+                throw new Exception(message);
+            }
+        }
+        return null;
     }
 }

@@ -131,7 +131,7 @@ public class BeamTypeManagerImpl implements BeamTypeManager {
 		}
 		return result;
 	}
-
+	
   private String errorBuilderClassName() {
   	return basePackage + ".common.ErrorBuilder";
   }
@@ -146,6 +146,42 @@ public class BeamTypeManagerImpl implements BeamTypeManager {
 		return result;
 	}
 
+	@Override
+	public AbstractJClass mainClass(URI shapeId) throws BeamTransformGenerationException {
+		String className = mainClassName(shapeId);
+		return model.directClass(className);
+	}
+	
+	@Override
+	public AbstractJClass pipelineOptionsClass(URI shapeId) throws BeamTransformGenerationException {
+		String className = mainClassName(shapeId)+".Options";
+		return model.directClass(className);
+	}
+	
+	private String mainClassName(URI shapeId) throws BeamTransformGenerationException {
+		if (shapeId == null) {
+			fail("Target Shape must be identified by an IRI");
+	      }
+	      
+	      Namespace ns = nsManager.findByName(shapeId.getNamespace());
+	      
+	      if (ns == null) {
+	    	  fail("Prefix not found for namespace: " + shapeId.getNamespace());
+	      }
+	      
+	      String prefix = ns.getPrefix();
+	      
+	      StringBuilder builder = new StringBuilder();
+	      builder.append(basePackage);
+	      builder.append('.');
+	      builder.append(prefix);
+	      builder.append('.');
+	      builder.append(shapeId.getLocalName());
+	      builder.append("Beam");
+	      
+	      return builder.toString();
+	}
+	
 	@Override
 	public URI enumClassOfIndividual(URI individualId) throws BeamTransformGenerationException {
 		Vertex v = reasoner.getGraph().getVertex(individualId);

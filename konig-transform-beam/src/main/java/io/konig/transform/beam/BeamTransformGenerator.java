@@ -3472,6 +3472,10 @@ public class BeamTransformGenerator {
       
       optionsClass.method(JMod.PUBLIC, model.VOID, "setWorkerMachineType").param(String.class, "workerMachineType");
       
+      optionsClass.method(JMod.PUBLIC, String.class, "getModifiedDate");
+      
+      optionsClass.method(JMod.PUBLIC, model.VOID, "setModifiedDate").param(String.class, "modifiedDate");
+      
       // }
     }
 
