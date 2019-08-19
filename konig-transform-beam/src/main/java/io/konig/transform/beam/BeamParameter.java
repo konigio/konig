@@ -34,7 +34,6 @@ public class BeamParameter implements Comparable<BeamParameter> {
 	private AbstractJType varType;
 	private String varName;
 	private JVar var;
-	private ShowlNodeShape sourceNode;
 	private ShowlEffectiveNodeShape node;
 	
 	public static BeamParameter pattern(BeamParameterType type, ShowlEffectiveNodeShape node) {
@@ -46,15 +45,15 @@ public class BeamParameter implements Comparable<BeamParameter> {
 	}
 	
 	public static BeamParameter ofList(AbstractJType varType, String varName) {
-		return new BeamParameter(varType, BeamParameterType.LIST_VALUE, varName, null);
+		return new BeamParameter(varType, BeamParameterType.LIST_VALUE, varName);
 	}
 	
 	public static BeamParameter ofErrorBuilder(AbstractJType varType) {
-		return new BeamParameter(varType, BeamParameterType.ERROR_BUILDER, "errorBuilder", null);
+		return new BeamParameter(varType, BeamParameterType.ERROR_BUILDER, "errorBuilder");
 	}
 	
 	public static BeamParameter ofMappedValue(AbstractJType varType, String varName) {
-		return new BeamParameter(varType, BeamParameterType.MAPPED_VALUE, varName, null);
+		return new BeamParameter(varType, BeamParameterType.MAPPED_VALUE, varName);
 	}
 	
 	public static BeamParameter ofEnumValue(AbstractJType varType, String varName, ShowlEffectiveNodeShape node) {
@@ -73,17 +72,17 @@ public class BeamParameter implements Comparable<BeamParameter> {
 		this.paramType = type;
 	}
 	
-	private BeamParameter(AbstractJType varType, BeamParameterType paramType, String varName, ShowlNodeShape sourceNode) {
+	private BeamParameter(AbstractJType varType, BeamParameterType paramType, String varName) {
 		this.varType = varType;
 		this.paramType = paramType;
 		this.varName = varName;
-		this.sourceNode = sourceNode;
 	}
 
-	private BeamParameter(ShowlEffectiveNodeShape node, BeamParameterType paramType, ShowlNodeShape sourceNode, JVar var) {
+	private BeamParameter(ShowlEffectiveNodeShape node, BeamParameterType paramType, AbstractJType varType, String varName, JVar var) {
 		this.node = node;
 		this.paramType = paramType;
-		this.sourceNode = sourceNode;
+		this.varType = varType;
+		this.varName = varName;
 		this.var = var;
 	}
 	
@@ -109,10 +108,6 @@ public class BeamParameter implements Comparable<BeamParameter> {
 		return varType;
 	}
 
-	public ShowlNodeShape getSourceNode() {
-		return sourceNode;
-	}
-
 	public ShowlEffectiveNodeShape getNode() {
 		return node;
 	}
@@ -127,7 +122,7 @@ public class BeamParameter implements Comparable<BeamParameter> {
 	}
 	
 	public BeamParameter copy(JVar var) {
-		return new BeamParameter(node, paramType, sourceNode, var);
+		return new BeamParameter(node, paramType, var.type(), var.name(), var);
 	}
 
 

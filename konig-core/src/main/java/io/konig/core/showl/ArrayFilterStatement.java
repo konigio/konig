@@ -23,6 +23,10 @@ package io.konig.core.showl;
 
 import java.util.Set;
 
+import org.openrdf.model.URI;
+
+import io.konig.core.OwlReasoner;
+
 public class ArrayFilterStatement implements ShowlStatement {
 	
 	private ShowlPropertyShape multiValuedProperty;
@@ -60,6 +64,23 @@ public class ArrayFilterStatement implements ShowlStatement {
 		builder.append(multiValuedProperty.getPath());
 		builder.append(')');
 		return builder.toString();
+	}
+
+	@Override
+	public ShowlExpression transform() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String displayValue() {
+		return toString();
+	}
+
+	@Override
+	public URI valueType(OwlReasoner reasoner) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

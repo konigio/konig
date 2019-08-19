@@ -1,5 +1,7 @@
 package io.konig.transform.beam;
 
+import java.text.MessageFormat;
+
 /*
  * #%L
  * Konig Transform Beam
@@ -60,6 +62,17 @@ public class BeamMethod implements Comparable<BeamMethod> {
 	public BeamParameter addParameter(BeamParameter p) throws BeamTransformGenerationException {
 		if (!accept(p)) {
 			return null;
+		}
+		if (p.getParamType() == BeamParameterType.TABLE_ROW) {
+			for (BeamParameter q : parameters) {
+				if (
+						(q.getParamType() == p.getParamType() && q.getNode()==p.getNode()) ||
+						q.getVarName().equals(p.getVarName())
+				) {
+					String msg = MessageFormat.format("Duplicate parameter ''{0}'' in method {1}", p.getVarName(), name());
+//					throw new BeamTransformGenerationException(msg);
+				}
+			}
 		}
 		JVar var = method.param(p.getVarType(), p.getVarName());
 		p.setVar(var);

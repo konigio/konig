@@ -35,7 +35,7 @@ import io.konig.core.OwlReasoner;
  *
  */
 @SuppressWarnings("serial")
-public class ShowlOverlayExpression extends ArrayList<ShowlExpression> implements ShowlExpression {
+public class ShowlOverlayExpression extends ArrayList<ShowlExpression> implements ShowlExpression, ShowlStatement {
 
 	public ShowlOverlayExpression() {
 		// TODO Auto-generated constructor stub
@@ -55,6 +55,9 @@ public class ShowlOverlayExpression extends ArrayList<ShowlExpression> implement
 	public boolean add(ShowlExpression e) {
 		if (e instanceof ShowlDelegationExpression) {
 			return false;
+		}
+		if (e instanceof ShowlEnumPropertyExpression) {
+			throw new IllegalArgumentException("Enum property expressions are forbidden in an overlay expression: " + e.displayValue());
 		}
 		return super.add(e);
 	}

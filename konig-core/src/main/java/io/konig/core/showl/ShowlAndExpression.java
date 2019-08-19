@@ -20,6 +20,23 @@ package io.konig.core.showl;
  * #L%
  */
 
-public interface ShowlStatement extends ShowlExpression {
+
+import java.util.List;
+
+public class ShowlAndExpression extends ShowlBooleanGroupingExpression {
+
+	public ShowlAndExpression(List<ShowlExpression> operands) {
+		super(operands);
+	}
+
+	@Override
+	public ShowlBooleanOperator getOperator() {
+		return ShowlBooleanOperator.AND;
+	}
+
+	@Override
+	protected ShowlBooleanGroupingExpression create(List<ShowlExpression> operands) {
+		return new ShowlAndExpression(operands);
+	}
 
 }

@@ -436,8 +436,11 @@ public class BeamTransformGenerator {
     
   	// TODO: Split the base Worker class into SingleSourceWorker and MultiSourceWorker.
   	
-  	Worker worker = isOverlay(targetShape) ? new OverlayWorker(model, targetShape) : new Worker(model, targetShape);
+  	// OverlayWorker is obsolete.  
+  	
+//  	Worker worker = isOverlay(targetShape) ? new OverlayWorker(model, targetShape) : new Worker(model, targetShape);
     
+  	Worker worker = new Worker(model, targetShape);
     return worker.generateTransform();
   }
 
@@ -1073,12 +1076,17 @@ public class BeamTransformGenerator {
     private void declareFileToKvFn() throws BeamTransformGenerationException, JClassAlreadyExistsException {
       
       for (ShowlChannel channel : targetNode.getChannels()) {
+      	
+      	if (reasoner.isEnumerationClass(channel.getSourceNode().getOwlClass().getId())) {
+      		continue;
+      	}
         
         ShowlStatement joinStatement = channel.getJoinStatement();
         
         if (joinStatement == null) {
           continue;
         }
+        
         
 
         ShowlPropertyShape leftKey = null;
@@ -1147,7 +1155,8 @@ public class BeamTransformGenerator {
 
     private boolean isEnumNode(ShowlNodeShape node) {
     
-      return node.getShapeDataSource()!=null && node.getShapeDataSource().getDataSource() instanceof StaticDataSource;
+      return (node.getShapeDataSource()!=null && node.getShapeDataSource().getDataSource() instanceof StaticDataSource) ||
+      		reasoner.isEnumerationClass(node.getOwlClass().getId());
     }
 
 
@@ -3299,7 +3308,8 @@ public class BeamTransformGenerator {
     }
 
     private boolean requiresSourceUriMethod() {
-			for (ShowlChannel channel : targetNode.getChannels()) {
+			for (ShowlChannel channel : targetNode.nonEnumChannels(reasoner)) {
+				
 				DataSource ds = channel.getSourceNode().getShapeDataSource().getDataSource();
 				if (ds instanceof GoogleCloudStorageBucket || ds instanceof GoogleCloudStorageFolder) {
 					return true;
@@ -3492,9 +3502,9 @@ public class BeamTransformGenerator {
       JVar p = body.decl(pipelineType, "p", model.directClass(Pipeline.class.getName())
           .staticInvoke("create").arg(optionsVar));
       
+      List<GroupInfo> groupList = new ArrayList<>();
+      defineTupleTagsAndPcollections(body, p, optionsVar, groupList);
       
-      defineTupleTagsAndPcollections(body, p, optionsVar);
-      List<GroupInfo> groupList = groupList();
       defineKeyedCollectionTuples(body, groupList);
       generateMergeFnClasses(groupList);
       applyMergeFnClasses(body, groupList);
@@ -3636,47 +3646,6 @@ public class BeamTransformGenerator {
       
     }
 
-
-    protected List<GroupInfo> groupList() throws BeamTransformGenerationException {
-      List<GroupInfo> list = new ArrayList<>();
-      
-      for (BeamChannel sourceInfo : sortedSourceInfoList()) {
-        ShowlChannel channel = sourceInfo.getChannel();
-        ShowlStatement statement = channel.getJoinStatement();
-        if (statement instanceof ShowlEqualStatement) {
-          ShowlEqualStatement equal = (ShowlEqualStatement) statement;
-          
-          
-          ShowlPropertyShape leftProperty = null;
-          ShowlPropertyShape rightProperty = null;
-          ShowlPropertyPair pair = new ShowlPropertyPair();
-          if (sameConcatPattern(statement, pair)) {
-          	leftProperty = pair.getLeft();
-          	rightProperty = pair.getRight();
-          } else {
-      
-  	        leftProperty = leftKey(statement);
-  	        rightProperty = rightKey(statement);
-          }
-          
-          
-          BeamChannel leftInfo = sourceInfoFor(leftProperty);
-          BeamChannel rightInfo = sourceInfoFor(rightProperty);
-          
-          GroupInfo group = new GroupInfo();
-          group.getSourceList().add(leftInfo);
-          group.getSourceList().add(rightInfo);
-          
-          sortSourceInfo(group.getSourceList());
-          
-          list.add(group);
-          
-        } else if (statement != null) {
-          fail("Unsupported statement: " + statement.toString());
-        }
-      }
-      return list;
-    }
     
     private BeamChannel sourceInfoFor(ShowlPropertyShape p) throws BeamTransformGenerationException {
       ShowlNodeShape root = p.getRootNode();
@@ -3719,7 +3688,7 @@ public class BeamTransformGenerator {
     }
 
 
-    protected void defineTupleTagsAndPcollections(JBlock block, JVar pipeline, JVar options) throws BeamTransformGenerationException {
+    protected void defineTupleTagsAndPcollections(JBlock block, JVar pipeline, JVar options, List<GroupInfo> groupList) throws BeamTransformGenerationException {
 
       Set<ShowlNodeShape> set = new HashSet<>();
       AbstractJClass pCollectionTupleClass = model.ref(PCollectionTuple.class);
@@ -3729,12 +3698,21 @@ public class BeamTransformGenerator {
       AbstractJClass tupleTagClass = model.ref(TupleTag.class).narrow(tableRowClass);
       AbstractJClass tupleTagListClass = model.ref(TupleTagList.class);
       AbstractJClass parDoClass = model.ref(ParDo.class);
+
+      // For now, we only handle the case where all the sources have a common unique key
+      // We'll need to generalize later.
       
+      GroupInfo groupInfo = new GroupInfo();
+      groupList.add(groupInfo);
       List<BeamChannel> channelList = sortedSourceInfoList();
+      
+      // The following method will throw an exception if there is no common unique key
       Map<ShowlNodeShape, ShowlUniqueKey> uniqueKeyMap = uniqueKey(channelList);
+      
       
       for (BeamChannel sourceInfo : channelList) {
         ShowlNodeShape node = sourceInfo.getFocusNode();
+        groupInfo.getSourceList().add(sourceInfo);
         set.add(node);
         URI shapeId = RdfUtil.uri(node.getId());
         String shapeName = shapeId.getLocalName();
@@ -3792,6 +3770,8 @@ public class BeamTransformGenerator {
         }
         
       }
+
+      sortSourceInfo(groupInfo.getSourceList());
       
       
     }
@@ -3815,7 +3795,11 @@ public class BeamTransformGenerator {
     	UniqueKeyFactory factory = new UniqueKeyFactory(reasoner);
 			for (BeamChannel channel : channelList) {
 				ShowlNodeShape node = channel.getChannel().getSourceNode();
-				ShowlUniqueKeyCollection key = factory.createKeyCollection(node);
+				
+				ShowlUniqueKeyCollection key = node.getUniqueKeyCollection();
+				if (key == null) {
+					key =	factory.createKeyCollection(node);
+				}
 				list.add(key);
 			}
 			
@@ -4105,613 +4089,613 @@ public class BeamTransformGenerator {
   	
   }
 
-  private class OverlayWorker extends Worker {
-
-  	private PropertyPair keyPair;
-  	
-  	private BeamChannel sourceChannel;
-  	private BeamChannel targetChannel;
-
-  	JDefinedClass targetToKvFn;
-  	private JDefinedClass mergeClass;
-  	private GroupInfo groupInfo;
-  	
-  	
-		public OverlayWorker(JCodeModel model, ShowlNodeShape targetShape) {
-			super(model, targetShape);
-			
-		}
-		
-		protected List<GroupInfo> groupList() throws BeamTransformGenerationException {
-      List<GroupInfo> list = new ArrayList<>();
-      
-      GroupInfo group = new GroupInfo();
-      group.getSourceList().add(sourceChannel);
-      group.getSourceList().add(targetChannel);
-      list.add(group);
-      groupInfo = group;
-      return list;
-    }
-
-		protected void generateMergeFnClasses(List<GroupInfo> groupList) throws BeamTransformGenerationException {
-
-			OverlayMergeFnGenerator2 generator = new OverlayMergeFnGenerator2();
-			mergeClass = generator.generate();
-			groupInfo.setMergeFnClass(mergeClass);
-		}
-
-		protected JDefinedClass generateTransform() throws BeamTransformGenerationException {
-			createTargetChannel();
-			createSourceChannel();
-			createKeyPair();
-			JDefinedClass result = super.generateTransform();
-			return result;
-		}
-		
-
-		
-
-		protected void defineTupleTagsAndPcollections(JBlock block, JVar pipeline, JVar options) throws BeamTransformGenerationException {
-			 super.defineTupleTagsAndPcollections(block, pipeline, options);
-			 
-			 /*
-			  * Declare the TupleTag for the target node as a static field on the main class.
-			  */
-			 
-			 // static final TupleTag<TableRow> $targetTag = new TupleTag<TableRow>();
-			 
-			 AbstractJClass tableRowClass = model.ref(TableRow.class);
-			 AbstractJClass tupleTagClass = model.ref(TupleTag.class).narrow(tableRowClass);
-			 String targetTagName = targetTagName();
-			
-			 JVar targetTupleTagVar = mainClass.field(JMod.FINAL | JMod.STATIC, tupleTagClass, targetTagName).init(tupleTagClass._new());
-			 targetChannel.setTupleTag(targetTupleTagVar);
-			 targetChannel.setReadFileFn(targetToKvFn);
-			 /**
-			  * Generate the PCollection for target data from BigQuery
-			  */
-			 
-			 AbstractJClass stringClass = model.ref(String.class);
-			 AbstractJClass tableReferenceClass = model.ref(TableReference.class);
-			 AbstractJClass bigQueryIoClass = model.ref(BigQueryIO.class);
-			 AbstractJClass parDoClass = model.ref(ParDo.class);
-			 AbstractJClass kvClass = model.ref(KV.class).narrow(stringClass, tableRowClass);
-			 AbstractJClass pCollectionClass = model.ref(PCollection.class).narrow(kvClass);
-			 
-
-//				TableReference targetTableRef = new TableReference();
-//				targetTableRef.setDatasetId("datasetId");
-//				targetTableRef.setTableId("tableId");
-			 
-			 BigQueryTableReference tableRef = tableReference();
-			 
-			 JVar targetTableRef = block.decl(tableReferenceClass, "targetTableRef").init(tableReferenceClass._new());
-			 
-			 block.add(targetTableRef.invoke("setDatasetId").arg(JExpr.lit(tableRef.getDatasetId())));
-			 block.add(targetTableRef.invoke("setTableId").arg(JExpr.lit(tableRef.getTableId())));
-			 
-			 String targetTableName = targetTableName();
-			 
-			 // PCollection<KV<String,TableRow>> $targetTable = p.apply(BigQueryIO.readTableRows().from(targetTableRef)).apply(ParDo.of(new $targetTableToKvFn()));
-			 JVar targetTableCollection = block.decl(pCollectionClass, targetTableName).init(
-					 pipeline.invoke("apply").arg(
-							 bigQueryIoClass.staticInvoke("readTableRows").invoke("from").arg(targetTableRef))
-					 		.invoke("apply").arg(parDoClass.staticInvoke("of").arg(targetToKvFn._new()))
-					 );
-			 targetChannel.setPcollection(targetTableCollection);
-			 
-		 }
-		
-		
-		private String targetTableName() {
-		
-			return StringUtil.firstLetterLowerCase(ShowlUtil.shortShapeName(RdfUtil.uri(targetNode.getId()))) + "Table";
-		}
-
-		class OverlayMergeFnGenerator2 extends BaseTargetFnGenerator2 {
-					private JMethod dateTimeMethod;
-					
-					public JDefinedClass generate() throws BeamTransformGenerationException {
-						
-						declareClass();
-						processElement();
-						
-						return thisClass;
-					}
-		
-					private void processElement() throws BeamTransformGenerationException {
-						
-						AbstractJClass processContextClass = model.ref(ProcessContext.class);
-						AbstractJClass tableRowClass = model.ref(TableRow.class);
-						AbstractJClass tupleTagClass = model.ref(TupleTag.class);
-						AbstractJClass stringClass = model.ref(String.class);
-						AbstractJClass coGbkResultClass = model.ref(CoGbkResult.class);
-		        AbstractJClass kvClass = model.ref(KV.class).narrow(stringClass).narrow(coGbkResultClass);
-						AbstractJClass throwableClass = model.ref(Throwable.class);
-						
-						JVar sourceTag = sourceChannel.getTupleTag();
-						JVar targetTag = targetChannel.getTupleTag();
-						
-						JVar deadLetterTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(model.ref(String.class)), 
-								"deadLetterTag").init(tupleTagClass._new().narrow(model.ref(String.class)));
-						
-						JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(tableRowClass), 
-								"successTag").init(tupleTagClass._new().narrow(model.ref(TableRow.class)));
-						
-		//			@ProcessElement 
-		//			public void processElement(ProcessContext c) {
-		//				try {
-		//					KV<String, CoGbkResult> e = c.element();
-		//					
-		//					TableRow outputRow = baselineRow(e, MainClass.personTargetTag);
-		//					overlay(outputRow, e, MainClass.personSourceTag);
-		//					
-		//					
-		//					if (!outputRow.isEmpty()) {
-		//						c.output(outputRow);
-		//					}
-		//				} catch (Throwable oops) {
-		//					
-		//				}
-		//			}
-						
-		        JMethod method = 
-		            thisClass.method(JMod.PUBLIC, model.VOID, "processElement");
-		        method.annotate(model.directClass(ProcessElement.class.getName()));
-		        
-		        JMethod baselineRow = baselineRow();
-		        
-		        JVar c = method.param(processContextClass, "c");
-		        
-		        JTryBlock tryBlock = method.body()._try();
-		        JBlock body = tryBlock.body();
-		        JVar e = body.decl(kvClass, "e").init(c.invoke("element"));
-		        
-		        
-		       
-		        JVar outputRow = body.decl(tableRowClass, "outputRow")
-		        		.init(JExpr.invoke(baselineRow).arg(e).arg(targetTag))
-		        		;
-		        
-		        body.add(JExpr.invoke(overlay()).arg(outputRow).arg(e).arg(sourceTag));
-		        
-		        body._if(outputRow.invoke("isEmpty").not())._then().add(c.invoke("output").arg(successTag).arg(outputRow));
-		        	
-		        JCatchBlock catchBlock = tryBlock._catch(throwableClass);
-		        JVar oops = catchBlock.param("oops");
-		        catchBlock.body().add(c.invoke("output").arg(deadLetterTag).arg(oops.invoke("getMessage")));
-						
-					}
-		
-					private JMethod overlay() throws BeamTransformGenerationException {
-
-//					private void overlay(TableRow outputRow, KV<String, CoGbkResult> e, TupleTag<TableRow> tupleTag) {
+//  private class OverlayWorker extends Worker {
+//
+//  	private PropertyPair keyPair;
+//  	
+//  	private BeamChannel sourceChannel;
+//  	private BeamChannel targetChannel;
+//
+//  	JDefinedClass targetToKvFn;
+//  	private JDefinedClass mergeClass;
+//  	private GroupInfo groupInfo;
+//  	
+//  	
+//		public OverlayWorker(JCodeModel model, ShowlNodeShape targetShape) {
+//			super(model, targetShape);
+//			
+//		}
 //		
-//						Iterator<TableRow> sequence = e.getValue().getAll(tupleTag).iterator();
+//		protected List<GroupInfo> groupList() throws BeamTransformGenerationException {
+//      List<GroupInfo> list = new ArrayList<>();
+//      
+//      GroupInfo group = new GroupInfo();
+//      group.getSourceList().add(sourceChannel);
+//      group.getSourceList().add(targetChannel);
+//      list.add(group);
+//      groupInfo = group;
+//      return list;
+//    }
+//
+//		protected void generateMergeFnClasses(List<GroupInfo> groupList) throws BeamTransformGenerationException {
+//
+//			OverlayMergeFnGenerator2 generator = new OverlayMergeFnGenerator2();
+//			mergeClass = generator.generate();
+//			groupInfo.setMergeFnClass(mergeClass);
+//		}
+//
+//		protected JDefinedClass generateTransform() throws BeamTransformGenerationException {
+//			createTargetChannel();
+//			createSourceChannel();
+//			createKeyPair();
+//			JDefinedClass result = super.generateTransform();
+//			return result;
+//		}
+//		
+//
+//		
+//
+//		protected void defineTupleTagsAndPcollections(JBlock block, JVar pipeline, JVar options) throws BeamTransformGenerationException {
+//			 super.defineTupleTagsAndPcollections(block, pipeline, options);
+//			 
+//			 /*
+//			  * Declare the TupleTag for the target node as a static field on the main class.
+//			  */
+//			 
+//			 // static final TupleTag<TableRow> $targetTag = new TupleTag<TableRow>();
+//			 
+//			 AbstractJClass tableRowClass = model.ref(TableRow.class);
+//			 AbstractJClass tupleTagClass = model.ref(TupleTag.class).narrow(tableRowClass);
+//			 String targetTagName = targetTagName();
+//			
+//			 JVar targetTupleTagVar = mainClass.field(JMod.FINAL | JMod.STATIC, tupleTagClass, targetTagName).init(tupleTagClass._new());
+//			 targetChannel.setTupleTag(targetTupleTagVar);
+//			 targetChannel.setReadFileFn(targetToKvFn);
+//			 /**
+//			  * Generate the PCollection for target data from BigQuery
+//			  */
+//			 
+//			 AbstractJClass stringClass = model.ref(String.class);
+//			 AbstractJClass tableReferenceClass = model.ref(TableReference.class);
+//			 AbstractJClass bigQueryIoClass = model.ref(BigQueryIO.class);
+//			 AbstractJClass parDoClass = model.ref(ParDo.class);
+//			 AbstractJClass kvClass = model.ref(KV.class).narrow(stringClass, tableRowClass);
+//			 AbstractJClass pCollectionClass = model.ref(PCollection.class).narrow(kvClass);
+//			 
+//
+////				TableReference targetTableRef = new TableReference();
+////				targetTableRef.setDatasetId("datasetId");
+////				targetTableRef.setTableId("tableId");
+//			 
+//			 BigQueryTableReference tableRef = tableReference();
+//			 
+//			 JVar targetTableRef = block.decl(tableReferenceClass, "targetTableRef").init(tableReferenceClass._new());
+//			 
+//			 block.add(targetTableRef.invoke("setDatasetId").arg(JExpr.lit(tableRef.getDatasetId())));
+//			 block.add(targetTableRef.invoke("setTableId").arg(JExpr.lit(tableRef.getTableId())));
+//			 
+//			 String targetTableName = targetTableName();
+//			 
+//			 // PCollection<KV<String,TableRow>> $targetTable = p.apply(BigQueryIO.readTableRows().from(targetTableRef)).apply(ParDo.of(new $targetTableToKvFn()));
+//			 JVar targetTableCollection = block.decl(pCollectionClass, targetTableName).init(
+//					 pipeline.invoke("apply").arg(
+//							 bigQueryIoClass.staticInvoke("readTableRows").invoke("from").arg(targetTableRef))
+//					 		.invoke("apply").arg(parDoClass.staticInvoke("of").arg(targetToKvFn._new()))
+//					 );
+//			 targetChannel.setPcollection(targetTableCollection);
+//			 
+//		 }
+//		
+//		
+//		private String targetTableName() {
+//		
+//			return StringUtil.firstLetterLowerCase(ShowlUtil.shortShapeName(RdfUtil.uri(targetNode.getId()))) + "Table";
+//		}
+//
+//		class OverlayMergeFnGenerator2 extends BaseTargetFnGenerator2 {
+//					private JMethod dateTimeMethod;
+//					
+//					public JDefinedClass generate() throws BeamTransformGenerationException {
 //						
-//						while (sequence.hasNext()) {
-//							TableRow sourceRow = sequence.next();
-//							TableRow targetRow = transform(sourceRow);
-//							if (targetRow != null) {
-//								copy(targetRow, outputRow);
-//							}
-//						}
+//						declareClass();
+//						processElement();
+//						
+//						return thisClass;
 //					}
-						
-						AbstractJClass tableRowClass = model.ref(TableRow.class);
-						AbstractJClass stringClass = model.ref(String.class);
-						AbstractJClass coGbkResultClass = model.ref(CoGbkResult.class);
-						AbstractJClass kvClass = model.ref(KV.class).narrow(stringClass).narrow(coGbkResultClass);
-						AbstractJClass tupleTagClass = model.ref(TupleTag.class).narrow(TableRow.class);
-						AbstractJClass iteratorClass = model.ref(Iterator.class).narrow(tableRowClass);
-						
-						JMethod method = thisClass.method(JMod.PRIVATE, model.VOID, "overlay");
-						JBlock block = method.body();
-						JVar outputRow = method.param(tableRowClass, "outputRow");
-						JVar e = method.param(kvClass, "e");
-						JVar tupleTag = method.param(tupleTagClass, "tupleTag");
-						
-						JVar sequence = block.decl(iteratorClass, "sequence")
-								.init(e.invoke("getValue").invoke("getAll").arg(tupleTag).invoke("iterator"));
-						
-					
-						block = block._while(sequence.invoke("hasNext")).body();
-						
-						JVar sourceRow = block.decl(tableRowClass, "sourceRow").init(sequence.invoke("next"));
-						JVar targetRow = block.decl(tableRowClass, "targetRow").init(JExpr.invoke(transform()).arg(sourceRow));
-						
-						block._if(targetRow.neNull())._then().add(JExpr.invoke(copy()).arg(targetRow).arg(outputRow));
-						
-						
-						return method;
-					}
-
-					private JMethod copy() {
-						
-//					private void copy(TableRow targetRow, TableRow outputRow) {
+//		
+//					private void processElement() throws BeamTransformGenerationException {
+//						
+//						AbstractJClass processContextClass = model.ref(ProcessContext.class);
+//						AbstractJClass tableRowClass = model.ref(TableRow.class);
+//						AbstractJClass tupleTagClass = model.ref(TupleTag.class);
+//						AbstractJClass stringClass = model.ref(String.class);
+//						AbstractJClass coGbkResultClass = model.ref(CoGbkResult.class);
+//		        AbstractJClass kvClass = model.ref(KV.class).narrow(stringClass).narrow(coGbkResultClass);
+//						AbstractJClass throwableClass = model.ref(Throwable.class);
+//						
+//						JVar sourceTag = sourceChannel.getTupleTag();
+//						JVar targetTag = targetChannel.getTupleTag();
+//						
+//						JVar deadLetterTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(model.ref(String.class)), 
+//								"deadLetterTag").init(tupleTagClass._new().narrow(model.ref(String.class)));
+//						
+//						JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC , tupleTagClass.narrow(tableRowClass), 
+//								"successTag").init(tupleTagClass._new().narrow(model.ref(TableRow.class)));
+//						
+//		//			@ProcessElement 
+//		//			public void processElement(ProcessContext c) {
+//		//				try {
+//		//					KV<String, CoGbkResult> e = c.element();
+//		//					
+//		//					TableRow outputRow = baselineRow(e, MainClass.personTargetTag);
+//		//					overlay(outputRow, e, MainClass.personSourceTag);
+//		//					
+//		//					
+//		//					if (!outputRow.isEmpty()) {
+//		//						c.output(outputRow);
+//		//					}
+//		//				} catch (Throwable oops) {
+//		//					
+//		//				}
+//		//			}
+//						
+//		        JMethod method = 
+//		            thisClass.method(JMod.PUBLIC, model.VOID, "processElement");
+//		        method.annotate(model.directClass(ProcessElement.class.getName()));
+//		        
+//		        JMethod baselineRow = baselineRow();
+//		        
+//		        JVar c = method.param(processContextClass, "c");
+//		        
+//		        JTryBlock tryBlock = method.body()._try();
+//		        JBlock body = tryBlock.body();
+//		        JVar e = body.decl(kvClass, "e").init(c.invoke("element"));
+//		        
+//		        
+//		       
+//		        JVar outputRow = body.decl(tableRowClass, "outputRow")
+//		        		.init(JExpr.invoke(baselineRow).arg(e).arg(targetTag))
+//		        		;
+//		        
+//		        body.add(JExpr.invoke(overlay()).arg(outputRow).arg(e).arg(sourceTag));
+//		        
+//		        body._if(outputRow.invoke("isEmpty").not())._then().add(c.invoke("output").arg(successTag).arg(outputRow));
+//		        	
+//		        JCatchBlock catchBlock = tryBlock._catch(throwableClass);
+//		        JVar oops = catchBlock.param("oops");
+//		        catchBlock.body().add(c.invoke("output").arg(deadLetterTag).arg(oops.invoke("getMessage")));
+//						
+//					}
+//		
+//					private JMethod overlay() throws BeamTransformGenerationException {
+//
+////					private void overlay(TableRow outputRow, KV<String, CoGbkResult> e, TupleTag<TableRow> tupleTag) {
+////		
+////						Iterator<TableRow> sequence = e.getValue().getAll(tupleTag).iterator();
+////						
+////						while (sequence.hasNext()) {
+////							TableRow sourceRow = sequence.next();
+////							TableRow targetRow = transform(sourceRow);
+////							if (targetRow != null) {
+////								copy(targetRow, outputRow);
+////							}
+////						}
+////					}
+//						
+//						AbstractJClass tableRowClass = model.ref(TableRow.class);
+//						AbstractJClass stringClass = model.ref(String.class);
+//						AbstractJClass coGbkResultClass = model.ref(CoGbkResult.class);
+//						AbstractJClass kvClass = model.ref(KV.class).narrow(stringClass).narrow(coGbkResultClass);
+//						AbstractJClass tupleTagClass = model.ref(TupleTag.class).narrow(TableRow.class);
+//						AbstractJClass iteratorClass = model.ref(Iterator.class).narrow(tableRowClass);
+//						
+//						JMethod method = thisClass.method(JMod.PRIVATE, model.VOID, "overlay");
+//						JBlock block = method.body();
+//						JVar outputRow = method.param(tableRowClass, "outputRow");
+//						JVar e = method.param(kvClass, "e");
+//						JVar tupleTag = method.param(tupleTagClass, "tupleTag");
+//						
+//						JVar sequence = block.decl(iteratorClass, "sequence")
+//								.init(e.invoke("getValue").invoke("getAll").arg(tupleTag).invoke("iterator"));
+//						
 //					
-//					for (Entry<String, Object> entry : targetRow.entrySet()) {
-//						String fieldName = entry.getKey();
-//						Object value = entry.getValue();
-//						if (value instanceof TableRow) {
-//							Object outputValue = outputRow.get(fieldName);
-//							if (outputValue instanceof TableRow) {
-//								copy((TableRow)value, (TableRow)outputValue);
-//							} else {
-//								outputRow.put(fieldName, value);
-//							}
+//						block = block._while(sequence.invoke("hasNext")).body();
+//						
+//						JVar sourceRow = block.decl(tableRowClass, "sourceRow").init(sequence.invoke("next"));
+//						JVar targetRow = block.decl(tableRowClass, "targetRow").init(JExpr.invoke(transform()).arg(sourceRow));
+//						
+//						block._if(targetRow.neNull())._then().add(JExpr.invoke(copy()).arg(targetRow).arg(outputRow));
+//						
+//						
+//						return method;
+//					}
+//
+//					private JMethod copy() {
+//						
+////					private void copy(TableRow targetRow, TableRow outputRow) {
+////					
+////					for (Entry<String, Object> entry : targetRow.entrySet()) {
+////						String fieldName = entry.getKey();
+////						Object value = entry.getValue();
+////						if (value instanceof TableRow) {
+////							Object outputValue = outputRow.get(fieldName);
+////							if (outputValue instanceof TableRow) {
+////								copy((TableRow)value, (TableRow)outputValue);
+////							} else {
+////								outputRow.put(fieldName, value);
+////							}
+////							
+////						} else {
+////							outputRow.put(fieldName, value);
+////						}
+////					}
+////					
+////				}						
+//						AbstractJClass tableRowClass = model.ref(TableRow.class);
+//						AbstractJClass stringClass = model.ref(String.class);
+//						AbstractJClass objectClass = model.ref(Object.class);
+//						AbstractJClass entryClass = model.ref(Entry.class).narrow(stringClass).narrow(objectClass);
+//						
+//						JMethod method = thisClass.method(JMod.PRIVATE, model.VOID, "copy");
+//						JVar targetRow = method.param(tableRowClass, "targetRow");
+//						JVar outputRow = method.param(tableRowClass, "outputRow");
+//						
+//						
+//						JForEach forEach = method.body().forEach(entryClass, "entry", targetRow.invoke("entrySet"));
+//						JBlock block = forEach.body();
+//						
+//						JVar entry = forEach.var();
+//						
+//						JVar fieldName = block.decl(stringClass, "fieldName").init(entry.invoke("getKey"));
+//						JVar value = block.decl(objectClass, "value").init(entry.invoke("getValue"));
+//						
+//						JConditional ifStatement = block._if(value._instanceof(tableRowClass));
+//						JBlock thenBlock = ifStatement._then();
+//						
+//						JVar outputValue = thenBlock.decl(objectClass, "outputValue").init(outputRow.invoke("get").arg(fieldName));
+//						JConditional innerIf = thenBlock._if(outputValue._instanceof(tableRowClass));
+//						JBlock innerThen = innerIf._then();
+//						innerThen.add(JExpr.invoke(method).arg(value.castTo(tableRowClass)).arg(outputValue.castTo(tableRowClass)));
+//						innerIf._else().add(outputRow.invoke("put").arg(fieldName).arg(value));
+//						
+//						ifStatement._else().add(outputRow.invoke("put").arg(fieldName).arg(value));
+//						
+//						return method;
+//					}
+//
+//			private JMethod transform() throws BeamTransformGenerationException {
+//				AbstractJClass tableRowClass = model.ref(TableRow.class);
+//				JMethod method = thisClass.method(JMod.PRIVATE, tableRowClass, "transform");
+//				JVar sourceRow = method.param(tableRowClass, "sourceRow");
+//				
+//				sourceChannel.setSourceRow(sourceRow);
+//				JBlock block = method.body();
+//				JVar targetRow = block.decl(tableRowClass, "targetRow").init(tableRowClass._new());
+//
+//				JDefinedClass errorBuilderClass = errorBuilderClass();
+//
+//
+//				// ErrorBuilder errorBuilder = new ErrorBuilder();
+//				block.decl(errorBuilderClass, "errorBuilder").init(errorBuilderClass._new());
+//				for (ShowlDirectPropertyShape direct : targetNode.getProperties()) {
+//					BeamMethod childMethod = processProperty("", direct);
+//					etran.invoke(childMethod);
+//				}
+//
+//				
+//				block._return(targetRow);
+//				
+//
+//				return method;
+//			}
+//
+//					private JMethod baselineRow() {
+//		
+//						AbstractJClass tableRowClass = model.ref(TableRow.class);
+//						AbstractJClass stringClass = model.ref(String.class);
+//						AbstractJClass coGbkResultClass = model.ref(CoGbkResult.class);
+//		        AbstractJClass kvClass = model.ref(KV.class).narrow(stringClass).narrow(coGbkResultClass);
+//		        AbstractJClass tupleTagClass = model.ref(TupleTag.class).narrow(tableRowClass);
+//		        AbstractJClass iteratorClass = model.ref(Iterator.class).narrow(tableRowClass);
+//		        AbstractJClass longClass = model.ref(Long.class);
+//		        
+//		//			private TableRow baselineRow(KV<String, CoGbkResult> e, TupleTag<TableRow> tupleTag) {
+//		        
+//		        JMethod method = thisClass.method(JMod.PRIVATE, tableRowClass, "baselineRow");
+//		        JMethod dateTimeMethod = dateTime();
+//		        JVar e = method.param(kvClass, "e");
+//		        JVar tupleTag = method.param(tupleTagClass, "tupleTag");
+//		        
+//		//				
+//		//				Iterator<TableRow> sequence = e.getValue().getAll(tupleTag).iterator();
+//		//				TableRow result = null;
+//		//				Long latest = null;
+//		        
+//		        JVar sequence = method.body().decl(iteratorClass, "sequence")
+//		        		.init(e.invoke("getValue").invoke("getAll").arg(tupleTag).invoke("iterator"));
+//		        
+//		        JVar result = method.body().decl(tableRowClass, "result").init(JExpr._null());
+//		        JVar latest = method.body().decl(longClass, "latest").init(JExpr._null());
+//		        
+//		//				while (sequence.hasNext()) {
+//		//					TableRow row = sequence.next();
+//		//					Long modified = dateTime(row, "modified");
+//		//					if (modified!=null && (latest==null || modified > latest)) {
+//		//						latest = modified;
+//		//						result = row;
+//		//					}
+//		//				}
+//		        
+//		        JWhileLoop loop = method.body()._while(sequence.invoke("hasNext"));
+//		        
+//		        JVar row = loop.body().decl(tableRowClass, "row").init(sequence.invoke("next"));
+//		        JVar modified = loop.body().decl(longClass, "modified")
+//		        		.init(JExpr.invoke(dateTime()).arg(row).arg(JExpr.lit("modified")));
+//		        
+//		        loop.body()._if(modified.neNull().cand(latest.eqNull().cor(modified.gt(latest))))
+//		        	._then().assign(latest, modified).assign(result, row);
+//		        
+//		        
+//		//				
+//		//				if (result == null) {
+//		//					result = new TableRow();
+//		//				}
+//		//				
+//		//				return result;
+//		//			}
+//						
+//		        method.body()._if(result.eqNull())._then().assign(result, tableRowClass._new());
+//		        
+//		        method.body()._return(result);
+//		        
+//						return method;
+//					}
+//		
+//					private JMethod dateTime() {
+//						if (dateTimeMethod == null) {
+//							AbstractJClass longClass = model.ref(Long.class);
+//							AbstractJClass tableRowClass = model.ref(TableRow.class);
+//							AbstractJClass stringClass = model.ref(String.class);
+//							AbstractJClass objectClass = model.ref(Object.class);
+//							AbstractJClass dateTimeClass = model.ref(DateTime.class);
+//		
+//						//	private Long dateTime(TableRow row, String fieldName) {
+//						//		Object value = row.get(fieldName);
+//						//    Long result = null;
+//						//		if (value instanceof String) {
+//						//			result = new DateTime((String) value).getValue();
+//					  //      row.set(fieldName, result);
+//						//     
+//						//		} else if (value instanceof Long) {
+//					  //      result = (Long) value;
+//					  //    }
+//						//		return result;
+//						//	}
 //							
-//						} else {
-//							outputRow.put(fieldName, value);
+//							dateTimeMethod = thisClass.method(JMod.PRIVATE, longClass, "dateTime");
+//							JVar row = dateTimeMethod.param(tableRowClass, "row");
+//							JVar fieldName = dateTimeMethod.param(stringClass, "fieldName");
+//							
+//							JBlock body = dateTimeMethod.body();
+//							
+//							JVar value = body.decl(objectClass, "value").init(row.invoke("get").arg(fieldName));
+//							JVar result = body.decl(longClass, "result").init(JExpr._null());
+//							
+//							JConditional ifStatement = body._if(value._instanceof(stringClass));
+//							JBlock thenBlock = ifStatement._then();
+//							
+//							thenBlock.add(result.assign(dateTimeClass._new().arg(value.castTo(stringClass)).invoke("getValue")));
+//							thenBlock.add(row.invoke("set").arg(fieldName).arg(result));
+//							
+//							JBlock elseBlock = ifStatement._elseif(value._instanceof(longClass))._then();
+//							elseBlock.add(result.assign(value.castTo(longClass)));
+//							
+//							body._return(result);
+//							
+//						}
+//						return dateTimeMethod;
+//					}
+//		
+//					protected void declareClass() throws BeamTransformGenerationException {
+//						String thisClassName = mergeFnClassName();
+//						
+//						AbstractJClass stringClass = model.ref(String.class);
+//						AbstractJClass coGbkResultClass = model.ref(CoGbkResult.class);
+//						AbstractJClass tableRowClass = model.ref(TableRow.class);
+//						AbstractJClass kvClass = model.ref(KV.class).narrow(stringClass).narrow(coGbkResultClass);
+//						AbstractJClass doFnClass = model.ref(DoFn.class).narrow(kvClass).narrow(tableRowClass);
+//						
+//						try {
+//							thisClass = model._class(JMod.PUBLIC, thisClassName)._extends(doFnClass);
+//						} catch (JClassAlreadyExistsException e) {
+//							fail("Failed to declare class {0}", thisClassName);
+//						}
+//						
+//					}
+//		
+//					private String mergeFnClassName() throws BeamTransformGenerationException {
+//						
+//						return mainPackage() + "." + ShowlUtil.shortShapeName(targetNode) + "MergeFn";
+//					}
+//
+//
+//					@Override
+//					protected BeamChannel beamChannel(ShowlNodeShape sourceNode) throws BeamTransformGenerationException {
+//						return sourceInfoMap.get(RdfUtil.uri(sourceNode.getRoot().getId()));
+//					}
+//
+//					@Override
+//					protected JVar contextElement(JBlock body, JVar c) throws BeamTransformGenerationException {
+//						throw new BeamTransformGenerationException("Not implemented");
+//					}
+//				}
+//
+//		private BigQueryTableReference tableReference() throws BeamTransformGenerationException {
+//
+//			DataSource ds = targetNode.getShapeDataSource().getDataSource();
+//			if (ds instanceof GoogleBigQueryTable) {
+//				return ((GoogleBigQueryTable) ds).getTableReference();
+//			} 
+//			fail("Expected GoogleBigQueryTable data source for {0}", targetNode.getPath());
+//			return null;
+//		}
+//
+//		private String targetTagName() {
+//			return StringUtil.firstLetterLowerCase(ShowlUtil.shortShapeName(RdfUtil.uri(targetNode.getId())) + "Tag");
+//		}
+//
+//		private void createTargetChannel() {
+//			
+//			ShowlChannel showlChannel = new ShowlChannel(targetNode, null);
+//			targetChannel = new BeamChannel(showlChannel);
+//			
+//			
+//			
+//		}
+//		private void createSourceChannel() throws BeamTransformGenerationException {
+//			List<ShowlChannel> channelList = targetNode.nonEnumChannels(reasoner);
+//			if (channelList.size() == 1) {
+//				ShowlChannel channel = channelList.get(0);
+//				sourceChannel = new BeamChannel(channelList.get(0));
+//				
+//				sourceInfoMap.put(RdfUtil.uri(channel.getSourceNode().getId()), sourceChannel);
+//			} else {
+//				fail("Expected a single source but found {0} for {1}", channelList.size(), targetNode.getPath());
+//			}
+//			
+//		}
+//		
+//		private void createKeyPair() throws BeamTransformGenerationException {
+//			
+//			ShowlNodeShape sourceNode = sourceChannel.getFocusNode();
+//
+//			
+//			ShowlPropertyShape targetId = targetNode.findOut(Konig.id);
+//			ShowlPropertyShape sourceId = sourceNode.findOut(Konig.id);
+//			
+//			if (sourceId != null && targetId!=null) {
+//				keyPair = new PropertyPair(sourceId, targetId);
+//				return;
+//			}
+//			
+//			// For now, we only support keys that are direct properties of the target shape.
+//			// We can relax this constraint later if the need arises.
+//			
+//			outer: for (ShowlDirectPropertyShape targetDirect : targetNode.getProperties()) {
+//				URI keyType = targetDirect.getValueType(reasoner);
+//
+//				if (keyType!=null && reasoner.isInverseFunctionalProperty(keyType)) {
+//					URI predicate = targetDirect.getPredicate();
+//					
+//					ShowlDirectPropertyShape sourceDirect = sourceNode.getProperty(predicate);
+//					if (sourceDirect != null) {
+//						keyPair(sourceDirect, targetDirect);
+//					} else {
+//						ShowlDerivedPropertyList derivedList = sourceNode.getDerivedProperty(predicate);
+//						for (ShowlDerivedPropertyShape derived : derivedList) {
+//							PropertyConstraint constraint = derived.getPropertyConstraint();
+//							if (constraint != null && constraint.getFormula() != null) {
+//									keyPair(derived, targetDirect);
+//									continue outer;
+//							}
 //						}
 //					}
+//				}
+//			}
+//			
+//		
+//			if (keyPair == null) {
+//				fail("Found no common inverse functional property on {0} and {1}");
+//			}
+//			
+//			
+//		}
+//		
+//		private void keyPair(ShowlPropertyShape source, ShowlDirectPropertyShape target) {
+//			boolean replacePair = false;
+//			if (keyPair == null) {
+//				replacePair = true;
+//			} else {
+//				boolean alphaOrder = false;
+//				ShowlPropertyShape prior = keyPair.getTargetProperty();
+//				if (target.getValueShape() == null) {
+//					if (prior.getValueShape() != null) {
+//						// prefer an unstructured key
+//						replacePair = true;
+//					} else {
+//						alphaOrder = true;
+//					}
+//				} else {
+//					alphaOrder = true;
+//				}
+//				
+//				if (alphaOrder) {
+//					String priorName = prior.getPredicate().getLocalName();
+//					String newName = target.getPredicate().getLocalName();
 //					
-//				}						
-						AbstractJClass tableRowClass = model.ref(TableRow.class);
-						AbstractJClass stringClass = model.ref(String.class);
-						AbstractJClass objectClass = model.ref(Object.class);
-						AbstractJClass entryClass = model.ref(Entry.class).narrow(stringClass).narrow(objectClass);
-						
-						JMethod method = thisClass.method(JMod.PRIVATE, model.VOID, "copy");
-						JVar targetRow = method.param(tableRowClass, "targetRow");
-						JVar outputRow = method.param(tableRowClass, "outputRow");
-						
-						
-						JForEach forEach = method.body().forEach(entryClass, "entry", targetRow.invoke("entrySet"));
-						JBlock block = forEach.body();
-						
-						JVar entry = forEach.var();
-						
-						JVar fieldName = block.decl(stringClass, "fieldName").init(entry.invoke("getKey"));
-						JVar value = block.decl(objectClass, "value").init(entry.invoke("getValue"));
-						
-						JConditional ifStatement = block._if(value._instanceof(tableRowClass));
-						JBlock thenBlock = ifStatement._then();
-						
-						JVar outputValue = thenBlock.decl(objectClass, "outputValue").init(outputRow.invoke("get").arg(fieldName));
-						JConditional innerIf = thenBlock._if(outputValue._instanceof(tableRowClass));
-						JBlock innerThen = innerIf._then();
-						innerThen.add(JExpr.invoke(method).arg(value.castTo(tableRowClass)).arg(outputValue.castTo(tableRowClass)));
-						innerIf._else().add(outputRow.invoke("put").arg(fieldName).arg(value));
-						
-						ifStatement._else().add(outputRow.invoke("put").arg(fieldName).arg(value));
-						
-						return method;
-					}
-
-			private JMethod transform() throws BeamTransformGenerationException {
-				AbstractJClass tableRowClass = model.ref(TableRow.class);
-				JMethod method = thisClass.method(JMod.PRIVATE, tableRowClass, "transform");
-				JVar sourceRow = method.param(tableRowClass, "sourceRow");
-				
-				sourceChannel.setSourceRow(sourceRow);
-				JBlock block = method.body();
-				JVar targetRow = block.decl(tableRowClass, "targetRow").init(tableRowClass._new());
-
-				JDefinedClass errorBuilderClass = errorBuilderClass();
-
-
-				// ErrorBuilder errorBuilder = new ErrorBuilder();
-				block.decl(errorBuilderClass, "errorBuilder").init(errorBuilderClass._new());
-				for (ShowlDirectPropertyShape direct : targetNode.getProperties()) {
-					BeamMethod childMethod = processProperty("", direct);
-					etran.invoke(childMethod);
-				}
-
-				
-				block._return(targetRow);
-				
-
-				return method;
-			}
-
-					private JMethod baselineRow() {
-		
-						AbstractJClass tableRowClass = model.ref(TableRow.class);
-						AbstractJClass stringClass = model.ref(String.class);
-						AbstractJClass coGbkResultClass = model.ref(CoGbkResult.class);
-		        AbstractJClass kvClass = model.ref(KV.class).narrow(stringClass).narrow(coGbkResultClass);
-		        AbstractJClass tupleTagClass = model.ref(TupleTag.class).narrow(tableRowClass);
-		        AbstractJClass iteratorClass = model.ref(Iterator.class).narrow(tableRowClass);
-		        AbstractJClass longClass = model.ref(Long.class);
-		        
-		//			private TableRow baselineRow(KV<String, CoGbkResult> e, TupleTag<TableRow> tupleTag) {
-		        
-		        JMethod method = thisClass.method(JMod.PRIVATE, tableRowClass, "baselineRow");
-		        JMethod dateTimeMethod = dateTime();
-		        JVar e = method.param(kvClass, "e");
-		        JVar tupleTag = method.param(tupleTagClass, "tupleTag");
-		        
-		//				
-		//				Iterator<TableRow> sequence = e.getValue().getAll(tupleTag).iterator();
-		//				TableRow result = null;
-		//				Long latest = null;
-		        
-		        JVar sequence = method.body().decl(iteratorClass, "sequence")
-		        		.init(e.invoke("getValue").invoke("getAll").arg(tupleTag).invoke("iterator"));
-		        
-		        JVar result = method.body().decl(tableRowClass, "result").init(JExpr._null());
-		        JVar latest = method.body().decl(longClass, "latest").init(JExpr._null());
-		        
-		//				while (sequence.hasNext()) {
-		//					TableRow row = sequence.next();
-		//					Long modified = dateTime(row, "modified");
-		//					if (modified!=null && (latest==null || modified > latest)) {
-		//						latest = modified;
-		//						result = row;
-		//					}
-		//				}
-		        
-		        JWhileLoop loop = method.body()._while(sequence.invoke("hasNext"));
-		        
-		        JVar row = loop.body().decl(tableRowClass, "row").init(sequence.invoke("next"));
-		        JVar modified = loop.body().decl(longClass, "modified")
-		        		.init(JExpr.invoke(dateTime()).arg(row).arg(JExpr.lit("modified")));
-		        
-		        loop.body()._if(modified.neNull().cand(latest.eqNull().cor(modified.gt(latest))))
-		        	._then().assign(latest, modified).assign(result, row);
-		        
-		        
-		//				
-		//				if (result == null) {
-		//					result = new TableRow();
-		//				}
-		//				
-		//				return result;
-		//			}
-						
-		        method.body()._if(result.eqNull())._then().assign(result, tableRowClass._new());
-		        
-		        method.body()._return(result);
-		        
-						return method;
-					}
-		
-					private JMethod dateTime() {
-						if (dateTimeMethod == null) {
-							AbstractJClass longClass = model.ref(Long.class);
-							AbstractJClass tableRowClass = model.ref(TableRow.class);
-							AbstractJClass stringClass = model.ref(String.class);
-							AbstractJClass objectClass = model.ref(Object.class);
-							AbstractJClass dateTimeClass = model.ref(DateTime.class);
-		
-						//	private Long dateTime(TableRow row, String fieldName) {
-						//		Object value = row.get(fieldName);
-						//    Long result = null;
-						//		if (value instanceof String) {
-						//			result = new DateTime((String) value).getValue();
-					  //      row.set(fieldName, result);
-						//     
-						//		} else if (value instanceof Long) {
-					  //      result = (Long) value;
-					  //    }
-						//		return result;
-						//	}
-							
-							dateTimeMethod = thisClass.method(JMod.PRIVATE, longClass, "dateTime");
-							JVar row = dateTimeMethod.param(tableRowClass, "row");
-							JVar fieldName = dateTimeMethod.param(stringClass, "fieldName");
-							
-							JBlock body = dateTimeMethod.body();
-							
-							JVar value = body.decl(objectClass, "value").init(row.invoke("get").arg(fieldName));
-							JVar result = body.decl(longClass, "result").init(JExpr._null());
-							
-							JConditional ifStatement = body._if(value._instanceof(stringClass));
-							JBlock thenBlock = ifStatement._then();
-							
-							thenBlock.add(result.assign(dateTimeClass._new().arg(value.castTo(stringClass)).invoke("getValue")));
-							thenBlock.add(row.invoke("set").arg(fieldName).arg(result));
-							
-							JBlock elseBlock = ifStatement._elseif(value._instanceof(longClass))._then();
-							elseBlock.add(result.assign(value.castTo(longClass)));
-							
-							body._return(result);
-							
-						}
-						return dateTimeMethod;
-					}
-		
-					protected void declareClass() throws BeamTransformGenerationException {
-						String thisClassName = mergeFnClassName();
-						
-						AbstractJClass stringClass = model.ref(String.class);
-						AbstractJClass coGbkResultClass = model.ref(CoGbkResult.class);
-						AbstractJClass tableRowClass = model.ref(TableRow.class);
-						AbstractJClass kvClass = model.ref(KV.class).narrow(stringClass).narrow(coGbkResultClass);
-						AbstractJClass doFnClass = model.ref(DoFn.class).narrow(kvClass).narrow(tableRowClass);
-						
-						try {
-							thisClass = model._class(JMod.PUBLIC, thisClassName)._extends(doFnClass);
-						} catch (JClassAlreadyExistsException e) {
-							fail("Failed to declare class {0}", thisClassName);
-						}
-						
-					}
-		
-					private String mergeFnClassName() throws BeamTransformGenerationException {
-						
-						return mainPackage() + "." + ShowlUtil.shortShapeName(targetNode) + "MergeFn";
-					}
-
-
-					@Override
-					protected BeamChannel beamChannel(ShowlNodeShape sourceNode) throws BeamTransformGenerationException {
-						return sourceInfoMap.get(RdfUtil.uri(sourceNode.getRoot().getId()));
-					}
-
-					@Override
-					protected JVar contextElement(JBlock body, JVar c) throws BeamTransformGenerationException {
-						throw new BeamTransformGenerationException("Not implemented");
-					}
-				}
-
-		private BigQueryTableReference tableReference() throws BeamTransformGenerationException {
-
-			DataSource ds = targetNode.getShapeDataSource().getDataSource();
-			if (ds instanceof GoogleBigQueryTable) {
-				return ((GoogleBigQueryTable) ds).getTableReference();
-			} 
-			fail("Expected GoogleBigQueryTable data source for {0}", targetNode.getPath());
-			return null;
-		}
-
-		private String targetTagName() {
-			return StringUtil.firstLetterLowerCase(ShowlUtil.shortShapeName(RdfUtil.uri(targetNode.getId())) + "Tag");
-		}
-
-		private void createTargetChannel() {
-			
-			ShowlChannel showlChannel = new ShowlChannel(targetNode, null);
-			targetChannel = new BeamChannel(showlChannel);
-			
-			
-			
-		}
-		private void createSourceChannel() throws BeamTransformGenerationException {
-			List<ShowlChannel> channelList = targetNode.nonEnumChannels(reasoner);
-			if (channelList.size() == 1) {
-				ShowlChannel channel = channelList.get(0);
-				sourceChannel = new BeamChannel(channelList.get(0));
-				
-				sourceInfoMap.put(RdfUtil.uri(channel.getSourceNode().getId()), sourceChannel);
-			} else {
-				fail("Expected a single source but found {0} for {1}", channelList.size(), targetNode.getPath());
-			}
-			
-		}
-		
-		private void createKeyPair() throws BeamTransformGenerationException {
-			
-			ShowlNodeShape sourceNode = sourceChannel.getFocusNode();
-
-			
-			ShowlPropertyShape targetId = targetNode.findOut(Konig.id);
-			ShowlPropertyShape sourceId = sourceNode.findOut(Konig.id);
-			
-			if (sourceId != null && targetId!=null) {
-				keyPair = new PropertyPair(sourceId, targetId);
-				return;
-			}
-			
-			// For now, we only support keys that are direct properties of the target shape.
-			// We can relax this constraint later if the need arises.
-			
-			outer: for (ShowlDirectPropertyShape targetDirect : targetNode.getProperties()) {
-				URI keyType = targetDirect.getValueType(reasoner);
-
-				if (keyType!=null && reasoner.isInverseFunctionalProperty(keyType)) {
-					URI predicate = targetDirect.getPredicate();
-					
-					ShowlDirectPropertyShape sourceDirect = sourceNode.getProperty(predicate);
-					if (sourceDirect != null) {
-						keyPair(sourceDirect, targetDirect);
-					} else {
-						ShowlDerivedPropertyList derivedList = sourceNode.getDerivedProperty(predicate);
-						for (ShowlDerivedPropertyShape derived : derivedList) {
-							PropertyConstraint constraint = derived.getPropertyConstraint();
-							if (constraint != null && constraint.getFormula() != null) {
-									keyPair(derived, targetDirect);
-									continue outer;
-							}
-						}
-					}
-				}
-			}
-			
-		
-			if (keyPair == null) {
-				fail("Found no common inverse functional property on {0} and {1}");
-			}
-			
-			
-		}
-		
-		private void keyPair(ShowlPropertyShape source, ShowlDirectPropertyShape target) {
-			boolean replacePair = false;
-			if (keyPair == null) {
-				replacePair = true;
-			} else {
-				boolean alphaOrder = false;
-				ShowlPropertyShape prior = keyPair.getTargetProperty();
-				if (target.getValueShape() == null) {
-					if (prior.getValueShape() != null) {
-						// prefer an unstructured key
-						replacePair = true;
-					} else {
-						alphaOrder = true;
-					}
-				} else {
-					alphaOrder = true;
-				}
-				
-				if (alphaOrder) {
-					String priorName = prior.getPredicate().getLocalName();
-					String newName = target.getPredicate().getLocalName();
-					
-					if (newName.compareTo(priorName) < 0) {
-						replacePair = true;
-					}
-				}
-				
-				
-			}
-			if (replacePair) {
-				keyPair = new PropertyPair(source, target);
-			}
-			
-		}
-		protected void declareReadFileFnClass() throws JClassAlreadyExistsException, BeamTransformGenerationException {
-
-			targetToKvFn = generateTargetToKvFn();
-			JDefinedClass sourceToKvFn = generateFileToKvFn(keyPair.getSourceProperty(), sourceChannel.getChannel());
-    	
-//  	for (ShowlChannel channel : targetNode.nonEnumChannels(reasoner)) {
-//       
-//       ShowlStatement joinStatement = channel.getJoinStatement();
-//       
-//       if (joinStatement == null) {
-//         continue;
-//       }
-//   
-//       ShowlPropertyShape leftKey = leftKey(joinStatement);
-//       ShowlPropertyShape rightKey = rightKey(joinStatement);
-//       
-//       
-//       generateFileToKvFn(leftKey, channel(leftKey, channel));
-//       generateFileToKvFn(rightKey, channel(rightKey, channel));
-//       
-//       
-//     }
-			
-			
-		}
-		private JDefinedClass generateTargetToKvFn() throws BeamTransformGenerationException {
-			GetKeyMethodGenerator getKeyMethodGenerator = createGetKeyMethodGeneratorForTarget();
-			
-			OverlayReadTargetFnGenerator2 generator = new OverlayReadTargetFnGenerator2(getKeyMethodGenerator);
-			return generator.generate();
-			
-		}
-
-		private GetKeyMethodGenerator createGetKeyMethodGeneratorForTarget() throws BeamTransformGenerationException {
-			ShowlPropertyShape targetKey = keyPair.getTargetProperty();
-			URI keyType = keyType(targetKey);
-			
-			if (keyType == null) {
-				fail("Unknown key type for {0}", targetKey.getPath());
-			}
-			
-			if (XMLSchema.STRING.equals(keyType)) {
-				return new StringGetKeyMethodGenerator(targetKey.getPredicate().getLocalName());
-			}
-			fail("Unsupported key type {0} for {1}", keyType.getLocalName(), targetKey.getPath());
-			return null;
-		}
-		
-		
-
-  }
+//					if (newName.compareTo(priorName) < 0) {
+//						replacePair = true;
+//					}
+//				}
+//				
+//				
+//			}
+//			if (replacePair) {
+//				keyPair = new PropertyPair(source, target);
+//			}
+//			
+//		}
+//		protected void declareReadFileFnClass() throws JClassAlreadyExistsException, BeamTransformGenerationException {
+//
+//			targetToKvFn = generateTargetToKvFn();
+//			JDefinedClass sourceToKvFn = generateFileToKvFn(keyPair.getSourceProperty(), sourceChannel.getChannel());
+//    	
+////  	for (ShowlChannel channel : targetNode.nonEnumChannels(reasoner)) {
+////       
+////       ShowlStatement joinStatement = channel.getJoinStatement();
+////       
+////       if (joinStatement == null) {
+////         continue;
+////       }
+////   
+////       ShowlPropertyShape leftKey = leftKey(joinStatement);
+////       ShowlPropertyShape rightKey = rightKey(joinStatement);
+////       
+////       
+////       generateFileToKvFn(leftKey, channel(leftKey, channel));
+////       generateFileToKvFn(rightKey, channel(rightKey, channel));
+////       
+////       
+////     }
+//			
+//			
+//		}
+//		private JDefinedClass generateTargetToKvFn() throws BeamTransformGenerationException {
+//			GetKeyMethodGenerator getKeyMethodGenerator = createGetKeyMethodGeneratorForTarget();
+//			
+//			OverlayReadTargetFnGenerator2 generator = new OverlayReadTargetFnGenerator2(getKeyMethodGenerator);
+//			return generator.generate();
+//			
+//		}
+//
+//		private GetKeyMethodGenerator createGetKeyMethodGeneratorForTarget() throws BeamTransformGenerationException {
+//			ShowlPropertyShape targetKey = keyPair.getTargetProperty();
+//			URI keyType = keyType(targetKey);
+//			
+//			if (keyType == null) {
+//				fail("Unknown key type for {0}", targetKey.getPath());
+//			}
+//			
+//			if (XMLSchema.STRING.equals(keyType)) {
+//				return new StringGetKeyMethodGenerator(targetKey.getPredicate().getLocalName());
+//			}
+//			fail("Unsupported key type {0} for {1}", keyType.getLocalName(), targetKey.getPath());
+//			return null;
+//		}
+//		
+//		
+//
+//  }
 
   private BeamTransformGenerationException fail(String pattern, Object...args) throws BeamTransformGenerationException {
     throw new BeamTransformGenerationException(MessageFormat.format(pattern, args));
@@ -4813,6 +4797,19 @@ public class BeamTransformGenerator {
       this.mergeFnClass = mergeFnClass;
     }
     
+
+    public String toString() {
+    	StringBuilder builder = new StringBuilder();
+    	builder.append("GroupInfo(sourceList=[");
+    	String comma = "";
+    	for (BeamChannel channel : sourceList) {
+    		builder.append(comma);
+    		comma = ", ";
+    		builder.append(channel.toString());
+    	}
+    	builder.append("])");
+    	return builder.toString();
+    }
     
     
   }
