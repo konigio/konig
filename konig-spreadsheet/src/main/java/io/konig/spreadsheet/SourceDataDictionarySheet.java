@@ -210,7 +210,7 @@ public class SourceDataDictionarySheet extends BaseSheetProcessor {
 		if (shape.getMediaTypeBaseName() == null) {
 			String vendorName = settings.getMediaTypeVendorName();
 			if (vendorName == null) {
-				fail(row, SOURCE_OBJECT_NAME, "{} property must be defined", SettingsSheet.MEDIA_TYPE_VENDOR_NAME);
+				fail(row, SOURCE_OBJECT_NAME, "{0} property must be defined", SettingsSheet.MEDIA_TYPE_VENDOR_NAME);
 			}
 			sourceSystemValue = StringUtil.mediaTypePart(sourceSystemValue);
 			sourceObjectNameValue = StringUtil.mediaTypePart(sourceObjectNameValue);

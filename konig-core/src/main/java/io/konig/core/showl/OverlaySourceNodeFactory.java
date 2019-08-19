@@ -28,6 +28,7 @@ public class OverlaySourceNodeFactory implements ShowlSourceNodeFactory {
 	private Set<ShowlNodeShape> candidates = new HashSet<>();
 
 	private ShowlNodeShape targetNodeShape;
+	private ShowlNodeShape sourceNode;
 	private ShowlSourceNodeFactory defaultFactory;
 	
 	
@@ -40,8 +41,14 @@ public class OverlaySourceNodeFactory implements ShowlSourceNodeFactory {
 
 
 	public void setSourceNode(ShowlNodeShape sourceNode) {
+		this.sourceNode = sourceNode;
 		candidates.clear();
 		candidates.add(sourceNode);
+	}
+
+
+	public ShowlNodeShape getSourceNode() {
+		return sourceNode;
 	}
 
 

@@ -72,6 +72,10 @@ public class MergeTargetFnGenerator extends BaseTargetFnGenerator {
 			return;
 		}
 		
+		if (sourceNode.getAccessor()!=null) {
+			return;
+		}
+		
 		BlockInfo blockInfo = etran.peekBlockInfo();
 		JBlock block = blockInfo.getBlock();
 		if (keyValueVar == null) {

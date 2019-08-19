@@ -20,6 +20,11 @@ package io.konig.core.showl;
  * #L%
  */
 
-public interface ShowlStatement extends ShowlExpression {
+
+public enum ShowlBooleanOperator {
+
+	AND,
+	OR,
+	NOT
 
 }

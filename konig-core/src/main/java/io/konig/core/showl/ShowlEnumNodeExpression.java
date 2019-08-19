@@ -31,12 +31,20 @@ public class ShowlEnumNodeExpression implements ShowlExpression, HasEnumNode {
 	
 	private ShowlNodeShape enumNode;
 	private ShowlChannel channel;
+	private ShowlStatement joinStatement;
 	
 	public ShowlEnumNodeExpression(ShowlNodeShape enumNode) {
 		this.enumNode = enumNode;
 	}
 	
 	
+	public ShowlEnumNodeExpression(ShowlNodeShape enumNode, ShowlChannel channel) {
+		this.enumNode = enumNode;
+		this.channel = channel;
+		this.joinStatement = channel.getJoinStatement();
+	}
+
+
 	@Override
 	public ShowlNodeShape getEnumNode() {
 		return enumNode;
@@ -87,11 +95,13 @@ public class ShowlEnumNodeExpression implements ShowlExpression, HasEnumNode {
 
 
 
+	@Deprecated
 	public ShowlChannel getChannel() {
 		return channel;
 	}
 
 
+	@Deprecated
 	public void setChannel(ShowlChannel channel) {
 		this.channel = channel;
 	}
@@ -107,6 +117,16 @@ public class ShowlEnumNodeExpression implements ShowlExpression, HasEnumNode {
 	@Override
 	public ShowlEnumNodeExpression transform() {
 		return this;
+	}
+
+
+	public ShowlStatement getJoinStatement() {
+		return joinStatement;
+	}
+
+
+	public void setJoinStatement(ShowlStatement joinStatement) {
+		this.joinStatement = joinStatement;
 	}
 
 }

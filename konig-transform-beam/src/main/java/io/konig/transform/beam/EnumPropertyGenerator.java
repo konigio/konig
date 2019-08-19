@@ -87,10 +87,15 @@ public class EnumPropertyGenerator extends SimplePropertyGenerator {
 		etran.addTableRowParameters(beamMethod, targetProperty);
 		ShowlNodeShape enumNode = ShowlUtil.containingEnumNode(targetProperty, etran.getOwlReasoner());
 		ShowlNodeShape enumClassNode = ShowlUtil.enumClassNode(enumNode);
+
+		if (enumClassNode == null) {
+			throw new BeamTransformGenerationException("Enum class node not defined for " + targetProperty.getPath());
+		}
 		
 		AbstractJType javaType = etran.getTypeManager().enumClass(enumNode.getOwlClass().getId());
 		
 		String enumName = enumNode.getAccessor().getPredicate().getLocalName();
+		
 		
 		BeamParameter beamParam = BeamParameter.ofEnumValue(javaType, enumName, enumClassNode.effectiveNode());
 		if (beamMethod.addParameter(beamParam) != null) {

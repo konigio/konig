@@ -41,6 +41,10 @@ public class ShowlChannel {
 		return sourceShape;
 	}
 
+	public void setJoinStatement(ShowlStatement joinStatement) {
+		this.joinStatement = joinStatement;
+	}
+
 	public ShowlStatement getJoinStatement() {
 		return joinStatement;
 	}
