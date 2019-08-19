@@ -61,7 +61,7 @@ public class BeamParameter implements Comparable<BeamParameter> {
 	}
 	
 	public static BeamParameter ofPipelineOptions(AbstractJType varType) {
-		return new BeamParameter(varType, BeamParameterType.PIPELINE_OPTIONS, "options", null);
+		return new BeamParameter(varType, BeamParameterType.PIPELINE_OPTIONS, "options");
 	}
 	
 	public String toString() {
