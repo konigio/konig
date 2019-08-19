@@ -225,7 +225,7 @@ public class UniqueKeyFactory {
 
 
 		private boolean isInverseFunctional(ShowlPropertyShape p) {
-			return reasoner.isInverseFunctionalProperty(p.getPredicate());
+			return p!=null && reasoner.isInverseFunctionalProperty(p.getPredicate());
 		}
 
 

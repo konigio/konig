@@ -30,11 +30,49 @@ public class OverlayTransformService extends BasicTransformService {
 	
 	private Set<ShowlNodeShape> candidates;
 	
+	/**
+	 * We maintain a common enumMap so that we always return the same ShowlNodeShape
+	 * for Enum structures across all source nodes.
+	 */
+	private Map<ShowlPropertyShape,ShowlNodeShape> enumMap;
+	
 
 	public OverlayTransformService(ShowlSchemaService schemaService, ShowlNodeShapeService nodeService,
 			ShowlSourceNodeFactory sourceNodeFactory, Set<ShowlNodeShape> candidates) {
 		super(schemaService, nodeService, sourceNodeFactory);
 		this.candidates = candidates;
+	}
+
+	@Override
+	protected Map<ShowlPropertyShape,ShowlNodeShape> enumMap() {
+		if (enumMap == null) {
+			enumMap = new HashMap<>();
+		}
+		return enumMap;
+	}
+
+
+	@Override
+	protected boolean acceptEnumClass(ShowlPropertyShapeGroup targetGroup) {
+		
+		ShowlPropertyShape targetDirect = targetGroup.direct();
+		ShowlNodeShape targetNode = targetDirect==null ? null : targetDirect.getValueShape();
+		if (targetNode == null) {
+			return false;
+		}
+		
+		ShowlNodeShape sourceNode = focusSourceNode();
+		ShowlPropertyShapeGroup peer = findPeer(sourceNode, targetNode);
+		
+		return peer != null;
+	}
+	
+	private  ShowlNodeShape focusSourceNode() {
+		ShowlSourceNodeFactory sourceNodeFactory = getSourceNodeFactory();
+		if (sourceNodeFactory instanceof OverlaySourceNodeFactory) {
+			return ((OverlaySourceNodeFactory) sourceNodeFactory).getSourceNode();
+		}
+		return null;
 	}
 
 	public Set<ShowlPropertyShapeGroup> computeTransform(ShowlNodeShape targetNode) throws ShowlProcessingException {
@@ -68,6 +106,8 @@ public class OverlayTransformService extends BasicTransformService {
 		}
 	}
 
+
+
 	private void collectUnmappedProperties(ShowlNodeShape targetNode, Set<ShowlPropertyShapeGroup> unmapped) {
 		for (ShowlDirectPropertyShape p : targetNode.getProperties()) {
 			if (p.getSelectedExpression()==null) {
@@ -96,6 +136,10 @@ public class OverlayTransformService extends BasicTransformService {
 				ShowlExpression prior = map.get(p);
 				if (prior == null) {
 					map.put(p, e);
+				} else if (prior instanceof ShowlEnumPropertyExpression && e instanceof ShowlEnumPropertyExpression) {
+					// Do nothing
+					// We do not allow an overlay of Enum properties (since they are handled as a special case)
+					
 				} else if (prior instanceof ShowlArrayExpression && e instanceof ShowlArrayExpression) {
 					ShowlArrayExpression priorArray = (ShowlArrayExpression) prior;
 					ShowlArrayExpression newArray = (ShowlArrayExpression) e;

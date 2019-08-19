@@ -82,7 +82,7 @@ public class ToPersonTargetShapeFn
         }
         gender_id(errorBuilder, genderRow, gender);
         gender_name(errorBuilder, genderRow, gender);
-        gender_genderCode(errorBuilder, genderRow, personSourceRow);
+        gender_genderCode(errorBuilder, genderRow, gender);
         if (!genderRow.isEmpty()) {
             personTargetRow.set("gender", genderRow);
         } else {
@@ -111,8 +111,8 @@ public class ToPersonTargetShapeFn
         return name;
     }
 
-    private String gender_genderCode(ErrorBuilder errorBuilder, TableRow genderRow, TableRow personSourceRow) {
-        String genderCode = ((String) personSourceRow.get("gender_code"));
+    private String gender_genderCode(ErrorBuilder errorBuilder, TableRow genderRow, com.example.beam.etl.schema.GenderType gender) {
+        String genderCode = ((String)((gender!= null)?gender.getGenderCode():null));
         if (genderCode!= null) {
             genderRow.set("genderCode", genderCode);
         } else {

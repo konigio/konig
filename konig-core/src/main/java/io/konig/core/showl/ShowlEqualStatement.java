@@ -23,7 +23,12 @@ package io.konig.core.showl;
 
 import java.util.Set;
 
-public class ShowlEqualStatement implements ShowlStatement {
+import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.XMLSchema;
+
+import io.konig.core.OwlReasoner;
+
+public class ShowlEqualStatement implements ShowlExpression, ShowlStatement {
 	
 	private ShowlExpression left;
 	private ShowlExpression right;
@@ -82,6 +87,21 @@ public class ShowlEqualStatement implements ShowlStatement {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public ShowlExpression transform() {
+		return new ShowlEqualStatement(left.transform(), right.transform());
+	}
+
+	@Override
+	public String displayValue() {
+		return toString();
+	}
+
+	@Override
+	public URI valueType(OwlReasoner reasoner) {
+		return XMLSchema.BOOLEAN;
 	}
 
 }

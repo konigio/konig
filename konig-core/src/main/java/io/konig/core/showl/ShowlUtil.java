@@ -1,5 +1,6 @@
 package io.konig.core.showl;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -447,13 +448,40 @@ public class ShowlUtil {
 		return result;
 	}
 
-	public static ShowlNodeShape enumClassNode(ShowlNodeShape enumNode) {
+	public static ShowlNodeShape enumClassNode(ShowlNodeShape enumNode) throws ShowlProcessingException {
 		ShowlPropertyShape accessor = enumNode.getAccessor();
 		if (accessor != null) {
 			ShowlExpression s = accessor.getSelectedExpression();
 			if (s instanceof ShowlEnumNodeExpression) {
 				ShowlEnumNodeExpression e = (ShowlEnumNodeExpression) s;
 				return e.getEnumNode();
+			}
+			
+			if (s instanceof ShowlOverlayExpression) {
+				
+				// By design every element within the overlay expression *should* contain
+				// A ShowlEnumNodeExpression that references the same ShowlNodeShape instance.
+				
+				// We will confirm that this is true and return that instance
+				
+				ShowlOverlayExpression overlay = (ShowlOverlayExpression) s;
+				ShowlNodeShape result = null;
+				for (ShowlExpression e : overlay) {
+					if (e instanceof ShowlEnumNodeExpression) {
+						ShowlNodeShape n = ((ShowlEnumNodeExpression) e).getEnumNode();
+						if (result == null) {
+							result = n;
+						} else if (n != result) {
+							String msg = MessageFormat.format("Conflicting enum nodes in overlay expression of {0}", enumNode.getPath());
+							throw new ShowlProcessingException(msg);
+						}
+					} else {
+						String msg = MessageFormat.format("Expected ShowlEnumNodeExpression in overlay for {0} but found {1}", 
+								enumNode.getPath(), e.getClass().getSimpleName());
+						throw new ShowlProcessingException(msg);
+					}
+				}
+				return result;
 			}
 		}
 		return null;

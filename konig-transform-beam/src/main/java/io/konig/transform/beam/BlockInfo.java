@@ -279,6 +279,7 @@ public class BlockInfo {
 		tableRowMap.put(node, tableRowVar);
 	}
 
+	
 	public JVar getTableRowVar(ShowlEffectiveNodeShape node) {
 		JVar var = tableRowMap.get(node);
 	

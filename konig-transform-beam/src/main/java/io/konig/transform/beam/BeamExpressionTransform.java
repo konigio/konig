@@ -241,7 +241,12 @@ public class BeamExpressionTransform  {
 		
 		JVar var = null;
 		
-		
+		Collections.sort(e, new Comparator<ShowlExpression>(){
+
+			@Override
+			public int compare(ShowlExpression a, ShowlExpression b) {
+				return a.displayValue().compareTo(b.displayValue());
+			}});
 		
 		for (int i=0; i<e.size(); i++) {
 			IJExpression init = transform(e.get(i));
@@ -429,12 +434,24 @@ public class BeamExpressionTransform  {
 			return bVar;
 		}
 		
+		if (p.getValueShape()!=null) {
+			bVar = blockInfo.getTableRowVar(p.getValueShape().effectiveNode());
+			if (bVar != null) {
+				return bVar;
+			}
+		}
+		
 		// There is no pre-declared variable for this property.  Try getting it directly from a TableRow.
 		
 		ShowlEffectiveNodeShape node = p.getDeclaringShape().effectiveNode();
 		JVar tableRowVar = tableRowVar(node);
 		if (tableRowVar != null) {
-			return tableRowVar.invoke("get").arg(JExpr.lit(p.getPredicate().getLocalName()));
+			ShowlPropertyShape nodeAccessor = p.getDeclaringShape().getAccessor();
+			IJExpression propertyValue = tableRowVar.invoke("get").arg(JExpr.lit(p.getPredicate().getLocalName()));
+			if (nodeAccessor != null && !nodeAccessor.isRequired()) {
+				propertyValue = JExpr.cond(tableRowVar.eqNull(), JExpr._null(), propertyValue);
+			}
+			return propertyValue;
 		}
 		
 		fail("TableRow variable not found for expression {0}", e.displayValue());
@@ -1744,7 +1761,7 @@ public class BeamExpressionTransform  {
 			
 			switch (copy.getParamType()) {
 			case ENUM_VALUE:
-				blockInfo.putEnumMember(copy.getSourceNode().effectiveNode(), copy.getVar());
+				blockInfo.putEnumMember(copy.getNode(), copy.getVar());
 				break;
 				
 			case ERROR_BUILDER :
@@ -1756,7 +1773,13 @@ public class BeamExpressionTransform  {
 				break;
 				
 			case TABLE_ROW :
-				blockInfo.putTableRow(copy.getSourceNode().effectiveNode(), copy.getVar());
+				blockInfo.putTableRow(copy.getNode(), copy.getVar());
+				break;
+				
+			default:
+				fail("Cannot build invocation of {0}: Parameter type {1} not supported", 
+						beamMethod.name(), 
+						copy.getParamType());
 				break;
 				
 			}

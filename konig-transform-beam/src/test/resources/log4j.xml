@@ -31,10 +31,6 @@
   
 <!-- 
   
-  
-  
--->
-  
    <logger name="io.konig.core.showl" additivity="false">
       <level value="trace"/>
       <appender-ref ref="console"/>
@@ -43,6 +39,10 @@
       <level value="trace"/>
       <appender-ref ref="console"/>
   </logger>
+  
+  
+-->
+  
   
   <root> 
     <priority value ="info" /> 

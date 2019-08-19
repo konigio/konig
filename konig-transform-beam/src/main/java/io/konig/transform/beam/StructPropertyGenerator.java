@@ -38,6 +38,8 @@ import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlEffectiveNodeShape;
 import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlNodeShape;
+import io.konig.core.showl.ShowlOverlayExpression;
+import io.konig.core.showl.ShowlPropertyExpression;
 import io.konig.core.showl.ShowlPropertyShape;
 import io.konig.core.showl.ShowlUtil;
 
@@ -84,6 +86,7 @@ public class StructPropertyGenerator extends TargetPropertyGenerator {
 		
 		return new StructInfo(nodeList, methodList);
 	}
+	
 
 	private TargetPropertyGenerator propertyGenerator(ShowlDirectPropertyShape p) throws BeamTransformGenerationException {
 		
@@ -152,7 +155,33 @@ public class StructPropertyGenerator extends TargetPropertyGenerator {
 		BeamParameter exclude = BeamParameter.pattern(BeamParameterType.TABLE_ROW, targetProperty.getValueShape().effectiveNode());
 		beamMethod.excludeParamFor(exclude);
 		etran.addOutputRowAndErrorBuilderParams(beamMethod, targetProperty);
+		
+		ShowlExpression selectedExpression = targetProperty.getSelectedExpression();
+		if (selectedExpression instanceof ShowlOverlayExpression) {
+			ShowlOverlayExpression overlay = (ShowlOverlayExpression)selectedExpression;
+			for (ShowlExpression e : overlay) {
+				if (e instanceof ShowlPropertyExpression) {
+					ShowlPropertyExpression sourcePropertyExpression = (ShowlPropertyExpression) e;
+					declareSourceProperty(beamMethod, sourcePropertyExpression);
+				}
+			}
+		} else if (selectedExpression instanceof ShowlPropertyExpression) {
+			declareSourceProperty(beamMethod, (ShowlPropertyExpression)selectedExpression);
+		}
 
+	}
+
+
+	private void declareSourceProperty(BeamMethod beamMethod, ShowlPropertyExpression sourcePropertyExpression) throws BeamTransformGenerationException {
+
+		BlockInfo blockInfo = etran.peekBlockInfo();
+		ShowlPropertyShape sourceProperty = sourcePropertyExpression.getSourceProperty();
+		if (sourceProperty.getValueShape()!=null) {
+			etran.addTableRowParam(beamMethod, sourceProperty.getDeclaringShape().effectiveNode());
+			JVar var = etran.declareSourcePropertyValue(sourceProperty);
+			blockInfo.putTableRow(sourceProperty.getValueShape().effectiveNode(), var);
+		}
+		
 	}
 
 }

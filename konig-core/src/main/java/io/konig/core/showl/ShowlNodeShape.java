@@ -80,6 +80,7 @@ public class ShowlNodeShape implements Traversable {
 	private ShowlNodeShape targetNode;
 	private ShowlEffectiveNodeShape effectiveNode;
 	private SynsetNode synsetNode;
+	private ShowlUniqueKeyCollection uniqueKeyCollection;
 	
 	private ShowlManager manager;
 	
@@ -731,4 +732,14 @@ public class ShowlNodeShape implements Traversable {
 		}
 		return null;
 	}
+
+	public ShowlUniqueKeyCollection getUniqueKeyCollection() {
+		return uniqueKeyCollection;
+	}
+
+	public void setUniqueKeyCollection(ShowlUniqueKeyCollection uniqueKeyCollection) {
+		this.uniqueKeyCollection = uniqueKeyCollection;
+	}
+	
+	
 }
