@@ -27,6 +27,9 @@ public class ToBqPersonShapeFn
             KV<String, CoGbkResult> e = c.element();
             TableRow personContactRow = sourceRow(e, BqPersonShapeBeam.personContactTag);
             TableRow personNameRow = sourceRow(e, BqPersonShapeBeam.personNameTag);
+            if ((personContactRow == null)&&(personNameRow == null)) {
+                return;
+            }
             id(errorBuilder, outputRow, personContactRow, personNameRow);
             phoneNumber(errorBuilder, outputRow, personContactRow);
             givenName(errorBuilder, outputRow, personNameRow);
