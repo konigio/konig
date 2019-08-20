@@ -229,7 +229,9 @@ public class ShowlServiceImpl implements ShowlService {
 
 				ShowlProperty property = propertyMap.get(predicate);
 				
-				URI range = (property==null) ? null :  property.inferRange(reasoner);
+				URI range = (property==null) ? 
+						RdfUtil.uri(reasoner.getRange(predicate)) :  
+						property.inferRange(reasoner);
 				
 				if (range == null) {
 					logger.warn("Ignoring property {}.{} because the range is not known.",
