@@ -33,12 +33,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.values.TupleTag;
-import org.apache.commons.csv.CSVParser;
 import org.openrdf.model.Namespace;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
@@ -47,6 +45,7 @@ import com.fasterxml.uuid.Generators;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
+import com.helger.jcodemodel.IJExpression;
 import com.helger.jcodemodel.JBlock;
 import com.helger.jcodemodel.JCatchBlock;
 import com.helger.jcodemodel.JClassAlreadyExistsException;
@@ -159,6 +158,8 @@ public class BaseTargetFnGenerator {
 				declareTableRow(thisClass, etran, node, c);
 			}
 			
+			abortIfNoData(etran, structInfo.getNodeList(), targetNode);
+			
 			for (BeamMethod propertyMethod : structInfo.getMethodList()) {
 				etran.invoke(propertyMethod);				
 				if (Konig.modified.equals(propertyMethod.getTargetProperty().getPredicate())) { 
@@ -197,6 +198,53 @@ public class BaseTargetFnGenerator {
 		
 	}
   	
+	private void abortIfNoData(
+			BeamExpressionTransform etran, 
+			List<ShowlEffectiveNodeShape> nodeList,
+			ShowlNodeShape targetNode
+	) throws BeamTransformGenerationException {
+		
+		BlockInfo blockInfo = etran.peekBlockInfo();
+		
+		if (!requiresEarlyAbort(nodeList, targetNode)) {
+			return;
+		}
+		
+		IJExpression condition = null;
+		for (ShowlEffectiveNodeShape node : nodeList) {
+			if (node.canonicalNode().getId().equals(targetNode.getId())) {
+				continue;
+			}
+			JVar var =  blockInfo.getTableRowVar(node);
+			if (var == null) {
+				fail("TableRow variable not found for {0}", node.canonicalNode().getPath());
+			}
+			if (condition == null) {
+				condition = var.eqNull();
+			} else {
+				condition = condition.cand(var.eqNull());
+			}
+		}
+		
+		blockInfo.getBlock()._if(condition)._then()._return();
+		
+		
+	}
+
+	private boolean requiresEarlyAbort(List<ShowlEffectiveNodeShape> nodeList, ShowlNodeShape targetNode) {
+		int count = 0;
+		for (ShowlEffectiveNodeShape node : nodeList) {
+			if (node.canonicalNode().getId().equals(targetNode.getId())) {
+				continue;
+			}
+			if (++count > 1) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+
 	private void validateTemporalValue(JDefinedClass thisClass, ShowlPropertyShape property) {
 		AbstractJClass exception = model.ref(Exception.class);
 		AbstractJClass stringClass = model.ref(String.class);
