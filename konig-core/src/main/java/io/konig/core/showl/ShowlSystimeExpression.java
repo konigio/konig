@@ -62,4 +62,7 @@ public class ShowlSystimeExpression implements ShowlExpression {
 		return this;
 	}
 
+	public String toString() {
+		return displayValue();
+	}
 }

@@ -63,6 +63,7 @@ public class BlockInfo {
 	private JVar listVar;
 	private JVar outputRow;
 	private JVar errorBuilderVar;
+	private JVar optionsVar;
 	private BeamEnumInfo enumInfo;
 	
 	private BeamMethod beamMethod;
@@ -133,6 +134,22 @@ public class BlockInfo {
 		this.enumInfo = enumInfo;
 	}
 
+	public JVar getOptionsVar() throws BeamTransformGenerationException {
+		if (optionsVar == null) {
+			StringBuilder builder = new StringBuilder();
+			builder.append("options parameter not found");
+			if (beamMethod!=null) {
+				builder.append(" in method ");
+				builder.append(beamMethod.name());
+			}
+			throw new BeamTransformGenerationException(builder.toString());
+		}
+		return optionsVar;
+	}
+
+	public void setOptionsVar(JVar optionsVar) {
+		this.optionsVar = optionsVar;
+	}
 
 	public JVar getErrorBuilderVar() throws BeamTransformGenerationException {
 		if (errorBuilderVar == null) {

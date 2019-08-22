@@ -22,6 +22,9 @@ package io.konig.transform.beam;
 
 
 import java.text.MessageFormat;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,6 +34,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.Set;
 
 import org.openrdf.model.Literal;
@@ -38,6 +43,7 @@ import org.openrdf.model.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.api.client.util.DateTime;
 import com.google.api.services.bigquery.model.TableRow;
 import com.helger.jcodemodel.AbstractJClass;
 import com.helger.jcodemodel.AbstractJType;
@@ -48,10 +54,12 @@ import com.helger.jcodemodel.JAtomFloat;
 import com.helger.jcodemodel.JAtomInt;
 import com.helger.jcodemodel.JAtomLong;
 import com.helger.jcodemodel.JBlock;
+import com.helger.jcodemodel.JCatchBlock;
 import com.helger.jcodemodel.JCodeModel;
 import com.helger.jcodemodel.JConditional;
 import com.helger.jcodemodel.JDefinedClass;
 import com.helger.jcodemodel.JExpr;
+import com.helger.jcodemodel.JFieldVar;
 import com.helger.jcodemodel.JForEach;
 import com.helger.jcodemodel.JForLoop;
 import com.helger.jcodemodel.JInvocation;
@@ -60,6 +68,7 @@ import com.helger.jcodemodel.JMod;
 import com.helger.jcodemodel.JOp;
 import com.helger.jcodemodel.JOpTernary;
 import com.helger.jcodemodel.JStringLiteral;
+import com.helger.jcodemodel.JTryBlock;
 import com.helger.jcodemodel.JVar;
 
 import io.konig.core.OwlReasoner;
@@ -1473,6 +1482,11 @@ public class BeamExpressionTransform  {
 	
 	public JVar declarePropertyValue(ShowlPropertyShape targetProperty) throws BeamTransformGenerationException {
 
+
+//		JInvocation invocation = null;
+//		if (Konig.modified.equals(property.getPredicate())) { 
+//			invocation = JExpr.invoke(temporalValueMethod()).arg("modified").arg(blockInfo.getOptionsVar().invoke("getModifiedDate").arg(blockInfo.getErrorBuilderVar())) ;
+//		}
 		IJExpression fieldValue = transform(targetProperty.getSelectedExpression());
 		return declarePropertyValue(targetProperty, fieldValue, null);
 	}
@@ -1506,24 +1520,15 @@ public class BeamExpressionTransform  {
 	
 			String fieldName = blockInfo.varName(property.getPredicate().getLocalName());
 			
-			JInvocation invocation = null;
-			if (Konig.modified.equals(property.getPredicate())) { 
-				invocation = JExpr.invoke("temporalValue").arg(JExpr.ref("options").invoke("getModifiedDate")) ;
-			}
 			
-			var = blockInfo.getBlock().decl(fieldType, fieldName).init(invocation==null?fieldValue.castTo(fieldType):invocation);
-			
-			if(invocation != null) {
-				JOpTernary assign = JOp.cond(JExpr.ref(var).eq(JExpr._null()),fieldValue,var);
-				blockInfo.getBlock().add(var.assign(assign)); 
-			}
-			
+			var = blockInfo.getBlock().decl(fieldType, fieldName).init(fieldValue.castTo(fieldType));
 			blockInfo.putPropertyValue(property.asGroup(), var);
 		}
 		
 		
 		return var;
 	}
+	
 
 	
 	public OwlReasoner getOwlReasoner() {
@@ -1951,5 +1956,98 @@ public class BeamExpressionTransform  {
 			blockInfo.putPropertyValue(accessor.asGroup(), var);
 		}
 		return var;
+	}
+	
+
+
+	public JMethod temporalValueMethod() throws BeamTransformGenerationException {
+		JDefinedClass theClass = rootClass();
+		JMethod temporalValueMethod = findTemporalValueMethod(theClass);
+		if (temporalValueMethod==null) {
+			AbstractJClass exception = model.ref(Exception.class);
+			AbstractJClass stringClass = model.ref(String.class);
+			AbstractJClass errorBuilderClass = typeManager.errorBuilderClass();
+			
+			temporalValueMethod = theClass.method(JMod.PRIVATE, model.ref(Long.class), "temporalValue")
+					._throws(exception);
+			JVar fieldName = temporalValueMethod.param(stringClass, "fieldName");
+			JVar fieldValue = temporalValueMethod.param(stringClass, "fieldValue");
+			JVar errorBuilder = temporalValueMethod.param(errorBuilderClass, "errorBuilder");
+			temporalValueMethod.body()._if(fieldValue.eqNull())._then()._return(JExpr._null());
+			JBlock block = temporalValueMethod.body()._if(fieldValue.invoke("length").gt(JExpr.lit(0)))._then();
+			JTryBlock tryBlock = block._try();
+			JBlock tryBody = tryBlock.body();
+			AbstractJClass patternClass = model.ref(Pattern.class);
+			JFieldVar datePattern = theClass.field(JMod.PRIVATE | JMod.FINAL | JMod.STATIC, patternClass, "DATE_PATTERN",
+					patternClass.staticInvoke("compile").arg(JExpr.lit("(\\d+-\\d+-\\d+)(.*)")));
+	
+			AbstractJClass dateTime = model.ref(DateTime.class);
+			JVar dateTimeVar = tryBody.decl(dateTime, "dateTimeValue").init(dateTime._new().arg(fieldValue));
+			JConditional isDateIf = tryBody._if(dateTimeVar.invoke("isDateOnly"));
+			isDateIf._then()._return(dateTimeVar.invoke("getValue").div(1000));
+	
+			AbstractJClass instantClass = model.ref(Instant.class);
+			AbstractJClass offsetDateTimeClass = model.ref(OffsetDateTime.class);
+			AbstractJClass matcherClass = model.ref(Matcher.class);
+			AbstractJClass zonedDateTimeClass = model.ref(ZonedDateTime.class);
+			AbstractJClass messageFormatClass = model.ref(MessageFormat.class);
+			JConditional outerIf = tryBody._if(fieldValue.invoke("contains").arg(JExpr.lit("T")));
+	
+			JConditional innerIf = outerIf._then()._if(fieldValue.invoke("contains").arg(JExpr.lit("/")));
+	
+			innerIf._then()._return(instantClass.staticInvoke("from")
+					.arg(zonedDateTimeClass.staticInvoke("parse").arg(fieldValue)).invoke("toEpochMilli").div(1000));
+	
+			innerIf._elseif(fieldValue.invoke("contains").arg("Z"))._then()
+					._return(instantClass.staticInvoke("parse").arg(fieldValue).invoke("toEpochMilli").div(1000));
+	
+			innerIf._else()._return(instantClass.staticInvoke("from")
+					.arg(offsetDateTimeClass.staticInvoke("parse").arg(fieldValue)).invoke("toEpochMilli").div(1000));
+	
+			JVar matcher = tryBody.decl(matcherClass, "matcher", datePattern.invoke("matcher").arg(fieldValue));
+	
+			JConditional ifMatches = tryBody._if(matcher.invoke("matches"));
+	
+			JBlock ifMatchesBlock = ifMatches._then();
+	
+			JVar datePart = ifMatchesBlock.decl(stringClass, "datePart", matcher.invoke("group").arg(JExpr.lit(1)));
+	
+			JVar zoneOffset = ifMatchesBlock.decl(stringClass, "zoneOffset", matcher.invoke("group").arg(JExpr.lit(2)));
+	
+			ifMatchesBlock
+					._if(zoneOffset.invoke("length").eq(JExpr.lit(0)).cor(zoneOffset.invoke("equals").arg(JExpr.lit("Z"))))
+					._then().add(JExpr.assign(fieldValue, datePart.plus("T00:00:00.000").plus(zoneOffset)));
+	
+			ifMatchesBlock._return(instantClass.staticInvoke("from")
+					.arg(offsetDateTimeClass.staticInvoke("parse").arg(fieldValue)).invoke("toEpochMilli").div(1000));
+			AbstractJClass exceptionClass = model.ref(Exception.class);
+			JCatchBlock catchBlock = tryBlock._catch(exceptionClass);
+		    JVar message = catchBlock.body().decl(stringClass, "message");
+	        message.init(messageFormatClass.staticInvoke("format").arg("{0} has invalid date value ''{1}''").arg(fieldName).arg(JExpr.ref(fieldValue)));
+		    catchBlock.body().add(errorBuilder.invoke("addError").arg(message));
+		    temporalValueMethod.body()._return(JExpr._null());
+		}
+		
+		return temporalValueMethod;
+	    
+	    
+	}
+
+	private JMethod findTemporalValueMethod(JDefinedClass theClass) {
+		for (JMethod method : theClass.methods()) {
+			if (method.name().equals("temporalValue")) {
+				return method;
+			}
+		}
+		return null;
+	}
+
+
+	private JDefinedClass rootClass() {
+		AbstractJClass superclass = targetClass._extends();
+		if (superclass instanceof JDefinedClass) {
+			return (JDefinedClass) superclass;
+		}
+		return targetClass;
 	}
 }

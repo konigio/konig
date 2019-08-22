@@ -69,6 +69,7 @@ public class BasicTransformService implements ShowlTransformService {
 		Set<Object> memory = new HashSet<>();
 		
 		Map<ShowlPropertyShape,ShowlNodeShape> enumMap;
+		private ShowlPropertyShapeGroup targetModified;
 		private ShowlNodeShapeService nodeService;
 
 		public State(
@@ -84,6 +85,20 @@ public class BasicTransformService implements ShowlTransformService {
 			this.nodeService = nodeService;
 			this.enumMap = enumMap;
 		}
+		
+		
+
+		public ShowlPropertyShapeGroup getTargetModified() {
+			return targetModified;
+		}
+
+
+
+		public void setTargetModified(ShowlPropertyShapeGroup targetModified) {
+			this.targetModified = targetModified;
+		}
+
+
 
 		public boolean done() {
 			return propertyPool.isEmpty() || candidateSet.isEmpty();
@@ -171,6 +186,7 @@ public class BasicTransformService implements ShowlTransformService {
 
 		}
 
+		handleModifiedProperty(state);
 		handleTargetFormulas(state);
 		handleTeleportFormulas(state);
 		setTargetProperties(state.targetNode);
@@ -1015,7 +1031,7 @@ public class BasicTransformService implements ShowlTransformService {
 		while (sequence.hasNext()) {
 			ShowlPropertyShapeGroup targetProperty = sequence.next();
 
-			if (mapModified(targetProperty)) {
+			if (mapModified(state, targetProperty)) {
 				sequence.remove();
 				continue;
 			}
@@ -1056,9 +1072,9 @@ public class BasicTransformService implements ShowlTransformService {
 		return result;
 	}
 
-	private boolean mapModified(ShowlPropertyShapeGroup targetProperty) {
+	private boolean mapModified(State state, ShowlPropertyShapeGroup targetProperty) {
 		if (targetProperty.getPredicate().equals(Konig.modified)) {
-			targetProperty.direct().setSelectedExpression(ShowlSystimeExpression.INSTANCE);
+			state.setTargetModified(targetProperty);
 			return true;
 		}
 		return false;
@@ -1755,6 +1771,40 @@ public class BasicTransformService implements ShowlTransformService {
 			}
 		}
 
+	}
+	
+	private void handleModifiedProperty(State state) {
+
+		ShowlPropertyShapeGroup targetProperty = state.getTargetModified();
+		
+		if (targetProperty != null && targetProperty.getSelectedExpression()==null) {
+			ShowlDirectPropertyShape targetModified = targetProperty.direct();
+
+			ShowlNodeShape focusNode = focusSourceNode(state);
+			if (focusNode != null) {
+				ShowlDirectPropertyShape sourceModified = focusNode.getProperty(Konig.id);
+				if (sourceModified != null) {
+					targetModified.setSelectedExpression(new ShowlDirectPropertyExpression(sourceModified));
+					return;
+				}
+			}
+		
+			targetModified.setSelectedExpression(ShowlSystimeExpression.INSTANCE);
+		}
+	}
+
+	private ShowlNodeShape focusSourceNode(State state) {
+		ShowlNodeShape result = focusSourceNode();
+		if (result != null) {
+			return result;
+		}
+		List<ShowlChannel> list = state.targetNode.nonEnumChannels(schemaService.getOwlReasoner());
+		
+		return list.isEmpty() ? null : list.get(0).getSourceNode();
+	}
+
+	protected ShowlNodeShape focusSourceNode() {
+		return null;
 	}
 
 }

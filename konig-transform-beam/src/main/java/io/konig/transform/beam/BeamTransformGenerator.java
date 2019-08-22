@@ -3579,7 +3579,9 @@ public class BeamTransformGenerator {
 		AbstractJClass coGbkResultClass = model.ref(CoGbkResult.class);
 		AbstractJClass kvClass = model.ref(KV.class).narrow(stringClass).narrow(coGbkResultClass);
 		
-		MergeTargetFnGenerator generator = new MergeTargetFnGenerator(map,basePackage,nsManager,model,reasoner,typeManager());
+		MergeTargetFnGenerator generator = isTimeOrdered(targetNode) ? 
+				new TimeOrderedMergeTargetFnGenerator(map,basePackage,nsManager,model,reasoner,typeManager()) :
+				new MergeTargetFnGenerator(map,basePackage,nsManager,model,reasoner,typeManager());
 		mergeClass = generator.generate(targetNode, kvClass);
      // for (GroupInfo groupInfo : groupList) {
         //MergeFnGenerator2 generator = new MergeFnGenerator2(groupInfo);
@@ -3589,7 +3591,17 @@ public class BeamTransformGenerator {
     }
 
 
-    protected void defineKeyedCollectionTuples(JBlock body, List<GroupInfo> groupList) {
+    private boolean isTimeOrdered(ShowlNodeShape targetNode) {
+			for (ShowlChannel channel : targetNode.nonEnumChannels(reasoner)) {
+				ShowlNodeShape sourceNode = channel.getSourceNode();
+				if (sourceNode.getProperty(Konig.modified) == null) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		protected void defineKeyedCollectionTuples(JBlock body, List<GroupInfo> groupList) {
       // For now, we require that the key is a string.
       // We should relax this condition in the future.
       

@@ -67,7 +67,8 @@ public class OverlayTransformService extends BasicTransformService {
 		return peer != null;
 	}
 	
-	private  ShowlNodeShape focusSourceNode() {
+	@Override
+	protected  ShowlNodeShape focusSourceNode() {
 		ShowlSourceNodeFactory sourceNodeFactory = getSourceNodeFactory();
 		if (sourceNodeFactory instanceof OverlaySourceNodeFactory) {
 			return ((OverlaySourceNodeFactory) sourceNodeFactory).getSourceNode();

@@ -28,9 +28,38 @@ import org.apache.beam.sdk.transforms.DoFn;
 import com.google.api.services.bigquery.model.TableRow;
 
 public class Scratch {
+	
+
+	static class SourceProcessor implements Comparable<SourceProcessor> {
+		
+		private long modified;
+		private TableRow sourceRow;
+		
+		public SourceProcessor(long modified, TableRow sourceRow) {
+			this.modified = modified;
+			this.sourceRow = sourceRow;
+		}
+		
+		public void run(StringBuilder errorBuilder, TableRow outRow) {
+			
+		}
+
+		@Override
+		public int compareTo(SourceProcessor other) {
+			long delta = modified - other.modified;
+			return 
+				delta < 0 ? -1 :
+				delta == 0 ? 0 :
+				1;
+		}
+		
+		
+	}
+	
 	class ToPersonTargetShapeFn
   extends DoFn<TableRow, TableRow>
 {
+		
 
   @DoFn.ProcessElement
   public void processElement(ProcessContext c) {
