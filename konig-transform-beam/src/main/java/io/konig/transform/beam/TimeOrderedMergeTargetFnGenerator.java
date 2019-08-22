@@ -27,6 +27,7 @@ import com.helger.jcodemodel.JDefinedClass;
 import com.helger.jcodemodel.JExpr;
 import com.helger.jcodemodel.JFieldRef;
 import com.helger.jcodemodel.JFieldVar;
+import com.helger.jcodemodel.JForEach;
 import com.helger.jcodemodel.JInvocation;
 import com.helger.jcodemodel.JMethod;
 import com.helger.jcodemodel.JMod;
@@ -91,6 +92,15 @@ public class TimeOrderedMergeTargetFnGenerator extends MergeTargetFnGenerator {
 		}
 		
 		block.add(collectionsClass.staticInvoke("sort").arg(sourceList));
+		
+		// Invoke each SourceProcessor in the source list.
+		
+		JForEach forEach = block.forEach(sourceProcessorClass, "processor", sourceList);
+		
+		JVar processorVar = forEach.var();
+		JVar errorBuilder = blockInfo.getErrorBuilderVar();
+		JVar targetRow = blockInfo.getTableRowVar(targetNode.effectiveNode());
+		forEach.body().add(processorVar.invoke("run").arg(options).arg(errorBuilder).arg(targetRow));
 	}
 
 
@@ -237,7 +247,7 @@ public class TimeOrderedMergeTargetFnGenerator extends MergeTargetFnGenerator {
 		JBlock block = method.body();
 		String fieldName = sourceNode.getPath() + ".modified";
 		
-		JVar millis = block.decl(longClass, "millis").init(JExpr.invoke(etran.temporalValueMethod()).arg(fieldName).arg(row.invoke("get").arg("modified")).arg(blockInfo.getErrorBuilderVar()));
+		JVar millis = block.decl(longClass, "millis").init(JExpr.invoke(etran.unixTimeMethod()).arg(fieldName).arg(row.invoke("get").arg("modified")).arg(blockInfo.getErrorBuilderVar()));
 
 		block._if(millis.eqNull())._then()._return(JExpr._null());
 		
@@ -252,6 +262,7 @@ public class TimeOrderedMergeTargetFnGenerator extends MergeTargetFnGenerator {
 		JMethod run = processorClass.method(JMod.PUBLIC, model.VOID, "run");
 
     BeamExpressionTransform etran = new BeamExpressionTransform(reasoner, typeManager, model, processorClass);
+    etran.setOverlayPattern(true);
 		
 		BeamMethod beamMethod = new BeamMethod(run);
 		BlockInfo blockInfo = etran.beginBlock(beamMethod);

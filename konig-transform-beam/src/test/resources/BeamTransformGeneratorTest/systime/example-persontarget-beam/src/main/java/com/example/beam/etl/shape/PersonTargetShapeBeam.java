@@ -1,5 +1,6 @@
 package com.example.beam.etl.shape;
 
+import com.google.api.client.util.DateTime;
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.gcp.bigquery.TableRowJsonCoder;
@@ -31,7 +32,15 @@ public class PersonTargetShapeBeam {
 
     public static void main(String[] args) {
         PersonTargetShapeBeam.Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(PersonTargetShapeBeam.Options.class);
+        setModifiedUnixTime(options);
         process(options);
+    }
+
+    private static void setModifiedUnixTime(PersonTargetShapeBeam.Options options) {
+        String stringValue = options.getModifiedDate();
+        if (stringValue!= null) {
+            options.setModifiedUnixTime((new DateTime(stringValue).getValue()/ 1000));
+        }
     }
 
     public interface Options
@@ -59,5 +68,9 @@ public class PersonTargetShapeBeam {
         public String getModifiedDate();
 
         public void setModifiedDate(String modifiedDate);
+
+        public Long getModifiedUnixTime();
+
+        public void setModifiedUnixTime(Long modifiedUnixTime);
     }
 }

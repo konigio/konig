@@ -3431,6 +3431,10 @@ public class BeamTransformGenerator {
           .invoke("withValidation")
           .invoke("as").arg(optionsClass.staticRef("class")));
       
+      // setModifiedUnixTime(options);
+      
+      setModifiedUnixTime(optionsVar, method.body());
+      
       // process(options);
       
       method.body().add(JExpr.invoke("process").arg(optionsVar));
@@ -3439,7 +3443,27 @@ public class BeamTransformGenerator {
     }
 
 
-    private void declareOptionsClass() throws JClassAlreadyExistsException {
+    private void setModifiedUnixTime(JVar options, JBlock mainBody) {
+			
+    	if (targetNode.getProperty(Konig.modified)!=null) {
+    		
+    		JMethod method = mainClass.method(JMod.STATIC | JMod.PRIVATE, model.VOID, "setModifiedUnixTime");
+    		method.param(options.type(), "options");
+    		
+    		AbstractJClass stringClass = model.ref(String.class);
+  			AbstractJClass dateTimeClass = model.ref(DateTime.class);
+    		JBlock block = method.body();
+    		JVar stringValue = block.decl(stringClass, "stringValue").init(options.invoke("getModifiedDate"));
+    		block._if(stringValue.neNull())._then().add(
+    			options.invoke("setModifiedUnixTime").arg(dateTimeClass._new().arg(stringValue).invoke("getValue").div(1000))
+  			);
+    		
+    		mainBody.add(JExpr.invoke("setModifiedUnixTime").arg(options));
+    	}
+			
+		}
+
+		private void declareOptionsClass() throws JClassAlreadyExistsException {
 
       // public interface Options extends PipelineOptions {
       
@@ -3475,6 +3499,18 @@ public class BeamTransformGenerator {
       optionsClass.method(JMod.PUBLIC, String.class, "getModifiedDate");
       
       optionsClass.method(JMod.PUBLIC, model.VOID, "setModifiedDate").param(String.class, "modifiedDate");
+      
+      if (targetNode.getProperty(Konig.modified) != null) {
+      	// We only include the modifiedUnixTime option if the target node has the konig:modified property.
+      	// (That's the only case where this option is useful).
+      	
+      	// TODO: Move the modifiedDate property into this if condition also.
+      	// TODO: Rename "modifiedDate" to "modifiedTimestamp" since it includes time values (not just a date).
+	      
+	      optionsClass.method(JMod.PUBLIC, Long.class, "getModifiedUnixTime");
+	      
+	      optionsClass.method(JMod.PUBLIC, model.VOID, "setModifiedUnixTime").param(Long.class, "modifiedUnixTime");
+      }
       
       // }
     }

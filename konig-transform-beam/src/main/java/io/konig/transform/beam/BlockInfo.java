@@ -135,15 +135,6 @@ public class BlockInfo {
 	}
 
 	public JVar getOptionsVar() throws BeamTransformGenerationException {
-		if (optionsVar == null) {
-			StringBuilder builder = new StringBuilder();
-			builder.append("options parameter not found");
-			if (beamMethod!=null) {
-				builder.append(" in method ");
-				builder.append(beamMethod.name());
-			}
-			throw new BeamTransformGenerationException(builder.toString());
-		}
 		return optionsVar;
 	}
 

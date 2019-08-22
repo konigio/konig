@@ -1,5 +1,8 @@
 package io.konig.transform.beam;
 
+import com.helger.jcodemodel.JBlock;
+import com.helger.jcodemodel.JExpr;
+
 /*
  * #%L
  * Konig Transform Beam
@@ -24,7 +27,6 @@ package io.konig.transform.beam;
 import com.helger.jcodemodel.JVar;
 
 import io.konig.core.showl.ShowlPropertyShape;
-import io.konig.core.vocab.Konig;
 
 public class SimplePropertyGenerator extends TargetPropertyGenerator {
 
@@ -41,7 +43,6 @@ public class SimplePropertyGenerator extends TargetPropertyGenerator {
 
 		etran.addOutputRowAndErrorBuilderParams(beamMethod, targetProperty);
 		etran.addTableRowParameters(beamMethod, targetProperty);
-		etran.addPipelineOptionsParameters(beamMethod, targetProperty);
 		
 	}
 
@@ -51,11 +52,33 @@ public class SimplePropertyGenerator extends TargetPropertyGenerator {
 	protected void generateBody(BeamMethod beamMethod, ShowlPropertyShape targetProperty)
 			throws BeamTransformGenerationException {
 		
-		
-		JVar var = declareVariable(targetProperty);
-		captureValue(targetProperty, var);
+		if (etran.isOverlayPattern()) {
+			generateOverlayBody(beamMethod, targetProperty);
+		} else {
 
-		etran.peekBlockInfo().getBlock()._return(var);
+			JVar var = declareVariable(targetProperty);
+			captureValue(targetProperty, var);
+
+			etran.peekBlockInfo().getBlock()._return(var);
+		}
+		
+		
+	}
+
+
+
+	private void generateOverlayBody(BeamMethod beamMethod, ShowlPropertyShape targetProperty) throws BeamTransformGenerationException {
+
+		JVar result = etran.declareTargetPropertyValue(targetProperty);
+		BlockInfo blockInfo = etran.peekBlockInfo();
+		JBlock block = blockInfo.getBlock();
+	
+		block._if(result.neNull())._then()._return(result);
+		
+		block.assign(result, etran.transform(targetProperty.getSelectedExpression()));
+		captureValue(targetProperty, result);
+		
+		block._return(result);
 		
 	}
 

@@ -111,6 +111,8 @@ import io.konig.formula.FunctionModel;
 
 public class BeamExpressionTransform  {
 	private static Logger logger = LoggerFactory.getLogger(BeamExpressionTransform.class);
+	private static final String UNIX_TIME = "unixTime";
+	private static final String MODIFIED_TIMESTAMP ="modifiedTimestamp";
 
 	private OwlReasoner reasoner;
 	private BeamTypeManager typeManager;
@@ -125,6 +127,8 @@ public class BeamExpressionTransform  {
 	private int varCount = 0;
 	
 	private boolean treatNullAsFalse;
+	private boolean overlayPattern;
+	
 	private ArrayList<BlockInfo> blockStack;
 	
 	private BeamLiteralFactory literalFactory;
@@ -754,11 +758,44 @@ public class BeamExpressionTransform  {
 
 	
 
-	private IJExpression systime() {
-		AbstractJClass longClass = model.ref(Long.class);
-		AbstractJClass dateClass = model.ref(Date.class);
-		return longClass._new().arg(dateClass._new().invoke("getTime").div(1000L));
+	private IJExpression systime() throws BeamTransformGenerationException {
+		
+		JVar options = getOptionsVar();
+		
+		return JExpr.invoke( modifiedTimestampMethod()).arg(options);
 	}
+
+	private JVar getOptionsVar() throws BeamTransformGenerationException {
+		BlockInfo blockInfo = peekBlockInfo();
+		JVar options = blockInfo.getOptionsVar();
+		if (options == null) {
+			
+			// Inject an 'options' parameter into the enclosing method.
+			
+			BeamMethod beamMethod = blockInfo.getBeamMethod();
+			if (beamMethod == null) {
+				fail("Options parameter is not defined");
+			}
+			ShowlNodeShape targetNode = targetRoot();
+			AbstractJType optionsClass = typeManager.pipelineOptionsClass(RdfUtil.uri(targetNode.getId()));
+			
+			options = beamMethod.addParameter(BeamParameter.ofPipelineOptions(optionsClass)).getVar();
+			blockInfo.setOptionsVar(options);
+		}
+		
+		return options;
+	}
+
+
+	public boolean isOverlayPattern() {
+		return overlayPattern;
+	}
+
+
+	public void setOverlayPattern(boolean overlayPattern) {
+		this.overlayPattern = overlayPattern;
+	}
+
 
 	private IJExpression enumIndividualReference(ShowlEnumIndividualReference e) throws BeamTransformGenerationException {
 		URI iri = e.getIriValue();
@@ -1408,15 +1445,6 @@ public class BeamExpressionTransform  {
 		return var;
 		
 	}
-
-	public void addPipelineOptionsParameters(BeamMethod beamMethod, ShowlPropertyShape targetProperty) throws BeamTransformGenerationException {
-		if (Konig.modified.equals(targetProperty.getPredicate())) { 
-			URI shapeId = (URI) targetProperty.getDeclaringShape().getShape().getId();
-			AbstractJClass pipelineOptionsClass = typeManager.pipelineOptionsClass(RdfUtil.uri(shapeId));
-			BeamParameter param = BeamParameter.ofPipelineOptions(pipelineOptionsClass);
-			beamMethod.addParameter(param);
-		}
-	}
 	
 	public JInvocation createInvocation(BeamMethod method) throws BeamTransformGenerationException {
 		if (logger.isTraceEnabled()) {
@@ -1482,17 +1510,10 @@ public class BeamExpressionTransform  {
 	
 	public JVar declarePropertyValue(ShowlPropertyShape targetProperty) throws BeamTransformGenerationException {
 
-
-//		JInvocation invocation = null;
-//		if (Konig.modified.equals(property.getPredicate())) { 
-//			invocation = JExpr.invoke(temporalValueMethod()).arg("modified").arg(blockInfo.getOptionsVar().invoke("getModifiedDate").arg(blockInfo.getErrorBuilderVar())) ;
-//		}
 		IJExpression fieldValue = transform(targetProperty.getSelectedExpression());
 		return declarePropertyValue(targetProperty, fieldValue, null);
 	}
 
-
-	
 	public JVar declarePropertyValue(ShowlPropertyShape property, IJExpression fieldValue, AbstractJType fieldType) throws BeamTransformGenerationException {
 
 		BlockInfo blockInfo = peekBlockInfo();
@@ -1959,22 +1980,58 @@ public class BeamExpressionTransform  {
 	}
 	
 
+	public JMethod modifiedTimestampMethod() throws BeamTransformGenerationException {
+		JDefinedClass rootClass = rootClass();
+		JMethod method = findMethodByName(rootClass, MODIFIED_TIMESTAMP);
+		if (method == null) {
+			AbstractJClass longClass = model.ref(Long.class);
+			method = rootClass.method(JMod.PRIVATE, longClass, MODIFIED_TIMESTAMP);
+			ShowlNodeShape targetRoot = targetRoot();
+			AbstractJClass optionClass = typeManager.pipelineOptionsClass(RdfUtil.uri(targetRoot.getId()));
+			AbstractJClass dateClass = model.ref(Date.class);
+			
+			JVar options = method.param(optionClass, "options");
+			JBlock block = method.body();
+			
+			JVar modifiedUnixTime = block.decl(longClass, "modifiedUnixTime").init(options.invoke("getModifiedUnixTime"));
+			IJExpression systime =  longClass._new().arg(dateClass._new().invoke("getTime").div(1000L));
+			block._return(JExpr.cond(modifiedUnixTime.neNull(), modifiedUnixTime, systime));
+		}
+		return method;
+	}
 
-	public JMethod temporalValueMethod() throws BeamTransformGenerationException {
+	private ShowlNodeShape targetRoot() throws BeamTransformGenerationException {
+		for (int i=blockStack.size()-1; i>=0; i--) {
+			BlockInfo info = blockStack.get(i);
+			BeamMethod method = info.getBeamMethod();
+			if (method != null) {
+				ShowlPropertyShape targetProperty = method.getTargetProperty();
+				if (targetProperty != null) {
+					return targetProperty.getRootNode();
+				}
+			}
+		}
+		fail("Target root node not found");
+		return null;
+	}
+	
+
+
+	public JMethod unixTimeMethod() throws BeamTransformGenerationException {
 		JDefinedClass theClass = rootClass();
-		JMethod temporalValueMethod = findTemporalValueMethod(theClass);
-		if (temporalValueMethod==null) {
+		JMethod method = findMethodByName(theClass, UNIX_TIME);
+		if (method==null) {
 			AbstractJClass exception = model.ref(Exception.class);
 			AbstractJClass stringClass = model.ref(String.class);
 			AbstractJClass errorBuilderClass = typeManager.errorBuilderClass();
 			
-			temporalValueMethod = theClass.method(JMod.PRIVATE, model.ref(Long.class), "temporalValue")
+			method = theClass.method(JMod.PRIVATE, model.ref(Long.class), UNIX_TIME)
 					._throws(exception);
-			JVar fieldName = temporalValueMethod.param(stringClass, "fieldName");
-			JVar fieldValue = temporalValueMethod.param(stringClass, "fieldValue");
-			JVar errorBuilder = temporalValueMethod.param(errorBuilderClass, "errorBuilder");
-			temporalValueMethod.body()._if(fieldValue.eqNull())._then()._return(JExpr._null());
-			JBlock block = temporalValueMethod.body()._if(fieldValue.invoke("length").gt(JExpr.lit(0)))._then();
+			JVar fieldName = method.param(stringClass, "fieldName");
+			JVar fieldValue = method.param(stringClass, "fieldValue");
+			JVar errorBuilder = method.param(errorBuilderClass, "errorBuilder");
+			method.body()._if(fieldValue.eqNull())._then()._return(JExpr._null());
+			JBlock block = method.body()._if(fieldValue.invoke("length").gt(JExpr.lit(0)))._then();
 			JTryBlock tryBlock = block._try();
 			JBlock tryBody = tryBlock.body();
 			AbstractJClass patternClass = model.ref(Pattern.class);
@@ -2025,17 +2082,17 @@ public class BeamExpressionTransform  {
 		    JVar message = catchBlock.body().decl(stringClass, "message");
 	        message.init(messageFormatClass.staticInvoke("format").arg("{0} has invalid date value ''{1}''").arg(fieldName).arg(JExpr.ref(fieldValue)));
 		    catchBlock.body().add(errorBuilder.invoke("addError").arg(message));
-		    temporalValueMethod.body()._return(JExpr._null());
+		    method.body()._return(JExpr._null());
 		}
 		
-		return temporalValueMethod;
+		return method;
 	    
 	    
 	}
 
-	private JMethod findTemporalValueMethod(JDefinedClass theClass) {
+	private JMethod findMethodByName(JDefinedClass theClass, String methodName) {
 		for (JMethod method : theClass.methods()) {
-			if (method.name().equals("temporalValue")) {
+			if (method.name().equals(methodName)) {
 				return method;
 			}
 		}
@@ -2049,5 +2106,22 @@ public class BeamExpressionTransform  {
 			return (JDefinedClass) superclass;
 		}
 		return targetClass;
+	}
+
+
+	public JVar declareTargetPropertyValue(ShowlPropertyShape targetProperty) throws BeamTransformGenerationException {
+		BlockInfo blockInfo = peekBlockInfo();
+		JVar rowValue = blockInfo.getTableRowVar(targetProperty.getDeclaringShape().effectiveNode());
+		AbstractJType type = typeManager.rdfJavaType(targetProperty).getJavaType();
+		JBlock block = blockInfo.getBlock();
+		String localName = targetProperty.getPredicate().getLocalName();
+		String varName = blockInfo.varName(localName);
+		IJExpression value = JExpr.cond(
+				rowValue.neNull(), 
+				rowValue.invoke("get").arg(localName).castTo(type), 
+				JExpr._null()
+		);
+		
+		return block.decl(type, varName).init(value);
 	}
 }

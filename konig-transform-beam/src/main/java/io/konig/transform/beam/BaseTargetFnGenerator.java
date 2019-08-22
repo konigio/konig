@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
@@ -114,16 +115,18 @@ public class BaseTargetFnGenerator {
   protected void processElementMethod(JDefinedClass thisClass, ShowlNodeShape targetNode, BeamExpressionTransform etran) 
   		throws BeamTransformGenerationException {
   	
-	  	AbstractJClass errorBuilderClass = errorBuilderClass();
+  	AbstractJClass errorBuilderClass = errorBuilderClass();
 		AbstractJClass processContextClass = model.ref(ProcessContext.class);
 		AbstractJClass tableRowClass = model.ref(TableRow.class);
-		
-		AbstractJClass pipelineOptionsClass = typeManager.pipelineOptionsClass(RdfUtil.uri(targetNode.getId()));
+		AbstractJClass pipelineOptionsClass = model.directClass(PipelineOptions.class.getName());
+		AbstractJClass customPipelineOptionsClass = typeManager.pipelineOptionsClass(RdfUtil.uri(targetNode.getId()));
 		AbstractJClass tupleTagTableRowClass = model.ref(TupleTag.class).narrow(tableRowClass);
 		
 		JMethod method = thisClass.method(JMod.PUBLIC, model.VOID, "processElement");
 		
 		BeamMethod beamMethod = new BeamMethod(method);
+		JVar c = method.param(processContextClass, "c");
+		JVar pipelineOptions = method.param(pipelineOptionsClass, "pipelineOptions");
 		
 		JVar deadLetterTag = thisClass
 				.field(JMod.PUBLIC | JMod.STATIC, tupleTagTableRowClass, "deadLetterTag")
@@ -132,7 +135,9 @@ public class BaseTargetFnGenerator {
 		JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC, tupleTagTableRowClass, "successTag")
 				.init(JExpr.direct("new TupleTag<TableRow>(){}"));
 
-
+		
+		JVar options = method.body().decl(customPipelineOptionsClass, "options").init(pipelineOptions.invoke("as").arg(JExpr.dotClass(customPipelineOptionsClass)));
+				 
 		JVar errorBuilder = method.body().decl(errorBuilderClass, "errorBuilder").init(errorBuilderClass._new());
 		
 		JTryBlock tryBlock = method.body()._try();
@@ -140,8 +145,7 @@ public class BaseTargetFnGenerator {
 		try {
 			blockInfo.beamMethod(beamMethod);
 			method.annotate(ProcessElement.class);
-			JVar c = method.param(processContextClass, "c");
-			JVar options = method.param(pipelineOptionsClass, "options");
+			blockInfo.setOptionsVar(options);
 
 			blockInfo.errorBuilderVar(errorBuilder);
 

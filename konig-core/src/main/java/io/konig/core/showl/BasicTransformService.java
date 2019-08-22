@@ -1782,7 +1782,7 @@ public class BasicTransformService implements ShowlTransformService {
 
 			ShowlNodeShape focusNode = focusSourceNode(state);
 			if (focusNode != null) {
-				ShowlDirectPropertyShape sourceModified = focusNode.getProperty(Konig.id);
+				ShowlDirectPropertyShape sourceModified = focusNode.getProperty(Konig.modified);
 				if (sourceModified != null) {
 					targetModified.setSelectedExpression(new ShowlDirectPropertyExpression(sourceModified));
 					return;
