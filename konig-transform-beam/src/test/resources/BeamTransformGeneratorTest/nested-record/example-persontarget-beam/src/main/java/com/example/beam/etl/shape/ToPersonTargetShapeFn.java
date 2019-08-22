@@ -5,6 +5,7 @@ import com.example.beam.etl.common.ErrorBuilder;
 import com.example.beam.etl.shape.PersonTargetShapeBeam.Options;
 import com.fasterxml.uuid.Generators;
 import com.google.api.services.bigquery.model.TableRow;
+import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
@@ -17,7 +18,8 @@ public class ToPersonTargetShapeFn
     public static TupleTag<TableRow> successTag = (new TupleTag<TableRow>(){});
 
     @ProcessElement
-    public void processElement(ProcessContext c, Options options) {
+    public void processElement(ProcessContext c, PipelineOptions pipelineOptions) {
+        Options options = pipelineOptions.as(Options.class);
         ErrorBuilder errorBuilder = new ErrorBuilder();
         try {
             TableRow outputRow = new TableRow();
