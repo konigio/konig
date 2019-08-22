@@ -26,6 +26,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -76,8 +77,8 @@ public class BaseTargetFnGenerator {
 	private String basePackage;
 	private NamespaceManager nsManager;
 	protected JCodeModel model;
-	private OwlReasoner reasoner;
-	private BeamTypeManager typeManager;
+	protected OwlReasoner reasoner;
+	protected BeamTypeManager typeManager;
 
 	public BaseTargetFnGenerator(String basePackage, NamespaceManager nsManager, JCodeModel model, OwlReasoner reasoner,
 			BeamTypeManager typeManager) {
@@ -111,10 +112,10 @@ public class BaseTargetFnGenerator {
 		return theClass;
 	}
 
-  private void processElementMethod(JDefinedClass thisClass, ShowlNodeShape targetNode, BeamExpressionTransform etran) 
+  protected void processElementMethod(JDefinedClass thisClass, ShowlNodeShape targetNode, BeamExpressionTransform etran) 
   		throws BeamTransformGenerationException {
   	
-	  	AbstractJClass errorBuilderClass = errorBuilderClass();
+  	AbstractJClass errorBuilderClass = errorBuilderClass();
 		AbstractJClass processContextClass = model.ref(ProcessContext.class);
 		AbstractJClass tableRowClass = model.ref(TableRow.class);
 		AbstractJClass pipelineOptionsClass = model.directClass(PipelineOptions.class.getName());
@@ -123,8 +124,9 @@ public class BaseTargetFnGenerator {
 		
 		JMethod method = thisClass.method(JMod.PUBLIC, model.VOID, "processElement");
 		
-		StructPropertyGenerator struct = new StructPropertyGenerator(etran);
 		BeamMethod beamMethod = new BeamMethod(method);
+		JVar c = method.param(processContextClass, "c");
+		JVar pipelineOptions = method.param(pipelineOptionsClass, "pipelineOptions");
 		
 		JVar deadLetterTag = thisClass
 				.field(JMod.PUBLIC | JMod.STATIC, tupleTagTableRowClass, "deadLetterTag")
@@ -134,7 +136,7 @@ public class BaseTargetFnGenerator {
 				.init(JExpr.direct("new TupleTag<TableRow>(){}"));
 
 		
-		method.body().decl(customPipelineOptionsClass, "options").init(JExpr.ref("pipelineOptions").invoke("as").arg(JExpr.dotClass(customPipelineOptionsClass)));
+		JVar options = method.body().decl(customPipelineOptionsClass, "options").init(pipelineOptions.invoke("as").arg(JExpr.dotClass(customPipelineOptionsClass)));
 				 
 		JVar errorBuilder = method.body().decl(errorBuilderClass, "errorBuilder").init(errorBuilderClass._new());
 		
@@ -143,8 +145,7 @@ public class BaseTargetFnGenerator {
 		try {
 			blockInfo.beamMethod(beamMethod);
 			method.annotate(ProcessElement.class);
-			JVar c = method.param(processContextClass, "c");
-			method.param(pipelineOptionsClass, "pipelineOptions");
+			blockInfo.setOptionsVar(options);
 
 			blockInfo.errorBuilderVar(errorBuilder);
 
@@ -153,24 +154,7 @@ public class BaseTargetFnGenerator {
 			ShowlEffectiveNodeShape targetEffectiveNode = targetNode.effectiveNode();
 			
 			blockInfo.putTableRow(targetEffectiveNode, outputRow);
-			
-
-			StructInfo structInfo = struct.processNode(beamMethod, targetNode);
-			
-			for (ShowlEffectiveNodeShape node : structInfo.getNodeList()) {
-				declareTableRow(thisClass, etran, node, c);
-			}
-			
-			abortIfNoData(etran, structInfo.getNodeList(), targetNode);
-			
-			for (BeamMethod propertyMethod : structInfo.getMethodList()) {
-				etran.invoke(propertyMethod);				
-				if (Konig.modified.equals(propertyMethod.getTargetProperty().getPredicate())) { 
-					validateTemporalValue(thisClass, propertyMethod.getTargetProperty());					
-				}
-			}
-			
-			
+			processElementInternals(etran, targetNode, c, options);
 			provideOutput(successTag, deadLetterTag, tryBlock, c, outputRow, errorBuilder, targetNode);
 			
 			
@@ -201,9 +185,30 @@ public class BaseTargetFnGenerator {
 		
 	}
   	
-	private void abortIfNoData(
+	protected void processElementInternals(BeamExpressionTransform etran, ShowlNodeShape targetNode, JVar c, JVar options) throws BeamTransformGenerationException {
+
+		BlockInfo blockInfo = etran.peekBlockInfo();
+		BeamMethod beamMethod = blockInfo.getBeamMethod();
+		JDefinedClass thisClass = etran.getTargetClass();
+		
+		StructPropertyGenerator struct = new StructPropertyGenerator(etran);
+		StructInfo structInfo = struct.processNode(beamMethod, targetNode);
+		
+		for (ShowlEffectiveNodeShape node : structInfo.getNodeList()) {
+			declareTableRow(thisClass, etran, node, c);
+		}
+		
+		abortIfNoData(etran, structInfo.getNodeList(), targetNode);
+		
+		for (BeamMethod propertyMethod : structInfo.getMethodList()) {
+			etran.invoke(propertyMethod);	
+		}
+		
+	}
+
+	protected void abortIfNoData(
 			BeamExpressionTransform etran, 
-			List<ShowlEffectiveNodeShape> nodeList,
+			Collection<ShowlEffectiveNodeShape> nodeList,
 			ShowlNodeShape targetNode
 	) throws BeamTransformGenerationException {
 		
@@ -234,7 +239,7 @@ public class BaseTargetFnGenerator {
 		
 	}
 
-	private boolean requiresEarlyAbort(List<ShowlEffectiveNodeShape> nodeList, ShowlNodeShape targetNode) {
+	private boolean requiresEarlyAbort(Collection<ShowlEffectiveNodeShape> nodeList, ShowlNodeShape targetNode) {
 		int count = 0;
 		for (ShowlEffectiveNodeShape node : nodeList) {
 			if (node.canonicalNode().getId().equals(targetNode.getId())) {
@@ -247,65 +252,6 @@ public class BaseTargetFnGenerator {
 		return false;
 	}
 
-
-	private void validateTemporalValue(JDefinedClass thisClass, ShowlPropertyShape property) {
-		AbstractJClass exception = model.ref(Exception.class);
-		AbstractJClass stringClass = model.ref(String.class);
-		JMethod temporalValueMethod = thisClass.method(JMod.PRIVATE, model.ref(Long.class), "temporalValue")
-				._throws(exception);
-		JVar stringValue = temporalValueMethod.param(model.ref(String.class), "stringValue");
-		JBlock block = temporalValueMethod.body()._if(stringValue.neNull().cand(stringValue.invoke("length").gt(JExpr.lit(0))))._then();
-		JTryBlock tryBlock = block._try();
-		JBlock tryBody = tryBlock.body();
-		AbstractJClass patternClass = model.ref(Pattern.class);
-		JFieldVar datePattern = thisClass.field(JMod.PRIVATE | JMod.FINAL | JMod.STATIC, patternClass, "DATE_PATTERN",
-				patternClass.staticInvoke("compile").arg(JExpr.lit("(\\d+-\\d+-\\d+)(.*)")));
-
-		AbstractJClass dateTime = model.ref(DateTime.class);
-		JVar dateTimeVar = tryBody.decl(dateTime, "dateTimeValue").init(dateTime._new().arg(stringValue));
-		JConditional isDateIf = tryBody._if(dateTimeVar.invoke("isDateOnly"));
-		isDateIf._then()._return(dateTimeVar.invoke("getValue").div(1000));
-
-		AbstractJClass instantClass = model.ref(Instant.class);
-		AbstractJClass offsetDateTimeClass = model.ref(OffsetDateTime.class);
-		AbstractJClass matcherClass = model.ref(Matcher.class);
-		AbstractJClass zonedDateTimeClass = model.ref(ZonedDateTime.class);
-		JConditional outerIf = tryBody._if(stringValue.invoke("contains").arg(JExpr.lit("T")));
-
-		JConditional innerIf = outerIf._then()._if(stringValue.invoke("contains").arg(JExpr.lit("/")));
-
-		innerIf._then()._return(instantClass.staticInvoke("from")
-				.arg(zonedDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli").div(1000));
-
-		innerIf._elseif(stringValue.invoke("contains").arg("Z"))._then()
-				._return(instantClass.staticInvoke("parse").arg(stringValue).invoke("toEpochMilli").div(1000));
-
-		innerIf._else()._return(instantClass.staticInvoke("from")
-				.arg(offsetDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli").div(1000));
-
-		JVar matcher = tryBody.decl(matcherClass, "matcher", datePattern.invoke("matcher").arg(stringValue));
-
-		JConditional ifMatches = tryBody._if(matcher.invoke("matches"));
-
-		JBlock ifMatchesBlock = ifMatches._then();
-
-		JVar datePart = ifMatchesBlock.decl(stringClass, "datePart", matcher.invoke("group").arg(JExpr.lit(1)));
-
-		JVar zoneOffset = ifMatchesBlock.decl(stringClass, "zoneOffset", matcher.invoke("group").arg(JExpr.lit(2)));
-
-		ifMatchesBlock
-				._if(zoneOffset.invoke("length").eq(JExpr.lit(0)).cor(zoneOffset.invoke("equals").arg(JExpr.lit("Z"))))
-				._then().add(JExpr.assign(stringValue, datePart.plus("T00:00:00.000").plus(zoneOffset)));
-
-		ifMatchesBlock._return(instantClass.staticInvoke("from")
-				.arg(offsetDateTimeClass.staticInvoke("parse").arg(stringValue)).invoke("toEpochMilli").div(1000));
-		AbstractJClass exceptionClass = model.ref(Exception.class);
-		JCatchBlock catchBlock = tryBlock._catch(exceptionClass);
-	    JVar message = catchBlock.body().decl(model._ref(String.class), "message");
-        message.init(model.directClass("String").staticInvoke("format").arg("Invalid "+property.getPath()+" date %s;").arg(JExpr.ref(stringValue)));
-	    catchBlock.body()._throw(exceptionClass._new().arg(message));
-	    temporalValueMethod.body()._return(JExpr._null());
-	}
   
   	private void provideOutput(
 			JVar successTag,

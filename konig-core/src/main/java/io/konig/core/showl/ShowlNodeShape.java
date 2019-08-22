@@ -562,8 +562,8 @@ public class ShowlNodeShape implements Traversable {
       if (!reasoner.isEnumerationClass(sourceNode.getOwlClass().getId())) {
         if (list == null) {
         	list = new ArrayList<>();
-        	list.add(c);
         }
+      	list.add(c);
       }
     }
     

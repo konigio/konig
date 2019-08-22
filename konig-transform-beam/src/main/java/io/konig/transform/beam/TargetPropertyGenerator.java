@@ -32,12 +32,51 @@ import com.helger.jcodemodel.JMethod;
 import com.helger.jcodemodel.JMod;
 import com.helger.jcodemodel.JVar;
 
+import io.konig.core.showl.ShowlAlternativePathsExpression;
+import io.konig.core.showl.ShowlArrayExpression;
+import io.konig.core.showl.ShowlDirectPropertyShape;
 import io.konig.core.showl.ShowlEffectiveNodeShape;
+import io.konig.core.showl.ShowlExpression;
 import io.konig.core.showl.ShowlPropertyShape;
+import io.konig.core.showl.ShowlUtil;
 
 public abstract class TargetPropertyGenerator {
 
 	protected BeamExpressionTransform etran;
+	
+	public static TargetPropertyGenerator create(BeamExpressionTransform etran, ShowlDirectPropertyShape p) throws BeamTransformGenerationException {
+		
+		
+		if (p.getValueShape()!=null && p.getValueShape().getOwlClass().isEnum(etran.getOwlReasoner())) {
+			return new EnumNodeGenerator(etran);
+		}
+		
+		ShowlExpression e = p.getSelectedExpression();
+		if (ShowlUtil.isEnumField(e)) {
+			return new EnumPropertyGenerator(etran);
+		}
+
+		if (e instanceof ShowlArrayExpression) {
+			return new MultiValuedTargetPropertyGenerator(etran);
+		}
+		
+		RdfJavaType type = etran.getTypeManager().rdfJavaType(p);
+		
+		if (type.isSimpleType()) {
+			return new SimplePropertyGenerator(etran);
+		}
+		
+		if (p.getValueShape()!=null) {
+			
+			if (p.getSelectedExpression() instanceof ShowlAlternativePathsExpression) {
+				return new AlternativePathsGenerator(etran);
+			}
+			
+			return new StructPropertyGenerator(etran);
+		}
+		
+		throw new BeamTransformGenerationException("Type not supported yet: " + type.getRdfType().getLocalName());
+	}
 	
 
 	public TargetPropertyGenerator(BeamExpressionTransform etran) {
@@ -116,7 +155,7 @@ public abstract class TargetPropertyGenerator {
 		
 		
 		StringBuilder builder = new StringBuilder();
-		if (!"processElement".equals(prefix)) {
+		if (!"processElement".equals(prefix) && !"run".equals(prefix)) {
 			builder.append(prefix);
 			builder.append('_');
 		}

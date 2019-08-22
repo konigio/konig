@@ -89,37 +89,7 @@ public class StructPropertyGenerator extends TargetPropertyGenerator {
 	
 
 	private TargetPropertyGenerator propertyGenerator(ShowlDirectPropertyShape p) throws BeamTransformGenerationException {
-		
-		
-		if (p.getValueShape()!=null && p.getValueShape().getOwlClass().isEnum(etran.getOwlReasoner())) {
-			return new EnumNodeGenerator(etran);
-		}
-		
-		ShowlExpression e = p.getSelectedExpression();
-		if (ShowlUtil.isEnumField(e)) {
-			return new EnumPropertyGenerator(etran);
-		}
-
-		if (e instanceof ShowlArrayExpression) {
-			return new MultiValuedTargetPropertyGenerator(etran);
-		}
-		
-		RdfJavaType type = etran.getTypeManager().rdfJavaType(p);
-		
-		if (type.isSimpleType()) {
-			return new SimplePropertyGenerator(etran);
-		}
-		
-		if (p.getValueShape()!=null) {
-			
-			if (p.getSelectedExpression() instanceof ShowlAlternativePathsExpression) {
-				return new AlternativePathsGenerator(etran);
-			}
-			
-			return this;
-		}
-		
-		throw new BeamTransformGenerationException("Type not supported yet: " + type.getRdfType().getLocalName());
+		return TargetPropertyGenerator.create(etran, p);
 	}
 
 	@Override

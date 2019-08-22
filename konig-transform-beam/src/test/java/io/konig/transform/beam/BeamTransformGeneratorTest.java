@@ -104,6 +104,14 @@ public class BeamTransformGeneratorTest {
 	private URI uri(String stringValue) {
 		return new URIImpl(stringValue);
 	}
+	
+	@Test
+	public void testTimeOrderedMultipleSources() throws Exception {
+		
+		generateAll("src/test/resources/BeamTransformGeneratorTest/time-ordered-multiple-source", true);
+		
+	}
+
 	/**
 	 * Test Case for Multiple Sources 
 	 * PersonName from gcs
