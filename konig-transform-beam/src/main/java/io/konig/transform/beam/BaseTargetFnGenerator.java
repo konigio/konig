@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
@@ -116,8 +117,8 @@ public class BaseTargetFnGenerator {
 	  	AbstractJClass errorBuilderClass = errorBuilderClass();
 		AbstractJClass processContextClass = model.ref(ProcessContext.class);
 		AbstractJClass tableRowClass = model.ref(TableRow.class);
-		
-		AbstractJClass pipelineOptionsClass = typeManager.pipelineOptionsClass(RdfUtil.uri(targetNode.getId()));
+		AbstractJClass pipelineOptionsClass = model.directClass(PipelineOptions.class.getName());
+		AbstractJClass customPipelineOptionsClass = typeManager.pipelineOptionsClass(RdfUtil.uri(targetNode.getId()));
 		AbstractJClass tupleTagTableRowClass = model.ref(TupleTag.class).narrow(tableRowClass);
 		
 		JMethod method = thisClass.method(JMod.PUBLIC, model.VOID, "processElement");
@@ -132,7 +133,9 @@ public class BaseTargetFnGenerator {
 		JVar successTag = thisClass.field(JMod.PUBLIC | JMod.STATIC, tupleTagTableRowClass, "successTag")
 				.init(JExpr.direct("new TupleTag<TableRow>(){}"));
 
-
+		
+		method.body().decl(customPipelineOptionsClass, "options").init(JExpr.ref("pipelineOptions").invoke("as").arg(JExpr.dotClass(customPipelineOptionsClass)));
+				 
 		JVar errorBuilder = method.body().decl(errorBuilderClass, "errorBuilder").init(errorBuilderClass._new());
 		
 		JTryBlock tryBlock = method.body()._try();
@@ -141,7 +144,7 @@ public class BaseTargetFnGenerator {
 			blockInfo.beamMethod(beamMethod);
 			method.annotate(ProcessElement.class);
 			JVar c = method.param(processContextClass, "c");
-			method.param(pipelineOptionsClass, "options");
+			method.param(pipelineOptionsClass, "pipelineOptions");
 
 			blockInfo.errorBuilderVar(errorBuilder);
 
@@ -251,7 +254,7 @@ public class BaseTargetFnGenerator {
 		JMethod temporalValueMethod = thisClass.method(JMod.PRIVATE, model.ref(Long.class), "temporalValue")
 				._throws(exception);
 		JVar stringValue = temporalValueMethod.param(model.ref(String.class), "stringValue");
-		JBlock block = temporalValueMethod.body()._if(stringValue.invoke("length").gt(JExpr.lit(0)))._then();
+		JBlock block = temporalValueMethod.body()._if(stringValue.neNull().cand(stringValue.invoke("length").gt(JExpr.lit(0))))._then();
 		JTryBlock tryBlock = block._try();
 		JBlock tryBody = tryBlock.body();
 		AbstractJClass patternClass = model.ref(Pattern.class);

@@ -11,6 +11,7 @@ import com.example.beam.etl.shape.PersonTargetShapeBeam.Options;
 import com.fasterxml.uuid.Generators;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.bigquery.model.TableRow;
+import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
@@ -24,7 +25,8 @@ public class ToPersonTargetShapeFn
     private static final Pattern DATE_PATTERN = Pattern.compile("(\\d+-\\d+-\\d+)(.*)");
 
     @ProcessElement
-    public void processElement(ProcessContext c, Options options) {
+    public void processElement(ProcessContext c, PipelineOptions pipelineOptions) {
+        Options options = pipelineOptions.as(Options.class);
         ErrorBuilder errorBuilder = new ErrorBuilder();
         try {
             TableRow outputRow = new TableRow();
@@ -98,7 +100,7 @@ public class ToPersonTargetShapeFn
     private Long temporalValue(String stringValue)
         throws Exception
     {
-        if (stringValue.length()> 0) {
+        if ((stringValue!= null)&&(stringValue.length()> 0)) {
             try {
                 DateTime dateTimeValue = new DateTime(stringValue);
                 if (dateTimeValue.isDateOnly()) {
