@@ -3431,6 +3431,9 @@ public class BeamTransformGenerator {
           .invoke("withValidation")
           .invoke("as").arg(optionsClass.staticRef("class")));
       
+      // setBatchBeginUnixTime(options);
+      setBatchBeginUnixTime(optionsVar, method.body());
+      
       // setModifiedUnixTime(options);
       
       setModifiedUnixTime(optionsVar, method.body());
@@ -3443,7 +3446,26 @@ public class BeamTransformGenerator {
     }
 
 
-    private void setModifiedUnixTime(JVar options, JBlock mainBody) {
+    private void setBatchBeginUnixTime(JVar options, JBlock mainBody) {
+			if (BeamUtil.hasBatchWindow(targetNode, reasoner)) {
+
+    		JMethod method = mainClass.method(JMod.STATIC | JMod.PRIVATE, model.VOID, "setBatchBeginUnixTime");
+    		method.param(options.type(), "options");
+    		
+  			AbstractJClass dateTimeClass = model.ref(DateTime.class);
+  		
+    		JBlock block = method.body();
+    		JInvocation stringValue = options.invoke("getBatchBegin");
+    		block.add(
+    			options.invoke("setBatchBeginUnixTime").arg(dateTimeClass._new().arg(stringValue).invoke("getValue").div(1000))
+  			);
+    		
+    		mainBody.add(JExpr.invoke(method).arg(options));
+			}
+			
+		}
+
+		private void setModifiedUnixTime(JVar options, JBlock mainBody) {
 			
     	if (targetNode.getProperty(Konig.modified)!=null) {
     		
@@ -3499,7 +3521,17 @@ public class BeamTransformGenerator {
       optionsClass.method(JMod.PUBLIC, String.class, "getModifiedDate");
       
       optionsClass.method(JMod.PUBLIC, model.VOID, "setModifiedDate").param(String.class, "modifiedDate");
-      
+      if (BeamUtil.hasBatchWindow(targetNode, reasoner)) {
+      	JMethod getBatchBegin = optionsClass.method(JMod.PUBLIC, String.class, "getBatchBegin");
+      	getBatchBegin.annotate(Required.class);
+        description = getBatchBegin.annotate(Description.class);
+        description.param(JExpr.lit("The date/time for the beginning of the batch window in ISO 8601 format"));
+        
+        optionsClass.method(JMod.PUBLIC, model.VOID, "setBatchBegin").param(String.class, "batchBegin");
+        
+        optionsClass.method(JMod.PUBLIC, Long.class, "getBatchBeginUnixTime");
+        optionsClass.method(JMod.PUBLIC, model.VOID, "setBatchBeginUnixTime").param(Long.class, "batchBeginUnixTime");
+      }
       if (targetNode.getProperty(Konig.modified) != null) {
       	// We only include the modifiedUnixTime option if the target node has the konig:modified property.
       	// (That's the only case where this option is useful).
@@ -3884,16 +3916,24 @@ public class BeamTransformGenerator {
 				fail("Unique key with repeated field not supported yet for node {0}", node.getPath());
 			}
 			
+			BatchWindowFilter windowFilter = batchWindowFilter();
+			
 			if (uniqueKey.flatten().size()>1) {
-				generator = new CompositeKeyFnGenerator(mainPackage(), etran(null), node, uniqueKey);
+				generator = new CompositeKeyFnGenerator(mainPackage(), etran(null), node, uniqueKey, windowFilter);
 			} else {
-				generator = new SimpleKeyFnGenerator(mainPackage(), etran(null), node, uniqueKey);
+				generator = new SimpleKeyFnGenerator(mainPackage(), etran(null), node, uniqueKey, windowFilter);
 			}
 			
     	return generator.generate();
     }
    
     
+		private BatchWindowFilter batchWindowFilter() {
+			return BeamUtil.hasBatchWindow(targetNode, reasoner) ?
+					new BatchWindowFilter(targetNode, optionsClass) : 
+					null;
+		}
+
 		private BeamExpressionTransform etran(JDefinedClass targetClass) {
 			
 			return new BeamExpressionTransform(reasoner, typeManager(), model, targetClass);
