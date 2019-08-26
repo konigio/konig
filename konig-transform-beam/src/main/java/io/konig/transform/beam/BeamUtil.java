@@ -311,4 +311,14 @@ public class BeamUtil {
 		throw new BeamTransformGenerationException("ShowlEnumNodeExpression not found for " + enumNode.getPath());
 	}
 
+	public static boolean hasBatchWindow(ShowlNodeShape targetNode, OwlReasoner reasoner) {
+
+		for (ShowlChannel channel : targetNode.nonEnumChannels(reasoner)) {
+			if (channel.getSourceNode().getProperty(Konig.modified)==null) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 }

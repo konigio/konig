@@ -40,8 +40,8 @@ import io.konig.core.showl.ShowlUniqueKey;
 public class SimpleKeyFnGenerator extends TableRowToKvFnGenerator {
 
 	public SimpleKeyFnGenerator(String mainPackage, BeamExpressionTransform etran, ShowlNodeShape sourceNode,
-			ShowlUniqueKey uniqueKey) {
-		super(mainPackage, etran, sourceNode, uniqueKey);
+			ShowlUniqueKey uniqueKey, SourceRowFilter windowFilter) {
+		super(mainPackage, etran, sourceNode, uniqueKey, windowFilter);
 	}
 
 	@Override

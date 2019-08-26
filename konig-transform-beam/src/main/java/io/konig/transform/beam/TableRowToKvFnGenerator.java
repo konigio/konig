@@ -55,17 +55,20 @@ abstract public class TableRowToKvFnGenerator {
 	protected ShowlUniqueKey uniqueKey;
 	private String mainPackage;
 	protected BeamExpressionTransform etran;
+	private SourceRowFilter windowFilter;
 
 	protected JDefinedClass fnClass;
 	protected AbstractJType keyType;
 	protected AbstractJClass kvClass;
 	
 	protected TableRowToKvFnGenerator(String mainPackage, BeamExpressionTransform etran, ShowlNodeShape sourceNode,
-			ShowlUniqueKey uniqueKey) {
+			ShowlUniqueKey uniqueKey, SourceRowFilter windowFilter) {
 		this.mainPackage = mainPackage;
 		this.etran = etran;
 		this.sourceNode = sourceNode;
 		this.uniqueKey = uniqueKey;
+		this.windowFilter = windowFilter;
+		
 	}
 
 	public JDefinedClass generate() throws BeamTransformGenerationException {
@@ -124,6 +127,11 @@ abstract public class TableRowToKvFnGenerator {
 			
 			JVar row = block.decl(tableRowClass, "row").init(c.invoke("element"));
 			blockInfo.putTableRow(sourceNode.effectiveNode(), row);
+			
+			if (windowFilter!=null) {
+				windowFilter.addFilter(etran, sourceNode, c, row);
+			}
+			
 			JVar keyValue = computeKey(row, c);
 			AbstractJClass plainKvClass = model.ref(KV.class);
 

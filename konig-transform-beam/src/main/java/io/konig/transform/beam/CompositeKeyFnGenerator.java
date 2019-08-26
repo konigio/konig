@@ -41,8 +41,8 @@ import io.konig.core.showl.UniqueKeyElement;
 public class CompositeKeyFnGenerator extends TableRowToKvFnGenerator {
 
 	protected CompositeKeyFnGenerator(String mainPackage, BeamExpressionTransform etran, ShowlNodeShape sourceNode,
-			ShowlUniqueKey uniqueKey) {
-		super(mainPackage, etran, sourceNode, uniqueKey);
+			ShowlUniqueKey uniqueKey, SourceRowFilter windowFilter) {
+		super(mainPackage, etran, sourceNode, uniqueKey, windowFilter);
 	}
 
 	@Override

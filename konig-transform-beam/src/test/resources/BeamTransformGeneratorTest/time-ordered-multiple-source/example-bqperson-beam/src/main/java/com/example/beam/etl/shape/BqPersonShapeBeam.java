@@ -42,8 +42,13 @@ public class BqPersonShapeBeam {
 
     public static void main(String[] args) {
         BqPersonShapeBeam.Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(BqPersonShapeBeam.Options.class);
+        setBatchBeginUnixTime(options);
         setModifiedUnixTime(options);
         process(options);
+    }
+
+    private static void setBatchBeginUnixTime(BqPersonShapeBeam.Options options) {
+        options.setBatchBeginUnixTime((new DateTime(options.getBatchBegin()).getValue()/ 1000));
     }
 
     private static void setModifiedUnixTime(BqPersonShapeBeam.Options options) {
@@ -78,6 +83,16 @@ public class BqPersonShapeBeam {
         public String getModifiedDate();
 
         public void setModifiedDate(String modifiedDate);
+
+        @Validation.Required
+        @Description("The date/time for the beginning of the batch window in ISO 8601 format")
+        public String getBatchBegin();
+
+        public void setBatchBegin(String batchBegin);
+
+        public Long getBatchBeginUnixTime();
+
+        public void setBatchBeginUnixTime(Long batchBeginUnixTime);
 
         public Long getModifiedUnixTime();
 
