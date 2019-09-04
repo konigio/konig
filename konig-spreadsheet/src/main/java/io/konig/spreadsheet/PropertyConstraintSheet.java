@@ -221,8 +221,8 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 			if (RDF.TYPE.equals(predicate)) {
 				if (valueClass == null) {
 					valueClass = OWL.CLASS;
-				} else if (!valueClass.equals(OWL.CLASS)) {
-					fail(row, VALUE_CLASS, "In Shape {0}, the Value Class of rdf:type must be owl:Class", compactName(shapeId));
+				} else if (!reasoner.isSubClassOf(valueClass, OWL.CLASS)) {
+					fail(row, VALUE_CLASS, "In Shape {0}, the Value Class of rdf:type must be owl:Class (or inherit from owl:Class)", compactName(shapeId));
 				}
 				
 				if (valueIn != null && valueIn.size()==1) {
