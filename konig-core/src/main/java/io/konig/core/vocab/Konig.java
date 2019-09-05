@@ -75,6 +75,8 @@ public class Konig {
 		public static final String receivesDataFrom = "http://www.konig.io/ns/core/receivesDataFrom";
 		public static final String etlPattern = "http://www.konig.io/ns/core/etlPattern";
 		public static final String OverlayPattern = "http://www.konig.io/ns/core/OverlayPattern";
+		public static final String ldContext = "http://www.konig.io/ns/core/ldContext";
+		public static final String language = "http://www.konig.io/ns/core/language";
 	}
 	
 	// ChangeSet terms
@@ -95,6 +97,7 @@ public class Konig {
 	public static final URI shapeInstanceCount = new URIImpl("http://www.konig.io/ns/core/shapeInstanceCount");
 	public static final URI TermStatus = new URIImpl("http://www.konig.io/ns/core/TermStatus");
 	public static final URI termStatus = new URIImpl("http://www.konig.io/ns/core/termStatus");
+	
 	// Generic Data Modeling
 
 	public static final URI EnumNamespace = new URIImpl("http://www.konig.io/ns/core/EnumNamespace");
@@ -125,6 +128,8 @@ public class Konig {
 	public static final URI receivesDataFrom = new URIImpl(Terms.receivesDataFrom);
 	public static final URI etlPattern = new URIImpl(Terms.etlPattern);
 	public static final URI OverlayPattern = new URIImpl(Terms.OverlayPattern);
+	public static final URI ldContext = new URIImpl(Terms.ldContext);
+	public static final URI language = new URIImpl(Terms.language);
 	
 
 	public static final URI propertyPath = new URIImpl(Terms.propertyPath);
