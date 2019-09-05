@@ -230,6 +230,7 @@ import io.konig.schemagen.jsonschema.JsonSchemaTypeMapper;
 import io.konig.schemagen.jsonschema.ShapeToJsonSchema;
 import io.konig.schemagen.jsonschema.ShapeToJsonSchemaLinker;
 import io.konig.schemagen.jsonschema.TemplateJsonSchemaNamer;
+import io.konig.schemagen.jsonschema.doc.JsonSchemaDocumentationGenerator;
 import io.konig.schemagen.jsonschema.impl.SmartJsonSchemaTypeMapper;
 import io.konig.schemagen.ocms.OracleCloudResourceGenerator;
 import io.konig.schemagen.ocms.OracleTableWriter;
@@ -1140,6 +1141,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 				outDir = new File(mavenProject.getBasedir(), "target/generated/json-schema");
 				jsonSchema.setJsonSchemaDir(outDir);
 			}
+			generator.setDocumentationGenerator(new JsonSchemaDocumentationGenerator());
 			generator.generateAll(shapeManager.listShapes(), outDir);
 		}
 		
