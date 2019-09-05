@@ -475,7 +475,8 @@ public class OwlReasoner {
 			URI uri = (URI) id;
 			if (
 				XMLSchema.NAMESPACE.equals(uri.getNamespace()) ||
-				GEO.WKT_LITERAL.equals(id)
+				GEO.WKT_LITERAL.equals(id) ||
+				RDF.LANGSTRING.equals(id)
 			) {
 				return true;
 			}

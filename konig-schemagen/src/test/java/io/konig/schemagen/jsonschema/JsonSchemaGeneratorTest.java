@@ -75,6 +75,32 @@ public class JsonSchemaGeneratorTest {
 	JsonSchemaGenerator generator = new JsonSchemaGenerator(namer, nsManager, typeMapper);
 	
 	@Test
+	public void testJsonld() throws Exception {
+
+		load("src/test/resources/JsonSchemaGeneratorTest/jsonld");
+		URI shapeId = uri("http://example.com/ns/shape/PersonShape");
+		Shape shape = shapeManager.getShapeById(shapeId);
+
+		ObjectNode schema = generator.generateJsonSchema(shape);
+		
+		ObjectNode properties = (ObjectNode) schema.get("properties");
+		assertTrue(properties.get("@context")!=null);
+		assertTrue(schema.get("definitions").get("LinkedDataContextShape").get("properties").get("@language")!=null);
+		
+		assertEquals(properties.get("jobTitle").get("type").asText(), "string");
+
+//		ObjectMapper mapper = new ObjectMapper();
+//		
+//		mapper.enable(SerializationFeature.INDENT_OUTPUT);
+//		mapper.setSerializationInclusion(Include.NON_NULL);
+//		String actualJson = mapper.writeValueAsString(schema);
+//		
+//		
+//		System.out.println(actualJson);
+		
+	}
+	
+	@Test
 	public void testObjectArray() throws Exception {
 
 		load("src/test/resources/object-array");

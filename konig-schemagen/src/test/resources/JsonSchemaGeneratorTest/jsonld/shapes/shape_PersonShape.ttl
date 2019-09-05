@@ -1,0 +1,25 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonShape sh:property  [ 
+		sh:path schema:jobTitle ; 
+		rdfs:comment "The person's job title" ; 
+		sh:datatype rdf:langString ; 
+		rdf:predicate schema:jobTitle ; 
+		sh:minCount 0 ; 
+		sh:maxCount 1
+	 ]  ,  [ 
+		sh:path konig:ldContext ; 
+		rdfs:comment "Encapsulates contextual information including the default language for text strings in this record." ; 
+		rdf:predicate konig:ldContext ; 
+		sh:minCount 1 ; 
+		sh:maxCount 1 ; 
+		sh:class konig:LinkedDataContext ; 
+		sh:shape shape:LinkedDataContextShape ]  ; 
+	a sh:Shape , sh:NodeShape ; 
+	sh:targetClass schema:Person . 

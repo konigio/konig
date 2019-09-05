@@ -1,5 +1,7 @@
 package io.konig.schemagen.jsonschema;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * Konig Schema Generator
@@ -37,6 +39,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
+import io.konig.core.vocab.Konig;
 import io.konig.core.vocab.SH;
 import io.konig.schemagen.GeneratedMediaTypeTransformer;
 import io.konig.schemagen.Generator;
@@ -99,7 +102,9 @@ public class JsonSchemaGenerator extends Generator {
 		private Set<String> memory = new HashSet<>();
 		private ObjectNode root;
 		private ObjectNode definitions;
-
+		private boolean ldLanguageExists=false;
+		
+		
 		public ObjectNode generateJsonSchema(Shape shape) {
 			
 			String schemaId = namer.schemaId(shape);
@@ -111,7 +116,7 @@ public class JsonSchemaGenerator extends Generator {
 				json.put("$ref", schemaId);
 			} else {
 				if (memory.isEmpty()) {
-					json.put("$schema", "http://json-schema.org/draft-04/schema#");
+					json.put("$schema", "http://json-schema.org/draft-05/schema#");
 				}
 				
 				memory.add(schemaId);
@@ -122,8 +127,47 @@ public class JsonSchemaGenerator extends Generator {
 				
 				putProperties(json, shape);
 				putOrConstraint(json, shape);
+				putRequired(json, shape);
 			}
 			return json;
+		}
+
+
+		private void putRequired(ObjectNode json, Shape shape) {
+			List<PropertyConstraint> requiredList = requiredList(shape);
+			if (!requiredList.isEmpty()) {
+				ArrayNode array = mapper.createArrayNode();
+				for (PropertyConstraint p : requiredList) {
+					String fieldName = p.getPredicate().getLocalName();
+					array.add(fieldName);
+				}
+				json.set("required", array);
+			}
+		}
+
+
+		private List<PropertyConstraint> requiredList(Shape shape) {
+			List<PropertyConstraint> list = new ArrayList<>();
+			for (PropertyConstraint p : shape.getProperty()) {
+				if (p.getMinCount() != null && p.getMinCount()>0 && p.getPredicate()!=null) {
+					list.add(p);
+				}
+			}
+			return list;
+		}
+
+
+		private void processJsonLdContext(ObjectNode json, Shape shape) {
+			
+			PropertyConstraint p = shape.getPropertyConstraint(Konig.ldContext);
+			if (p != null) {
+				putProperty(json, p);
+				Shape valueShape = p.getShape();
+				if (valueShape!=null) {
+					ldLanguageExists = valueShape.getPropertyConstraint(Konig.language) != null;
+				}
+			}
+			
 		}
 
 		private void putOrConstraint(ObjectNode json, Shape shape) {
@@ -153,13 +197,22 @@ public class JsonSchemaGenerator extends Generator {
 		}
 
 		private void putProperties(ObjectNode json, Shape shape) {
+
 			
 			boolean hasIdProperty =  (shape.getNodeKind() == NodeKind.IRI);
 			
 			List<PropertyConstraint> list = shape.getProperty();
+			
+			
 			if (hasIdProperty  || !list.isEmpty()) {
+				
+
+				boolean languageExists = ldLanguageExists;
+				
 				ObjectNode properties = mapper.createObjectNode();
 				json.set("properties", properties);
+
+				processJsonLdContext(properties, shape);
 				
 				if (hasIdProperty) {
 					addIdProperty(properties, shape);
@@ -167,12 +220,16 @@ public class JsonSchemaGenerator extends Generator {
 				
 				json.put("additionalProperties", additionalProperties);
 				for (PropertyConstraint constraint : list) {
-					
+					if (Konig.ldContext.equals(constraint.getPredicate())) {
+						continue;
+					}
 					if (shapeTransformer != null) {
 						constraint = shapeTransformer.transform(shape, constraint);
 					}
 					putProperty(properties, constraint);
 				}
+				
+				ldLanguageExists = languageExists;
 			}
 			
 			// TODO: list required fields.
@@ -203,7 +260,7 @@ public class JsonSchemaGenerator extends Generator {
 				return;
 			}
 			
-			String fieldName = propertyId.getLocalName();
+			String fieldName = fieldName(property);
 
 			Integer maxCount = property.getMaxCount();
 			
@@ -226,7 +283,18 @@ public class JsonSchemaGenerator extends Generator {
 			
 		}
 		
-		
+		private String fieldName(PropertyConstraint property) {
+
+			URI propertyId = property.getPredicate();
+			if (Konig.language.equals(propertyId)) {
+				return "@language";
+			}
+			if (Konig.ldContext.equals(propertyId)) {
+				return "@context";
+			}
+			return propertyId.getLocalName();
+		}
+
 		private ObjectNode createType(String fieldName, PropertyConstraint property, ObjectNode field) {
 			
 			
@@ -262,25 +330,30 @@ public class JsonSchemaGenerator extends Generator {
 				
 			} else if (RDF.LANGSTRING.equals(datatype)) {
 				
-				object.put("type", "object");
-				ObjectNode properties = mapper.createObjectNode();
-				object.set("properties", properties);
-				object.put("additionalProperties", additionalProperties);
+				if (ldLanguageExists) {
+					object.put("type", "string");
+				} else {
 				
-				ObjectNode value = mapper.createObjectNode();
-				properties.set("@value", value);
-				value.put("type", "string");
-				
-				ObjectNode language = mapper.createObjectNode();
-				properties.set("@language", language);
-				
-				language.put("type", "string");
-				
-				ArrayNode array = mapper.createArrayNode();
-				object.set("required", array);
-				
-				array.add("@value");
-				array.add("@language");
+					object.put("type", "object");
+					ObjectNode properties = mapper.createObjectNode();
+					object.set("properties", properties);
+					object.put("additionalProperties", additionalProperties);
+					
+					ObjectNode value = mapper.createObjectNode();
+					properties.set("@value", value);
+					value.put("type", "string");
+					
+					ObjectNode language = mapper.createObjectNode();
+					properties.set("@language", language);
+					
+					language.put("type", "string");
+					
+					ArrayNode array = mapper.createArrayNode();
+					object.set("required", array);
+					
+					array.add("@value");
+					array.add("@language");
+				}
 				
 				
 			} else if (datatype != null) {
