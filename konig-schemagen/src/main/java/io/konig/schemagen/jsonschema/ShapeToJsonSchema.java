@@ -22,6 +22,7 @@ package io.konig.schemagen.jsonschema;
 
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
@@ -32,6 +33,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.konig.schemagen.SchemaGeneratorException;
+import io.konig.schemagen.jsonschema.doc.JsonSchemaDocumentationGenerator;
 import io.konig.shacl.Shape;
 
 public class ShapeToJsonSchema {
@@ -39,6 +41,7 @@ public class ShapeToJsonSchema {
 	private JsonSchemaGenerator generator;
 	private ObjectMapper mapper;
 	private JsonSchemaListener listener;
+	private JsonSchemaDocumentationGenerator documentationGenerator;
 	
 	public ShapeToJsonSchema(JsonSchemaGenerator generator) {
 		this.generator = generator;
@@ -49,6 +52,17 @@ public class ShapeToJsonSchema {
 
 	public JsonSchemaListener getListener() {
 		return listener;
+	}
+
+	
+
+	public JsonSchemaDocumentationGenerator getDocumentationGenerator() {
+		return documentationGenerator;
+	}
+
+
+	public void setDocumentationGenerator(JsonSchemaDocumentationGenerator documentationGenerator) {
+		this.documentationGenerator = documentationGenerator;
 	}
 
 
@@ -86,10 +100,34 @@ public class ShapeToJsonSchema {
 				listener.handleJsonSchema(shape, json);
 			}
 			mapper.writeValue(jsonSchemaFile, json);
+			
+
+			if (documentationGenerator != null) {
+				File parentDir = jsonSchemaFile.getParentFile();
+				File docsDir = new File(parentDir, "docs");
+				docsDir.mkdirs();
+				
+				String docFileName = documentationFileName(jsonSchemaFile);
+				File docFile = new File(docsDir, docFileName);
+				
+				try (FileWriter out = new FileWriter(docFile)) {
+					documentationGenerator.write(out, json);
+				}
+			}
+			
 		} catch (IOException e) {
 			throw new SchemaGeneratorException(e);
 		}
 		
+		
+	}
+
+
+	private String documentationFileName(File jsonSchemaFile) {
+		String name = jsonSchemaFile.getName();
+		int dot = name.lastIndexOf('.');
+		
+		return name.substring(0, dot) + ".txt";
 	}
 	
 
