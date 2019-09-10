@@ -24,8 +24,12 @@ package io.konig.schemagen.jsonschema.doc;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.StringTokenizer;
+
+import org.openrdf.model.impl.URIImpl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -43,25 +47,77 @@ public class JsonSchemaDocumentationGenerator {
 	public void write(Writer out, ObjectNode schema) throws IOException {
 		Worker worker = new Worker(schema, new PrettyPrintWriter(out));
 		worker.object(schema, null, null, false);
+		worker.footnotes();
 		worker.flush();
+	}
+	
+	private static class EnumInfo {
+		private int footnoteNumber;
+		private String enumType;
+		private ArrayNode enumArray;
+		public EnumInfo(int footnoteNumber, String enumType, ArrayNode enumArray) {
+			this.footnoteNumber = footnoteNumber;
+			this.enumType = enumType;
+			this.enumArray = enumArray;
+		}
+		public int getFootnoteNumber() {
+			return footnoteNumber;
+		}
+		public String getEnumType() {
+			return enumType;
+		}
+		public ArrayNode getEnumArray() {
+			return enumArray;
+		}
+		
+		
 	}
 	
 	private class Worker {
 		private PrettyPrintWriter out;
 		private ObjectNode root;
+		private List<EnumInfo> enumList;
+		private int footnoteCount=0;
 
 		public Worker(ObjectNode root, PrettyPrintWriter out) {
 			this.root = root;
 			this.out = out;
 		}
 		
+		public void footnotes() {
+			if (enumList!=null) {
+				for (EnumInfo info : enumList) {
+					int number = info.getFootnoteNumber();
+					ArrayNode enumArray = info.getEnumArray();
+					String enumType = info.getEnumType();
+					out.println();
+					out.print('[');
+					out.print(number);
+					out.print("] Members of the ");
+					if (enumType != null) {
+						out.print(enumType);
+						out.print(' ');
+					}
+					out.println("enumeration include:");
+					out.pushIndent();
+					for (JsonNode node : enumArray) {
+						out.indent();
+						out.println(node.asText());
+					}
+					
+					out.popIndent();
+				}
+			}
+			
+		}
+
 		private void flush() {
 			out.flush();
 		}
 		
 		private void object(ObjectNode schema, ObjectNode schemaRef, String accessorName, boolean moreFields) throws IOException {
 			out.print('{');
-			comment(required(schema, schemaRef, accessorName), null, description(schema, schemaRef));
+			comment(required(schema, schemaRef, accessorName), null, description(schema, schemaRef), null, null);
 			out.pushIndent();
 			 
 			emitProperties(schema, schemaRef);
@@ -79,6 +135,10 @@ public class JsonSchemaDocumentationGenerator {
 		}
 		
 
+
+		private ArrayNode enumList(ObjectNode schema, ObjectNode schemaRef) {
+			return (ArrayNode) get(schema, schemaRef, "enum");
+		}
 
 		private void emitProperties(ObjectNode schema, ObjectNode schemaRef) throws IOException {
 			ObjectNode properties = properties(schema, schemaRef);
@@ -187,12 +247,27 @@ public class JsonSchemaDocumentationGenerator {
 				out.print(type);
 				comma(hasNext);
 				if (withComment) {
-					comment(required(schema, schemaRef, fieldName), format(fieldSchema, fieldSchemaRef), description(fieldSchema, fieldSchemaRef));
+					comment(
+							required(schema, schemaRef, fieldName), 
+							format(fieldSchema, fieldSchemaRef), 
+							description(fieldSchema, fieldSchemaRef), 
+							enumList(fieldSchema, fieldSchemaRef),
+							enumType(fieldSchema, fieldSchemaRef)
+						);
 				}
 				break;
 				
 			}
 			
+		}
+
+		private String enumType(ObjectNode node, ObjectNode nodeRef) {
+			JsonNode value = get(node, nodeRef, JsonSchema.Extension.rdfType);
+			if (value != null) {
+				URIImpl uri = new URIImpl(value.asText());
+				return uri.getLocalName();
+			}
+			return null;
 		}
 
 		private void comma(boolean hasNext) {
@@ -219,7 +294,13 @@ public class JsonSchemaDocumentationGenerator {
 			out.pushIndent();
 			out.indent();
 			value(schema, schemaRef, items, itemsRef, fieldName, false, false);
-			comment(required(schema, schemaRef, fieldName), format(items, itemsRef), description(fieldSchema, fieldSchemaRef));
+			comment(
+					required(schema, schemaRef, fieldName), 
+					format(items, itemsRef), 
+					description(fieldSchema, fieldSchemaRef), 
+					enumList(items, itemsRef),
+					enumType(items, itemsRef)
+			);
 			out.popIndent();
 			out.indent();
 			out.print(']');
@@ -287,7 +368,7 @@ public class JsonSchemaDocumentationGenerator {
 			return node;
 		}
 
-		private void comment(boolean required, String format, String description) {
+		private void comment(boolean required, String format, String description, ArrayNode enumList, String enumType) {
 			
 			
 			if (required || format!=null || description!=null) {
@@ -308,9 +389,48 @@ public class JsonSchemaDocumentationGenerator {
 				if (description != null) {
 					out.print(description);
 				}
+				if (enumList!=null && enumList.size()>0) {
+					enumComment(description, enumList, enumType);
+				}
 			}
 			
 			out.println();
+			
+		}
+
+		private void enumComment(String description, ArrayNode enumArray, String enumType) {
+			if (description!=null && !description.endsWith(".")) {
+				out.print('.');
+			}
+			out.print(" ");
+			if (enumArray.size()==1) {
+				out.print("The value must be \"");
+				out.print(enumArray.get(0).asText());
+				out.print("\".");
+			} else if (enumArray.size()<=10) {
+				out.print("The value must be one of: ");
+				String comma = "";
+				for (JsonNode value : enumArray) {
+					out.print(comma);
+					comma = ", ";
+					out.print(value.asText());
+				}
+			} else {
+				int footnoteNumber = ++footnoteCount;
+				if (enumType != null) {
+					out.print("The value must be a member of the ");
+					out.print(enumType);
+					out.print(" enumeration.  ");
+				}
+				out.print("See [");
+				out.print(footnoteNumber);
+				out.print("] below for the complete list of possible values.");
+				EnumInfo info = new EnumInfo(footnoteNumber, enumType, enumArray);
+				if (enumList == null) {
+					enumList = new ArrayList<>();
+				}
+				enumList.add(info);
+			}
 			
 		}
 

@@ -45,6 +45,16 @@ public class Generator {
 		this.nsManager = nsManager;
 	}
 
+	public IriEnumStyle getIriEnumStyle() {
+		return iriEnumStyle;
+	}
+
+	public void setIriEnumStyle(IriEnumStyle iriEnumStyle) {
+		this.iriEnumStyle = iriEnumStyle;
+	}
+
+
+
 	protected String documentation(PropertyConstraint p) {
 		String doc = p.getComment();
 		if (doc != null) {

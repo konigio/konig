@@ -25,6 +25,7 @@ public class JsonSchema {
 
 	public static class Extension {
 		public static final String nodeShape = "nodeShape";
+		public static final String rdfType = "rdfType";
 	}
 
 }
