@@ -1,5 +1,7 @@
 package io.konig.schemagen.jsonschema.doc;
 
+import static org.junit.Assert.assertEquals;
+
 /*
  * #%L
  * Konig Schema Generator
@@ -22,12 +24,13 @@ package io.konig.schemagen.jsonschema.doc;
 
 
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 
+import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
@@ -62,9 +65,14 @@ public class JsonSchemaDocumentationGeneratorTest {
 	private JsonSchemaTypeMapper typeMapper = new SimpleJsonSchemaTypeMapper();
 	private JsonSchemaGenerator schemaGenerator = new JsonSchemaGenerator(namer, nsManager, typeMapper);
 	private JsonSchemaDocumentationGenerator generator  = new JsonSchemaDocumentationGenerator();
+	
+	@Before
+	public void setUp() {
+		schemaGenerator.setIncludeIdValue(true);
+	}
 
 	@Test
-	public void test() throws Exception {
+	public void testJsonLd() throws Exception {
 		String expected = "{\n" + 
 				"   \"@context\": { -- Encapsulates contextual information including the default language for text strings in this record.\n" + 
 				"      \"@language\": string  -- The BCP-47 language code for the default language of text strings in the enclosing resource.\n" + 
@@ -74,6 +82,25 @@ public class JsonSchemaDocumentationGeneratorTest {
 				"";
 		URI shapeId = uri("http://example.com/ns/shape/PersonShape");
 		String text = generate("src/test/resources/JsonSchemaGeneratorTest/jsonld", shapeId);
+		assertEquals(text, expected);
+	}
+	
+	@Test
+	public void testLogicalConstraints() throws Exception {
+		String expected = "{\n" + 
+				"   \"id\": string  -- The IRI that identifies this Person\n" + 
+				"   _______________________________________________\n" + 
+				"   Must match exactly one of the following 2 cases\n" + 
+				"   CASE 1 ... Full Name\n" + 
+				"   \"name\": string  -- (Required) \n" + 
+				"   _______________________________________________\n" + 
+				"   CASE 2 ... Name Parts\n" + 
+				"   \"givenName\": string, -- (Required) \n" + 
+				"   \"familyName\": string  -- (Required) \n" + 
+				"   _______________________________________________\n" + 
+				"}\n";
+		URI shapeId = uri("http://example.com/ns/shape/PersonShape");
+		String text = generate("src/test/resources/JsonSchemaGeneratorTest/logical-constraints", shapeId);
 		assertEquals(text, expected);
 	}
 

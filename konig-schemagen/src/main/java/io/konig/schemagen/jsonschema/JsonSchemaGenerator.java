@@ -32,7 +32,6 @@ import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -40,18 +39,19 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.vocab.Konig;
-import io.konig.core.vocab.SH;
 import io.konig.schemagen.GeneratedMediaTypeTransformer;
 import io.konig.schemagen.Generator;
 import io.konig.schemagen.ShapeTransformer;
+import io.konig.shacl.Constraint;
 import io.konig.shacl.NodeKind;
-import io.konig.shacl.OrConstraint;
+import io.konig.shacl.NotConstraint;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
 
 public class JsonSchemaGenerator extends Generator {
 	
 	private boolean includeIdValue;
+	private boolean includeNodeShape=true;
 	private JsonSchemaNamer namer;
 	private JsonSchemaTypeMapper typeMapper;
 	private boolean additionalProperties;
@@ -121,17 +121,23 @@ public class JsonSchemaGenerator extends Generator {
 				
 				memory.add(schemaId);
 				if (includeIdValue) {
-					json.put("id", schemaId);
+					json.put("$id", schemaId);
+				}
+				if (includeNodeShape) {
+					json.put(JsonSchema.Extension.nodeShape, shape.getId().stringValue());
 				}
 				json.put("type", "object");
 				
 				putProperties(json, shape);
-				putOrConstraint(json, shape);
+				addConstraint(shape.getOr(), json, "anyOf");
+				addConstraint(shape.getAnd(), json, "allOf");
+				addConstraint(shape.getXone(), json, "oneOf");
+				addNot(shape, json);
+			
 				putRequired(json, shape);
 			}
 			return json;
 		}
-
 
 		private void putRequired(ObjectNode json, Shape shape) {
 			List<PropertyConstraint> requiredList = requiredList(shape);
@@ -170,16 +176,35 @@ public class JsonSchemaGenerator extends Generator {
 			
 		}
 
-		private void putOrConstraint(ObjectNode json, Shape shape) {
+
+
+		private void addNot(Shape shape, ObjectNode json) {
+			NotConstraint not = shape.getNot();
+			if (not != null) {
+
+				Shape s = not.getShape();
+				
+				ObjectNode node = null;
+				String schemaId = namer.schemaId(s);
+				if (memory.contains(schemaId)) {
+					node = mapper.createObjectNode();
+					node.put("$ref", schemaId);
+				} else {
+					node = generateJsonSchema(s);
+				}
+				
+				json.set("not", node);
+			}
 			
-			OrConstraint orConstraint = shape.getOr();
-			if (orConstraint != null) {
-				
+		}
+		
+		
+		private void addConstraint(Constraint constraint, ObjectNode json, String fieldName) {
+			if (constraint != null) {
+				List<Shape> list = constraint.getShapes();
 				ArrayNode array = mapper.createArrayNode();
-				json.set("anyOf", array);
-				
-				List<Shape> shapeList = orConstraint.getShapes();
-				for (Shape s : shapeList) {
+				json.set(fieldName, array);
+				for (Shape s : list) {
 					String schemaId = namer.schemaId(s);
 					if (memory.contains(schemaId)) {
 						ObjectNode node = mapper.createObjectNode();
@@ -190,11 +215,13 @@ public class JsonSchemaGenerator extends Generator {
 						array.add(node);
 					}
 				}
-				
-				
 			}
 			
 		}
+
+
+
+
 
 		private void putProperties(ObjectNode json, Shape shape) {
 

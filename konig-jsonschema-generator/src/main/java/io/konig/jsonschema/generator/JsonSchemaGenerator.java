@@ -39,9 +39,11 @@ import io.konig.jsonschema.model.JsonSchema.PropertyMap;
 import io.konig.jsonschema.model.JsonSchemaDatatype;
 import io.konig.shacl.AndConstraint;
 import io.konig.shacl.NodeKind;
+import io.konig.shacl.NotConstraint;
 import io.konig.shacl.OrConstraint;
 import io.konig.shacl.PropertyConstraint;
 import io.konig.shacl.Shape;
+import io.konig.shacl.XoneConstraint;
 
 public class JsonSchemaGenerator extends Generator {
 	
@@ -89,8 +91,34 @@ public class JsonSchemaGenerator extends Generator {
 		}
 
 		private void putConstraints(JsonSchema schema, Shape shape) throws JsonSchemaGeneratorException {
+			putXoneConstraints(schema, shape);
 			putOrConstraints(schema, shape);
 			putAndConstraints(schema, shape);
+			putNotConstraint(schema, shape);
+			
+		}
+
+		private void putNotConstraint(JsonSchema schema, Shape shape) throws JsonSchemaGeneratorException {
+
+			NotConstraint constraint = shape.getNot();
+			if (constraint ==null) {
+				return;
+			}
+			
+			schema.setNot(asJsonSchema(constraint.getShape()));
+			
+		}
+
+		private void putXoneConstraints(JsonSchema schema, Shape shape) throws JsonSchemaGeneratorException {
+
+			XoneConstraint constraint = shape.getXone();
+			if (constraint != null && !constraint.getShapes().isEmpty()) {
+				List<JsonSchema> list = new ArrayList<>();
+				for (Shape s : constraint.getShapes()) {
+					list.add(asJsonSchema(s));
+				}
+				schema.setOneOf(list);
+			}
 			
 		}
 
