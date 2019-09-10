@@ -1,6 +1,7 @@
 package io.konig.schemagen.jsonschema;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 /*
  * #%L
@@ -30,14 +31,17 @@ import java.util.Set;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
 import io.konig.core.vocab.Konig;
 import io.konig.schemagen.GeneratedMediaTypeTransformer;
 import io.konig.schemagen.Generator;
@@ -55,6 +59,7 @@ public class JsonSchemaGenerator extends Generator {
 	private JsonSchemaNamer namer;
 	private JsonSchemaTypeMapper typeMapper;
 	private boolean additionalProperties;
+	private OwlReasoner reasoner;
 
 	/**
 	 * For now, we hard-code a GeneratedMediaTypeTransformer.  In the future, the shape
@@ -73,6 +78,46 @@ public class JsonSchemaGenerator extends Generator {
 	}
 	
 
+	protected Set<String> enumList(PropertyConstraint property) {
+		
+		Set<String> set = super.enumList(property);
+	
+		if (set == null && reasoner!=null) {
+			Resource rdfType = rdfType(property);
+			if (reasoner.isEnumerationClass(rdfType)) {
+
+				set = new HashSet<>();
+				
+				Graph graph = reasoner.getGraph();
+				Set<URI> uriSet = graph.v(rdfType).in(RDF.TYPE).toUriSet();
+				for (URI uri : uriSet) {
+					set.add(uri.getLocalName());
+				}
+			}
+			
+		}
+		return set;
+	}
+	
+
+	private Resource rdfType(PropertyConstraint property) {
+		if (property.getValueClass() != null) {
+			return property.getValueClass();
+		}
+		if (property.getShape()!=null) {
+			Resource result = property.getShape().getTargetClass();
+			if (result != null) {
+				return result;
+			}
+		}
+		return property.getDatatype();
+	}
+	public OwlReasoner getReasoner() {
+		return reasoner;
+	}
+	public void setReasoner(OwlReasoner reasoner) {
+		this.reasoner = reasoner;
+	}
 	public boolean isIncludeIdValue() {
 		return includeIdValue;
 	}
@@ -268,14 +313,36 @@ public class JsonSchemaGenerator extends Generator {
 			ObjectNode field = mapper.createObjectNode();
 			properties.set("id", field);
 			field.put("type", "string");
+			
 			if (shape.getTargetClass() != null) {
 				StringBuilder builder = new StringBuilder();
+				URI targetClass = shape.getTargetClass();
 				builder.append("The IRI that identifies this ");
-				builder.append(shape.getTargetClass().getLocalName());
+				builder.append(className(targetClass));
 				
 				field.put("description", builder.toString());
+				field.put(JsonSchema.Extension.rdfType, targetClass.stringValue());
+				if (reasoner!=null && reasoner.isEnumerationClass(targetClass)) {
+					List<String> list = new ArrayList<>();
+					
+					Graph graph = reasoner.getGraph();
+					Set<URI> uriSet = graph.v(targetClass).in(RDF.TYPE).toUriSet();
+					for (URI uri : uriSet) {
+						list.add(uri.getLocalName());
+					}
+					Collections.sort(list);
+					ArrayNode array = mapper.createArrayNode();
+					for (String value : list) {
+						array.add(value);
+					}
+					field.set("enum", array);
+				}
 			}
 			
+		}
+
+		private String className(URI targetClass) {
+			return OWL.THING.equals(targetClass) ? "entity" : targetClass.getLocalName();
 		}
 
 		private void putProperty(ObjectNode properties, PropertyConstraint property) {
@@ -321,6 +388,8 @@ public class JsonSchemaGenerator extends Generator {
 			}
 			return propertyId.getLocalName();
 		}
+		
+
 
 		private ObjectNode createType(String fieldName, PropertyConstraint property, ObjectNode field) {
 			
@@ -329,6 +398,7 @@ public class JsonSchemaGenerator extends Generator {
 			NodeKind nodeKind = property.getNodeKind();
 			URI datatype = property.getDatatype();
 			Resource valueShapeId = property.getShapeId();
+			Resource rdfType = rdfType(property);
 			
 			Set<String> enumList = null;
 			
@@ -445,6 +515,10 @@ public class JsonSchemaGenerator extends Generator {
 				if (definitions.get(valueSchemaName) == null) {
 					definitions.set(valueSchemaName, valueSchema);
 				}
+			}
+			
+			if (rdfType != null) {
+				object.put(JsonSchema.Extension.rdfType, rdfType.stringValue());
 			}
 			
 			return object;

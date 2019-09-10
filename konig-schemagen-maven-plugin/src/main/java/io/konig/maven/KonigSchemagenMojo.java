@@ -181,6 +181,7 @@ import io.konig.openapi.model.OpenAPI;
 import io.konig.schemagen.AllJsonldWriter;
 import io.konig.schemagen.CalculateMaximumRowSize;
 import io.konig.schemagen.InvalidDatatypeException;
+import io.konig.schemagen.IriEnumStyle;
 import io.konig.schemagen.OntologySummarizer;
 import io.konig.schemagen.SchemaGeneratorException;
 import io.konig.schemagen.ShapeMediaTypeLinker;
@@ -1131,6 +1132,8 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			JsonSchemaTypeMapper jsonSchemaTypeMapper = new SmartJsonSchemaTypeMapper(owlReasoner);
 			JsonSchemaNamer jsonSchemaNamer = TemplateJsonSchemaNamer.namer(nsManager, shapeManager, jsonSchema);
 			JsonSchemaGenerator jsonSchemaGenerator = new JsonSchemaGenerator(jsonSchemaNamer, nsManager, jsonSchemaTypeMapper);
+			jsonSchemaGenerator.setIriEnumStyle(IriEnumStyle.LOCAL);
+			jsonSchemaGenerator.setReasoner(owlReasoner);
 			ShapeToJsonSchema generator = new ShapeToJsonSchema(jsonSchemaGenerator);
 			if (jsonSchema.getGenerateSchemaId()) {
 				jsonSchemaGenerator.setIncludeIdValue(true);
