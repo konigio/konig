@@ -46,7 +46,7 @@ public class JsonSchemaDocumentationGenerator {
 	
 	public void write(Writer out, ObjectNode schema) throws IOException {
 		Worker worker = new Worker(schema, new PrettyPrintWriter(out));
-		worker.object(schema, null, null, false);
+		worker.object(schema, null, null, null, false);
 		worker.footnotes();
 		worker.flush();
 	}
@@ -78,10 +78,12 @@ public class JsonSchemaDocumentationGenerator {
 		private ObjectNode root;
 		private List<EnumInfo> enumList;
 		private int footnoteCount=0;
+		private String lineSeparator;
 
 		public Worker(ObjectNode root, PrettyPrintWriter out) {
 			this.root = root;
 			this.out = out;
+			lineSeparator = System.lineSeparator();
 		}
 		
 		public void footnotes() {
@@ -115,9 +117,14 @@ public class JsonSchemaDocumentationGenerator {
 			out.flush();
 		}
 		
-		private void object(ObjectNode schema, ObjectNode schemaRef, String accessorName, boolean moreFields) throws IOException {
+		private void object(ObjectNode schema, ObjectNode schemaRef, String accessorName, String comment, boolean moreFields) throws IOException {
+			
+			if (comment == null) {
+				comment = comment(required(schema, schemaRef, accessorName), null, description(schema, schemaRef), null, null);
+			}
 			out.print('{');
-			comment(required(schema, schemaRef, accessorName), null, description(schema, schemaRef), null, null);
+			out.print(comment);
+			
 			out.pushIndent();
 			 
 			emitProperties(schema, schemaRef);
@@ -152,7 +159,12 @@ public class JsonSchemaDocumentationGenerator {
 					quote(fieldName);
 					out.print(": ");
 	
-					value(schema, schemaRef, fieldSchema, fieldSchemaRef, fieldName, fieldNames.hasNext(), true);
+					value(
+							schema, schemaRef, 
+							fieldSchema, 	fieldSchemaRef, 
+							fieldName, 
+							null,
+							fieldNames.hasNext(), true);
 					
 				}
 			}
@@ -176,6 +188,7 @@ public class JsonSchemaDocumentationGenerator {
 			separator(separatorLength);
 			out.indent();
 			out.println(statement);
+			separator(separatorLength);
 			
 			for (int i=0; i<list.size(); i++) {
 				ObjectNode schema = (ObjectNode) list.get(i);
@@ -228,6 +241,7 @@ public class JsonSchemaDocumentationGenerator {
 				ObjectNode schema, ObjectNode schemaRef,
 				ObjectNode fieldSchema, ObjectNode fieldSchemaRef,
 				String fieldName, 
+				String comment, 
 				boolean hasNext,
 				boolean withComment
 		) throws IOException {
@@ -236,7 +250,7 @@ public class JsonSchemaDocumentationGenerator {
 			switch (type) {
 			
 			case "object" :
-				object(fieldSchema, fieldSchemaRef, fieldName, hasNext);
+				object(fieldSchema, fieldSchemaRef, fieldName, comment, hasNext);
 				break;
 				
 			case "array" :
@@ -247,13 +261,14 @@ public class JsonSchemaDocumentationGenerator {
 				out.print(type);
 				comma(hasNext);
 				if (withComment) {
-					comment(
+					comment = comment(
 							required(schema, schemaRef, fieldName), 
 							format(fieldSchema, fieldSchemaRef), 
 							description(fieldSchema, fieldSchemaRef), 
 							enumList(fieldSchema, fieldSchemaRef),
 							enumType(fieldSchema, fieldSchemaRef)
 						);
+					out.print(comment);
 				}
 				break;
 				
@@ -293,14 +308,15 @@ public class JsonSchemaDocumentationGenerator {
 			out.println('[');
 			out.pushIndent();
 			out.indent();
-			value(schema, schemaRef, items, itemsRef, fieldName, false, false);
-			comment(
+			String comment = comment(
 					required(schema, schemaRef, fieldName), 
 					format(items, itemsRef), 
 					description(fieldSchema, fieldSchemaRef), 
 					enumList(items, itemsRef),
 					enumType(items, itemsRef)
 			);
+			value(schema, schemaRef, items, itemsRef, fieldName, comment, false, false);
+			
 			out.popIndent();
 			out.indent();
 			out.print(']');
@@ -368,63 +384,66 @@ public class JsonSchemaDocumentationGenerator {
 			return node;
 		}
 
-		private void comment(boolean required, String format, String description, ArrayNode enumList, String enumType) {
+		private String comment(boolean required, String format, String description, ArrayNode enumList, String enumType) {
 			
+			StringBuilder builder = new StringBuilder();
 			
 			if (required || format!=null || description!=null) {
-				out.print(" -- ");
+				builder.append(" -- ");
 				if (required || format!=null) {
 					String comma = "";
-					out.print('(');
+					builder.append('(');
 					if (required) {
-						out.print("Required");
+						builder.append("Required");
 						comma = ", ";
 					}
 					if (format!=null) {
-						out.print(comma);
-						out.print(format);
+						builder.append(comma);
+						builder.append(format);
 					}
-					out.print(") ");
+					builder.append(") ");
 				}
 				if (description != null) {
-					out.print(description);
+					builder.append(description);
 				}
 				if (enumList!=null && enumList.size()>0) {
-					enumComment(description, enumList, enumType);
+					enumComment(builder, description, enumList, enumType);
 				}
 			}
 			
-			out.println();
+			builder.append(lineSeparator);
+			
+			return builder.toString();
 			
 		}
 
-		private void enumComment(String description, ArrayNode enumArray, String enumType) {
+		private void enumComment(StringBuilder builder, String description, ArrayNode enumArray, String enumType) {
 			if (description!=null && !description.endsWith(".")) {
-				out.print('.');
+				builder.append('.');
 			}
-			out.print(" ");
+			builder.append(" ");
 			if (enumArray.size()==1) {
-				out.print("The value must be \"");
-				out.print(enumArray.get(0).asText());
-				out.print("\".");
+				builder.append("The value must be \"");
+				builder.append(enumArray.get(0).asText());
+				builder.append("\".");
 			} else if (enumArray.size()<=10) {
-				out.print("The value must be one of: ");
+				builder.append("The value must be one of: ");
 				String comma = "";
 				for (JsonNode value : enumArray) {
-					out.print(comma);
+					builder.append(comma);
 					comma = ", ";
-					out.print(value.asText());
+					builder.append(value.asText());
 				}
 			} else {
 				int footnoteNumber = ++footnoteCount;
 				if (enumType != null) {
-					out.print("The value must be a member of the ");
-					out.print(enumType);
-					out.print(" enumeration.  ");
+					builder.append("The value must be a member of the ");
+					builder.append(enumType);
+					builder.append(" enumeration.  ");
 				}
-				out.print("See [");
-				out.print(footnoteNumber);
-				out.print("] below for the complete list of possible values.");
+				builder.append("See [");
+				builder.append(footnoteNumber);
+				builder.append("] below for the complete list of possible values.");
 				EnumInfo info = new EnumInfo(footnoteNumber, enumType, enumArray);
 				if (enumList == null) {
 					enumList = new ArrayList<>();
