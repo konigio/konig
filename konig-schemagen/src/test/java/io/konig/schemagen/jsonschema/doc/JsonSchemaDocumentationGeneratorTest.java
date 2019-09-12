@@ -81,8 +81,8 @@ public class JsonSchemaDocumentationGeneratorTest {
 				"}\n" + 
 				"";
 		URI shapeId = uri("http://example.com/ns/shape/PersonShape");
-		String text = generate("src/test/resources/JsonSchemaGeneratorTest/jsonld", shapeId);
-		assertEquals(text, expected);
+		String actual = generate("src/test/resources/JsonSchemaGeneratorTest/jsonld", shapeId);
+		assertEquals(expected, actual);
 	}
 	
 	@Test
@@ -91,6 +91,7 @@ public class JsonSchemaDocumentationGeneratorTest {
 				"   \"id\": string  -- The IRI that identifies this Person\n" + 
 				"   _______________________________________________\n" + 
 				"   Must match exactly one of the following 2 cases\n" + 
+				"   _______________________________________________\n" + 
 				"   CASE 1 ... Full Name\n" + 
 				"   \"name\": string  -- (Required) \n" + 
 				"   _______________________________________________\n" + 
@@ -100,8 +101,8 @@ public class JsonSchemaDocumentationGeneratorTest {
 				"   _______________________________________________\n" + 
 				"}\n";
 		URI shapeId = uri("http://example.com/ns/shape/PersonShape");
-		String text = generate("src/test/resources/JsonSchemaGeneratorTest/logical-constraints", shapeId);
-		assertEquals(text, expected);
+		String actual = generate("src/test/resources/JsonSchemaGeneratorTest/logical-constraints", shapeId);
+		assertEquals(expected, actual);
 	}
 
 	private URI uri(String value) {
@@ -118,7 +119,7 @@ public class JsonSchemaDocumentationGeneratorTest {
 		
 		generator.write(out, node);
 		
-		return out.toString();
+		return out.toString().replace("\r", "");
 	}
 
 	private void load(String path) throws RDFParseException, RDFHandlerException, IOException {
