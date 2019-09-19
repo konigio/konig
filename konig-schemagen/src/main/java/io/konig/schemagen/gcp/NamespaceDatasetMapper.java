@@ -57,7 +57,10 @@ public class NamespaceDatasetMapper implements DatasetMapper {
 		
 		Value preferred = owlClass.getValue(GCP.preferredGcpDatasetId);
 		if (preferred instanceof Literal) {
-			return preferred.stringValue();
+			String property = getPropertyFromExpression(preferred.stringValue());
+			if(property != null && !property.equals("classNamespacePrefix")) {
+				return preferred.stringValue();
+			}
 		}
 		
 		Resource id = owlClass.getId();
@@ -73,7 +76,18 @@ public class NamespaceDatasetMapper implements DatasetMapper {
 	}
 
 
-
+	private String getPropertyFromExpression( String expression )
+    {
+        if ( expression != null && expression.startsWith( "${" ) && expression.endsWith( "}" )
+            && !expression.substring( 2 ).contains( "${" ) )
+        {
+            // expression="${xxx}" -> property="xxx"
+            return expression.substring( 2, expression.length() - 1 );
+        }
+        // no property can be extracted
+        return null;
+    }
+	
 	@Override
 	public String getId(Vertex owlClass) {
 		return datasetForClass(owlClass);
