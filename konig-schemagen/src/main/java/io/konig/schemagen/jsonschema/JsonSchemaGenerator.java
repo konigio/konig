@@ -138,7 +138,7 @@ public class JsonSchemaGenerator extends Generator {
 	public ObjectNode generateJsonSchema(Shape shape) {
 		
 		Worker worker = new Worker();
-		return worker.generateJsonSchema(shape);
+		return worker.generateTopJsonSchema(shape);
 	}
 	
 	private class Worker {
@@ -150,7 +150,7 @@ public class JsonSchemaGenerator extends Generator {
 		private boolean ldLanguageExists=false;
 		
 		
-		public ObjectNode generateJsonSchema(Shape shape) {
+		private ObjectNode generateJsonSchema(Shape shape) {
 			
 			String schemaId = namer.schemaId(shape);
 			ObjectNode json = mapper.createObjectNode();
@@ -182,6 +182,16 @@ public class JsonSchemaGenerator extends Generator {
 				putRequired(json, shape);
 			}
 			return json;
+		}
+
+		public ObjectNode generateTopJsonSchema(Shape shape) {
+			ObjectNode node = generateJsonSchema(shape);
+
+			if (shape.getComment()!=null && node.get("description")==null) {
+				node.put("description", shape.getComment());
+			}
+			
+			return node;
 		}
 
 		private void putRequired(ObjectNode json, Shape shape) {
