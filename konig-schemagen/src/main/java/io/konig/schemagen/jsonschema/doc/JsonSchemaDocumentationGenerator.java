@@ -268,7 +268,11 @@ public class JsonSchemaDocumentationGenerator {
 							enumList(fieldSchema, fieldSchemaRef),
 							enumType(fieldSchema, fieldSchemaRef)
 						);
+				}
+				if (comment != null) {
 					out.print(comment);
+				} else {
+					out.println();
 				}
 				break;
 				
