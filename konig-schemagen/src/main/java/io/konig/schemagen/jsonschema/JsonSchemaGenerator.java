@@ -84,7 +84,7 @@ public class JsonSchemaGenerator extends Generator {
 	
 		if (set == null && reasoner!=null) {
 			Resource rdfType = rdfType(property);
-			if (reasoner.isEnumerationClass(rdfType)) {
+			if (rdfType!=null && reasoner.isEnumerationClass(rdfType)) {
 
 				set = new HashSet<>();
 				
