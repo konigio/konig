@@ -241,7 +241,7 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 				p = prior;
 				processor.warn(
 					location(row, PROPERTY_ID), 
-					"Duplicate definition of property {0} on {0}", 
+					"Duplicate definition of property {0} on {1}", 
 					compactName(predicate), 
 					compactName(shapeId)
 				);
