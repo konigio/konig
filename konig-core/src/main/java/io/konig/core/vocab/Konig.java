@@ -77,6 +77,7 @@ public class Konig {
 		public static final String OverlayPattern = "http://www.konig.io/ns/core/OverlayPattern";
 		public static final String ldContext = "http://www.konig.io/ns/core/ldContext";
 		public static final String language = "http://www.konig.io/ns/core/language";
+		public static final String idComment = "http://www.konig.io/ns/core/idComment";
 	}
 	
 	// ChangeSet terms
@@ -130,6 +131,7 @@ public class Konig {
 	public static final URI OverlayPattern = new URIImpl(Terms.OverlayPattern);
 	public static final URI ldContext = new URIImpl(Terms.ldContext);
 	public static final URI language = new URIImpl(Terms.language);
+	public static final URI idComment = new URIImpl(Terms.idComment);
 	
 
 	public static final URI propertyPath = new URIImpl(Terms.propertyPath);
