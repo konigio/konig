@@ -213,6 +213,8 @@ public class PropertyConstraintSheet extends BaseSheetProcessor {
 					shape.setTargetClass(valueClass);
 				}
 				
+				shape.setIdComment(comment);
+				
 				// TODO: consider supporting Formula as an alternative for Shape IRI template.
 				return;
 			}

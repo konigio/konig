@@ -324,6 +324,11 @@ public class JsonSchemaGenerator extends Generator {
 			properties.set("id", field);
 			field.put("type", "string");
 			
+			String description = shape.getIdComment();
+			if (description != null) {
+				field.put("description", description);
+			}
+			
 			if (shape.getTargetClass() != null) {
 				StringBuilder builder = new StringBuilder();
 				URI targetClass = shape.getTargetClass();

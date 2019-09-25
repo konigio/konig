@@ -101,6 +101,7 @@ public class Shape implements Cloneable {
 	private Set<URI> shapeProcessing;
 	private Set<Shape> explicitDerivedFrom;
 	private Set<URI> broader;
+	private String idComment;
 	 
 	 public List<URI> getInputShapeOf() {
 	 	return inputShapeOf;
@@ -868,6 +869,15 @@ public class Shape implements Cloneable {
 
 	public void setNodeShapeCube(Cube nodeShapeCube) {
 		this.nodeShapeCube = nodeShapeCube;
+	}
+
+	@RdfProperty(Konig.Terms.idComment)
+	public String getIdComment() {
+		return idComment;
+	}
+
+	public void setIdComment(String idComment) {
+		this.idComment = idComment;
 	}
 	
 }
