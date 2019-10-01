@@ -52,6 +52,7 @@ public class BigQueryEnumShapeGenerator {
 	private ShapeManager shapeManager;
 	
 	private boolean omitTypeProperty=false;
+	private Set<URI> omitClass = null;
 	
 	public BigQueryEnumShapeGenerator(DatasetMapper datasetMapper, BigQueryTableMapper tableMapper,
 			ShapeNamer shapeNamer, ShapeManager shapeManager) {
@@ -122,6 +123,11 @@ public class BigQueryEnumShapeGenerator {
 
 
 	private boolean accept(URI enumId, OwlReasoner reasoner) {
+		
+		if (omitClass!=null && omitClass.contains(enumId)) {
+			return false;
+		}
+		
 		Set<URI> types = reasoner.superClasses(enumId);
 		types.remove(Schema.Enumeration);
 		types.add(enumId);
@@ -153,6 +159,12 @@ public class BigQueryEnumShapeGenerator {
 		
 		
 		return true;
+	}
+
+
+
+	public void setOmitClass(Set<URI> excludeEnumTableList) {
+		omitClass = excludeEnumTableList;
 	}
 
 }
