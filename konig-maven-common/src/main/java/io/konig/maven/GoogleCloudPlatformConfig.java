@@ -22,6 +22,14 @@ package io.konig.maven;
 
 
 import java.io.File;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.openrdf.model.URI;
+
+import io.konig.core.NamespaceManager;
+import io.konig.core.impl.RdfUtil;
 
 public class GoogleCloudPlatformConfig implements RdfSource {
 
@@ -77,6 +85,9 @@ public class GoogleCloudPlatformConfig implements RdfSource {
 	@Parameter(property="konig.gcp.bigqueryEnumShapeIriTemplate")
 	private String bigqueryEnumShapeIriTemplate;
 	
+	@Parameter(property="konig.gcp.excludeEnumTable")
+	private String[] excludeEnumTable;
+	
 	public GoogleCloudPlatformConfig() {
 		
 	}
@@ -85,6 +96,26 @@ public class GoogleCloudPlatformConfig implements RdfSource {
 	
 	public boolean isOmitTypeFromEnumTables() {
 		return omitTypeFromEnumTables;
+	}
+
+	public String[] getExcludeEnumTable() {
+		return excludeEnumTable;
+	}
+	
+	public Set<URI> getExcludeEnumTableList(NamespaceManager nsManager) {
+		if (excludeEnumTable==null || excludeEnumTable.length==0) {
+			return Collections.emptySet();
+		}
+		
+		Set<URI> result = new HashSet<>();
+		for (String curie : excludeEnumTable) {
+			result.add(RdfUtil.expand(nsManager, curie));
+		}
+		return result;
+	}
+
+	public void setExcludeEnumTable(String[] excludeEnumTable) {
+		this.excludeEnumTable = excludeEnumTable;
 	}
 
 
@@ -212,7 +243,6 @@ public class GoogleCloudPlatformConfig implements RdfSource {
 	public void setCamelEtl(File camelEtl) {
 		this.camelEtl = camelEtl;
 	}
-
 
 
 	public String getBigqueryEnumShapeIriTemplate() {
