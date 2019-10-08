@@ -104,6 +104,23 @@ public class JsonSchemaDocumentationGeneratorTest {
 		String actual = generate("src/test/resources/JsonSchemaGeneratorTest/logical-constraints", shapeId);
 		assertEquals(expected, actual);
 	}
+	
+
+	@Test
+	public void testRecursive() throws Exception {
+		String expected = "{ -- This is a recursive structure named 'PersonTargetShape'.\n" + 
+				"   \"id\": string, -- The IRI that identifies this Person\n" + 
+				"   \"givenName\": string,\n" + 
+				"   \"children\": [\n" + 
+				"      { -- Repeat the 'PersonTargetShape' structure here...\n" + 
+				"      }\n" + 
+				"   ]\n" + 
+				"}\n";
+		URI shapeId = uri("http://example.com/ns/shape/PersonTargetShape");
+		String actual = generate("src/test/resources/JsonSchemaGeneratorTest/recursive", shapeId);
+		assertEquals(expected, actual);
+		
+	}
 
 	private URI uri(String value) {
 		return new URIImpl(value);

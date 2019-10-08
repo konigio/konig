@@ -147,6 +147,7 @@ public class JsonSchemaGenerator extends Generator {
 		private Set<String> memory = new HashSet<>();
 		private ObjectNode root;
 		private ObjectNode definitions;
+		private Resource rootShapeId;
 		private boolean ldLanguageExists=false;
 		
 		
@@ -161,7 +162,7 @@ public class JsonSchemaGenerator extends Generator {
 				json.put("$ref", schemaId);
 			} else {
 				if (memory.isEmpty()) {
-					json.put("$schema", "http://json-schema.org/draft-05/schema#");
+					json.put("$schema", "http://json-schema.org/draft-07/schema#");
 				}
 				
 				memory.add(schemaId);
@@ -185,6 +186,7 @@ public class JsonSchemaGenerator extends Generator {
 		}
 
 		public ObjectNode generateTopJsonSchema(Shape shape) {
+			rootShapeId = shape.getId();
 			ObjectNode node = generateJsonSchema(shape);
 
 			if (shape.getComment()!=null && node.get("description")==null) {
@@ -517,19 +519,31 @@ public class JsonSchemaGenerator extends Generator {
 				Shape valueShape = property.getShape();
 				String valueSchemaName = jsonSchemaLocalName(valueShape);
 				
-				object.put("$ref", "#/definitions/" + valueSchemaName);
+				boolean isRoot = rootShapeId.equals(valueShape.getId());
 				
+				String refValue = isRoot ?
+						"#" : "#/definitions/" + valueSchemaName;
 				
-				ObjectNode valueSchema = generateJsonSchema(valueShape);
-				if (definitions == null) {
-					definitions = mapper.createObjectNode();
-					root.set("definitions", definitions);
+				object.put("$ref", refValue);
+
+				if (!isRoot) {
+					if (definitions == null) {
+						definitions = mapper.createObjectNode();
+						root.set("definitions", definitions);
+					}
+					
+					if (definitions.get(valueSchemaName) == null) {
+						// Temporarily put a dummy boolean node in the 'definitions' collection. 
+						// This will prevent multiple instances of valueShape schema generation if the node shape is recursive.
+						
+						definitions.put(valueSchemaName, true);
+	
+						ObjectNode valueSchema = generateJsonSchema(valueShape);
+						definitions.set(valueSchemaName, valueSchema);
+						
+					}
 				}
-				// This is a bit of a hack to fix Issue #1177
-				// TODO: Provide a better solution
-				if (definitions.get(valueSchemaName) == null) {
-					definitions.set(valueSchemaName, valueSchema);
-				}
+				
 			}
 			
 			if (rdfType != null) {

@@ -25,8 +25,10 @@ import java.io.IOException;
 import java.io.Writer;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.openrdf.model.impl.URIImpl;
@@ -79,6 +81,7 @@ public class JsonSchemaDocumentationGenerator {
 		private List<EnumInfo> enumList;
 		private int footnoteCount=0;
 		private String lineSeparator;
+		private Map<String,Boolean> recursiveMap = new HashMap<>();
 
 		public Worker(ObjectNode root, PrettyPrintWriter out) {
 			this.root = root;
@@ -119,15 +122,20 @@ public class JsonSchemaDocumentationGenerator {
 		
 		private void object(ObjectNode schema, ObjectNode schemaRef, String accessorName, String comment, boolean moreFields) throws IOException {
 			
+			Boolean isRecursive = isRecursive(schema);
+			
 			if (comment == null) {
 				comment = comment(required(schema, schemaRef, accessorName), null, description(schema, schemaRef), null, null);
 			}
+			comment = objectComment(isRecursive, comment, schema, schemaRef);
 			out.print('{');
 			out.print(comment);
 			
 			out.pushIndent();
 			 
-			emitProperties(schema, schemaRef);
+			if (!Boolean.TRUE.equals(isRecursive)) {
+				emitProperties(schema, schemaRef);
+			}
 			
 			out.popIndent();
 			out.indent();
@@ -142,6 +150,54 @@ public class JsonSchemaDocumentationGenerator {
 		}
 		
 
+
+		private String objectComment(Boolean recursive, String comment, ObjectNode node, ObjectNode nodeRef) {
+			if (isRecursive(node, nodeRef)) {
+				String ref = ref(node);
+				StringBuilder builder = new StringBuilder();
+				if (comment != null) {
+					comment = comment.trim();
+					if (comment.isEmpty()) {
+						builder.append(" -- ");
+					} else {
+						builder.append(comment);
+						if (comment.endsWith(".")) {
+							builder.append(' ');
+						} else {
+							builder.append(". ");
+						}
+					}
+				}
+				String localName = localName(ref);
+				if (Boolean.TRUE.equals(recursive)) {
+					builder.append("Repeat the '");
+					builder.append(localName);
+					builder.append("' structure here...");
+					
+				} else {
+					builder.append("This is a recursive structure named '");
+					builder.append(localName);
+					builder.append("'.");
+				}
+				builder.append(lineSeparator);
+				
+				comment = builder.toString();
+				
+			}
+			return comment;
+		}
+
+		private String localName(String ref) {
+			if ("#".equals(ref)) {
+				JsonNode nodeShape = root.get("nodeShape");
+				ref = nodeShape==null ? "/RootNode" : nodeShape.asText();
+			}
+			int slash = ref.lastIndexOf('/');
+			if (slash < 0) {
+				return ref;
+			}
+			return ref.substring(slash+1);
+		}
 
 		private ArrayNode enumList(ObjectNode schema, ObjectNode schemaRef) {
 			return (ArrayNode) get(schema, schemaRef, "enum");
@@ -371,6 +427,9 @@ public class JsonSchemaDocumentationGenerator {
 
 		//  "$ref" : "#/definitions/LinkedDataContextShape"
 		private ObjectNode resolve(String ref) {
+			if ("#".equals(ref)) {
+				return root;
+			}
 			if (!ref.startsWith("#/")) {
 				throw new IllegalArgumentException("Unexpected reference: " + ref);
 			}
@@ -507,7 +566,95 @@ public class JsonSchemaDocumentationGenerator {
 		}
 
 		private String description(ObjectNode node, ObjectNode nodeRef) {
-			return stringValue(node, nodeRef, "description"); 
+			return stringValue(node, nodeRef, "description");
+		}
+		
+
+
+		private Boolean isRecursive(ObjectNode schema) {
+
+			if (schema != null) {
+				
+				String ref = ref(schema);
+				
+				if (ref != null) {
+					return recursiveMap.get(ref);
+				}
+			}
+			
+			return null;
+		}
+
+		private String ref(ObjectNode schema) {
+
+			JsonNode refNode = schema.get("$ref");
+			if (refNode != null) {
+				return refNode.asText();
+			}
+			if (schema == root) {
+				return "#";
+			}
+			return null;
+		}
+
+		private boolean isRecursive(ObjectNode node, ObjectNode nodeRef) {
+			if (node == null) {
+				return false;
+			}
+			
+
+			String ref = ref(node);
+			if (ref == null) {
+				return false;
+			}
+			Boolean truth = recursiveMap.get(ref);
+			if (truth == null) {
+				truth = isRecursive(ref, node, nodeRef);
+				recursiveMap.put(ref, truth);
+			}
+			
+			return truth;
+			
+		}
+		private boolean isRecursive(String ref, ObjectNode node, ObjectNode nodeRef) {
+			
+			
+			ObjectNode properties = properties(node, nodeRef);
+			if (properties != null) {
+				Iterator<String> fieldNames = properties.fieldNames();
+				while (fieldNames.hasNext()) {
+					String fieldName = fieldNames.next();
+					ObjectNode fieldSchema = (ObjectNode) properties.get(fieldName);
+					
+					
+					JsonNode fieldRefNode = fieldSchema.get("$ref");
+					if (fieldRefNode==null) {
+
+						JsonNode items = fieldSchema.get("items");
+						if (items != null) {
+							fieldRefNode = items.get("$ref");
+							if (fieldRefNode == null) {
+								continue;
+							}
+						} else {
+							continue;
+						}
+					}
+					String fieldRef = fieldRefNode.asText();
+					if (fieldRef.equals(ref)) {
+						return true;
+					}
+
+					ObjectNode fieldSchemaRef = resolveReference(fieldSchema);
+				
+					if (isRecursive(ref, fieldSchema, fieldSchemaRef)) {
+						return true;
+					}
+					
+				}
+			}
+
+			return false;
 		}
 
 		private String stringValue(ObjectNode node, ObjectNode nodeRef, String fieldName) {
