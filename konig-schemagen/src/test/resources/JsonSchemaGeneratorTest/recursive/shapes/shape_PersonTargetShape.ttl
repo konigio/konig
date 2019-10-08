@@ -1,0 +1,30 @@
+@prefix gcp: <http://www.konig.io/ns/gcp/> .
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+shape:PersonTargetShape sh:property  [ 
+		sh:path schema:givenName ; 
+		rdf:predicate schema:givenName ; 
+		sh:datatype xsd:string ; 
+		sh:maxCount 1 ; 
+		sh:minCount 0
+	 ]  ,  [ 
+		sh:path schema:children ; 
+		rdf:predicate schema:children ; 
+		sh:shape shape:PersonTargetShape ; 
+		sh:minCount 0 ]  ; 
+	a sh:Shape ; 
+	sh:nodeKind sh:IRI ; 
+	konig:shapeDataSource <https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> ; 
+	sh:targetClass schema:Person . 
+
+<https://www.googleapis.com/bigquery/v2/projects/${gcpProjectId}/datasets/schema/tables/PersonTarget> konig:tabularFieldNamespace "${tabularFieldNamespace}" ; 
+	gcp:tableReference  [ 
+		gcp:projectId "${gcpProjectId}" ; 
+		gcp:tableId "PersonTarget" ; 
+		gcp:datasetId "schema" ]  ; 
+	a konig:GoogleBigQueryTable , konig:DataSource . 
