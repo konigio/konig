@@ -1136,6 +1136,7 @@ public class KonigSchemagenMojo  extends AbstractMojo {
 			jsonSchemaGenerator.setIriEnumStyle(IriEnumStyle.LOCAL);
 			jsonSchemaGenerator.setReasoner(owlReasoner);
 			ShapeToJsonSchema generator = new ShapeToJsonSchema(jsonSchemaGenerator);
+			generator.setRequiresMediatype(jsonSchema.isRequiresMediatype());
 			if (jsonSchema.getGenerateSchemaId()) {
 				jsonSchemaGenerator.setIncludeIdValue(true);
 				generator.setListener(new ShapeToJsonSchemaLinker(owlGraph));

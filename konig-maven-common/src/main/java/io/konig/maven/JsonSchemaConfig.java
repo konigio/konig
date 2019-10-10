@@ -31,6 +31,9 @@ public class JsonSchemaConfig {
 	private boolean additionalProperties=false;
 	private boolean generateSchemaId = false;
 	
+	@Parameter(property="konig.jsonschema.requiresMediatype")
+	private boolean requiresMediatype = false;
+	
 	public String getUriTemplate() {
 		return uriTemplate;
 	}
@@ -56,6 +59,12 @@ public class JsonSchemaConfig {
 	}
 	public void setGenerateSchemaId(boolean generateSchemaId) {
 		this.generateSchemaId = generateSchemaId;
+	}
+	public boolean isRequiresMediatype() {
+		return requiresMediatype;
+	}
+	public void setRequiresMediatype(boolean requiresMediatype) {
+		this.requiresMediatype = requiresMediatype;
 	}
 	
 	
