@@ -154,18 +154,21 @@ public class JsonSchemaGenerator extends Generator {
 		private ObjectNode generateJsonSchema(Shape shape) {
 			
 			String schemaId = namer.schemaId(shape);
+			String localName = jsonSchemaLocalName(shape);
 			ObjectNode json = mapper.createObjectNode();
 			if (root == null) {
 				root = json;
 			}
-			if (memory.contains(schemaId)) {
-				json.put("$ref", schemaId);
+			if (memory.contains(schemaId) || memory.contains(localName)) {
+				setRef(json, localName);
 			} else {
 				if (memory.isEmpty()) {
 					json.put("$schema", "http://json-schema.org/draft-07/schema#");
 				}
 				
 				memory.add(schemaId);
+				memory.add(localName);
+				
 				if (includeIdValue) {
 					json.put("$id", schemaId);
 				}
@@ -242,10 +245,10 @@ public class JsonSchemaGenerator extends Generator {
 				Shape s = not.getShape();
 				
 				ObjectNode node = null;
-				String schemaId = namer.schemaId(s);
+				String schemaId = jsonSchemaLocalName(s);
 				if (memory.contains(schemaId)) {
 					node = mapper.createObjectNode();
-					node.put("$ref", schemaId);
+					setRef(node, schemaId);
 				} else {
 					node = generateJsonSchema(s);
 				}
@@ -261,15 +264,15 @@ public class JsonSchemaGenerator extends Generator {
 				List<Shape> list = constraint.getShapes();
 				ArrayNode array = mapper.createArrayNode();
 				json.set(fieldName, array);
+				ObjectNode definitions = definitions();
 				for (Shape s : list) {
-					String schemaId = namer.schemaId(s);
-					if (memory.contains(schemaId)) {
-						ObjectNode node = mapper.createObjectNode();
-						node.put("$ref", schemaId);
-						array.add(node);
-					} else {
-						ObjectNode node = generateJsonSchema(s);
-						array.add(node);
+					String schemaId = jsonSchemaLocalName(s);
+					ObjectNode node = mapper.createObjectNode();
+					setRef(node, schemaId);
+					array.add(node);
+					if (!memory.contains(schemaId)) {
+						node = generateJsonSchema(s);
+						definitions.set(schemaId, node);
 					}
 				}
 			}
@@ -523,15 +526,10 @@ public class JsonSchemaGenerator extends Generator {
 				
 				String refValue = isRoot ?
 						"#" : "#/definitions/" + valueSchemaName;
-				
-				object.put("$ref", refValue);
+				setRef(object, refValue);
 
 				if (!isRoot) {
-					if (definitions == null) {
-						definitions = mapper.createObjectNode();
-						root.set("definitions", definitions);
-					}
-					
+					ObjectNode definitions = definitions();
 					if (definitions.get(valueSchemaName) == null) {
 						// Temporarily put a dummy boolean node in the 'definitions' collection. 
 						// This will prevent multiple instances of valueShape schema generation if the node shape is recursive.
@@ -553,7 +551,27 @@ public class JsonSchemaGenerator extends Generator {
 			return object;
 		}
 
+		private ObjectNode definitions() {
+
+			if (definitions == null) {
+				definitions = mapper.createObjectNode();
+				root.set("definitions", definitions);
+			}
+			return definitions;
+		}
+
+		private void setRef(ObjectNode object, String refValue) {
+			if (refValue.startsWith("http")) {
+				throw new IllegalArgumentException("Invalid value $ref=" + refValue);
+			}
+			if (!refValue.startsWith("#")) {
+				refValue = "#/definitions/" + refValue;
+			}
+			object.put("$ref", refValue);
+		}
+
 		private String jsonSchemaLocalName(Shape shape) {
+			
 			Resource shapeId = shape.getId();
 			if (shapeId instanceof URI) {
 				URI uri = (URI) shapeId;
