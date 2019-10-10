@@ -42,6 +42,7 @@ public class ShapeToJsonSchema {
 	private ObjectMapper mapper;
 	private JsonSchemaListener listener;
 	private JsonSchemaDocumentationGenerator documentationGenerator;
+	private boolean requiresMediatype;
 	
 	public ShapeToJsonSchema(JsonSchemaGenerator generator) {
 		this.generator = generator;
@@ -49,6 +50,13 @@ public class ShapeToJsonSchema {
 		mapper.enable(SerializationFeature.INDENT_OUTPUT);
 	}
 
+	public boolean isRequiresMediatype() {
+		return requiresMediatype;
+	}
+
+	public void setRequiresMediatype(boolean requiresMediatype) {
+		this.requiresMediatype = requiresMediatype;
+	}
 
 	public JsonSchemaListener getListener() {
 		return listener;
@@ -81,13 +89,24 @@ public class ShapeToJsonSchema {
 		outDir.mkdirs();
 		JsonSchemaNamer namer = generator.getNamer();
 		for (Shape shape : list) {
-			if (shape.getId() instanceof URI) {
+			if (accept(shape)) {
 				File file = new File(outDir, namer.jsonSchemaFileName(shape));
 				generateJsonSchema(shape, file);
 			}
 		}
 	}
 	
+	private boolean accept(Shape shape) {
+		if (!(shape.getId() instanceof URI)) {
+			return false;
+		}
+		if (requiresMediatype && shape.getMediaTypeBaseName()==null) {
+			return false;
+		}
+		return true;
+	}
+
+
 	/**
 	 * Generate the JSON Schema for a given shape and store it in a specified file.
 	 * @param shape The shape for which a JSON Schema will be generated
