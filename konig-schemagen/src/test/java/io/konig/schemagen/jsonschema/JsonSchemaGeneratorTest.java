@@ -231,11 +231,20 @@ public class JsonSchemaGeneratorTest {
 		ArrayNode anyOf = (ArrayNode) node.get("anyOf");
 		assertEquals(2, anyOf.size());
 		ObjectNode personShape = (ObjectNode) anyOf.get(0);
+		JsonNode personShapeRef = personShape.get("$ref");
+		assertTrue(personShapeRef != null);
+		assertEquals("#/definitions/PersonShape", personShapeRef.asText());
+		ObjectNode definitions = (ObjectNode) node.get("definitions");
+		personShape = (ObjectNode) definitions.get("PersonShape");
 		ObjectNode properties = (ObjectNode) personShape.get("properties");
 		ObjectNode familyName = (ObjectNode) properties.get("familyName");
 		assertEquals("string", familyName.get("type").asText());
 		
 		ObjectNode orgShape = (ObjectNode) anyOf.get(1);
+		JsonNode orgShapeRef = orgShape.get("$ref");
+		assertTrue(orgShapeRef!=null);
+		assertEquals("#/definitions/OrganizationShape", orgShapeRef.asText());
+		orgShape = (ObjectNode) definitions.get("OrganizationShape");
 		properties = (ObjectNode) orgShape.get("properties");
 		ObjectNode name = (ObjectNode) properties.get("name");
 		assertEquals("string", name.get("type").asText());

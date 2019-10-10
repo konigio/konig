@@ -153,19 +153,22 @@ public class JsonSchemaGenerator extends Generator {
 		
 		private ObjectNode generateJsonSchema(Shape shape) {
 			
-			String schemaId = jsonSchemaLocalName(shape);
+			String schemaId = namer.schemaId(shape);
+			String localName = jsonSchemaLocalName(shape);
 			ObjectNode json = mapper.createObjectNode();
 			if (root == null) {
 				root = json;
 			}
-			if (memory.contains(schemaId)) {
-				setRef(json, schemaId);
+			if (memory.contains(schemaId) || memory.contains(localName)) {
+				setRef(json, localName);
 			} else {
 				if (memory.isEmpty()) {
 					json.put("$schema", "http://json-schema.org/draft-07/schema#");
 				}
 				
 				memory.add(schemaId);
+				memory.add(localName);
+				
 				if (includeIdValue) {
 					json.put("$id", schemaId);
 				}
@@ -568,6 +571,7 @@ public class JsonSchemaGenerator extends Generator {
 		}
 
 		private String jsonSchemaLocalName(Shape shape) {
+			
 			Resource shapeId = shape.getId();
 			if (shapeId instanceof URI) {
 				URI uri = (URI) shapeId;

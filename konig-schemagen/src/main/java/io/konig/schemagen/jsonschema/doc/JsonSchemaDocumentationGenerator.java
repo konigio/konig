@@ -24,7 +24,9 @@ package io.konig.schemagen.jsonschema.doc;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.MessageFormat;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -82,6 +84,7 @@ public class JsonSchemaDocumentationGenerator {
 		private int footnoteCount=0;
 		private String lineSeparator;
 		private Map<String,Boolean> recursiveMap = new HashMap<>();
+		private Deque<String> caseNumberStack = new ArrayDeque();
 
 		public Worker(ObjectNode root, PrettyPrintWriter out) {
 			this.root = root;
@@ -257,24 +260,38 @@ public class JsonSchemaDocumentationGenerator {
 
 		private void logicalCase(int index, ObjectNode schema, ObjectNode schemaRef, int separatorLength) throws IOException {
 			
+			
 			String caseName = caseName(index, get(schema, schemaRef, JsonSchema.Extension.nodeShape) ); 
 			out.indent();
 			out.println(caseName);
 			emitProperties(schema, schemaRef);
 			separator(separatorLength);
+			caseNumberStack.pop();
 		}
 
 		private String caseName(int index, JsonNode nodeShape) {
 			index++;
+			
+			String caseNumber = caseNumber(index);
 			if (nodeShape == null) {
-				return "CASE " + index;
+				return "CASE " + caseNumber;
 			}
 			String localName = shapeLocalName(nodeShape.asText().trim());
 			if (localName.endsWith("Shape")) {
 				localName = localName.substring(0, localName.length()-5);
 			}
 			localName = StringUtil.label(localName);
-			return MessageFormat.format("CASE {0} ... {1}", index, localName);
+			return MessageFormat.format("CASE {0} ... {1}", caseNumber, localName);
+		}
+
+		private String caseNumber(int index) {
+
+			String text = Integer.toString(index);
+			if (!caseNumberStack.isEmpty()) {
+				text = caseNumberStack.peek() + "." + text;
+			}
+			caseNumberStack.push(text);
+			return text;
 		}
 
 		private String shapeLocalName(String text) {
