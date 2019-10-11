@@ -122,6 +122,19 @@ public class JsonSchemaDocumentationGeneratorTest {
 		
 	}
 
+	@Test
+	public void testAllOf() throws Exception {
+		String expected = "{\n" + 
+				"   \"id\": string, -- The IRI that identifies this Person\n" + 
+				"   \"givenName\": string,\n" + 
+				"   \"familyName\": string \n" + 
+				"}\n";
+		URI shapeId = uri("http://example.com/ns/shape/PersonTargetShape");
+		String actual = generate("src/test/resources/JsonSchemaGeneratorTest/all-of", shapeId);
+		assertEquals(expected, actual);
+		
+	}
+
 	private URI uri(String value) {
 		return new URIImpl(value);
 	}

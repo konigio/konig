@@ -228,12 +228,6 @@ public class ShapeBuilder {
 		return new PropertyBuilder(this, p);
 	}
 	
-	public ShapeBuilder beginShape(URI shapeId) {
-		Shape shape = produceShape(shapeId);
-		stack.add(shape);
-		return this;
-	}
-	
 	private Shape produceShape(URI shapeId) {
 
 		Shape shape = shapeManager.getShapeById(shapeId);
@@ -277,11 +271,8 @@ public class ShapeBuilder {
 	}
 	
 	public ShapeBuilder beginShape(Resource resource) {
-		Shape shape = new Shape(resource);
-		
-		if (resource instanceof URI) {
-			shapeManager.addShape(shape);
-		}
+		Shape shape = resource instanceof URI ? 
+				produceShape((URI)resource) : new Shape(resource);
 		
 		ShapeConsumer consumer = peekConsumer();
 		if (consumer != null) {
