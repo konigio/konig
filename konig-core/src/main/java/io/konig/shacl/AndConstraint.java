@@ -26,8 +26,10 @@ import java.util.List;
 
 import org.openrdf.model.URI;
 
+import io.konig.annotation.RdfList;
 import io.konig.core.Vertex;
 
+@RdfList
 public class AndConstraint implements Constraint, ShapeConsumer {
 
 	private Shape declaringShape;

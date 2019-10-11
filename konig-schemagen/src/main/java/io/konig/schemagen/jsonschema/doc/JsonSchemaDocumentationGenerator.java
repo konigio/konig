@@ -31,11 +31,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.StringTokenizer;
 
 import org.openrdf.model.impl.URIImpl;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -85,7 +87,8 @@ public class JsonSchemaDocumentationGenerator {
 		private String lineSeparator;
 		private Map<String,Boolean> recursiveMap = new HashMap<>();
 		private Deque<String> caseNumberStack = new ArrayDeque();
-
+		private ObjectMapper mapper;
+		
 		public Worker(ObjectNode root, PrettyPrintWriter out) {
 			this.root = root;
 			this.out = out;
@@ -228,12 +231,34 @@ public class JsonSchemaDocumentationGenerator {
 				}
 			}
 			
-			logicalConstraint((ArrayNode)get(schema, schemaRef, "oneOf"), "Must match exactly one of the following {0} cases");
-			logicalConstraint((ArrayNode)get(schema, schemaRef, "anyOf"), "Must match one or more of the following {0} cases");
-			logicalConstraint((ArrayNode)get(schema, schemaRef, "allOf"), "Must match all of the following {0} cases");
-			logicalConstraint((ArrayNode)get(schema, schemaRef, "not"), "Must NOT match any of the following {0} cases");
+			logicalConstraint(schema, schemaRef, "oneOf", "Must match exactly one of the following {0} cases");
+			logicalConstraint(schema, schemaRef, "anyOf", "Must match one or more of the following {0} cases");
+			logicalConstraint(schema, schemaRef, "not", "Must NOT match any of the following {0} cases");
+			
 			
 		}
+
+		private void logicalConstraint(ObjectNode schema, ObjectNode schemaRef, String fieldName, String pattern) throws IOException {
+			
+			ArrayNode constraint = (ArrayNode) get(schema, schemaRef, fieldName);
+			JsonNode allOf = get(schema, schemaRef, "allOf");
+			if (allOf instanceof ArrayNode) {
+				ArrayNode allOfArray = (ArrayNode)allOf;
+				Iterator<JsonNode> sequence = allOfArray.elements();
+				while (sequence.hasNext()) {
+					ObjectNode next = (ObjectNode) sequence.next();
+					ObjectNode nextRef = resolveReference(next);
+					JsonNode node = get(next, nextRef, fieldName);
+					if (node instanceof ArrayNode) {
+						ArrayNode array = (ArrayNode) node;
+						logicalConstraint(array, pattern);
+					}
+				}
+			} 
+			logicalConstraint(constraint, pattern);
+			
+		}
+
 
 		private void logicalConstraint(ArrayNode list, String pattern) throws IOException {
 			if (list == null) {
@@ -434,13 +459,63 @@ public class JsonSchemaDocumentationGenerator {
 
 		private ObjectNode properties(ObjectNode schema, ObjectNode schemaRef) {
 			JsonNode properties = get(schema, schemaRef, "properties");
+			JsonNode allOf = get(schema, schemaRef, "allOf");
 			
-			if (properties instanceof ObjectNode) {
+			if (properties instanceof ObjectNode && allOf==null) {
 				return (ObjectNode) properties;
+			}
+			if (allOf instanceof ArrayNode) {
+				return merge((ObjectNode) properties, (ArrayNode)allOf);
 			}
 			return null;
 		}
 
+
+		private ObjectNode merge(ObjectNode properties, ArrayNode array) {
+			ObjectMapper mapper = mapper();
+			ObjectNode result = mapper.createObjectNode();
+			if (properties != null) {
+				copyFields(properties, result);
+			}
+			if (array!=null) {
+				Iterator<JsonNode> sequence = array.iterator();
+				while (sequence.hasNext()) {
+					JsonNode node = sequence.next();
+					
+					JsonNode ref = node.get("$ref");
+					if (ref != null) {
+						node = resolve(ref.asText());
+					}
+					
+					JsonNode elementProperties = node.get("properties");
+					if (elementProperties instanceof ObjectNode) {
+						copyFields((ObjectNode)elementProperties, result);
+					}
+					
+				}
+			}
+			
+			return result;
+		}
+
+		private void copyFields(ObjectNode properties, ObjectNode result) {
+
+			Iterator<Entry<String,JsonNode>> sequence = properties.fields();
+			while (sequence.hasNext()) {
+				Entry<String,JsonNode> e = sequence.next();
+				String fieldName = e.getKey();
+				JsonNode fieldValue = e.getValue();
+				result.set(fieldName, fieldValue);
+			}
+			
+		}
+
+		private ObjectMapper mapper() {
+			if (mapper == null) {
+				mapper = new ObjectMapper();
+			}
+			return mapper;
+		}
 
 		//  "$ref" : "#/definitions/LinkedDataContextShape"
 		private ObjectNode resolve(String ref) {
