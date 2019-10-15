@@ -56,7 +56,11 @@ public class JsonSchemaDocumentationGenerator {
 		worker.footnotes();
 		worker.flush();
 	}
-	
+	private static enum CommentType {
+		NOT_RECURSIVE,
+		INITIAL_RECURSIVE,
+		SUBSEQUENT_RECURSIVE
+	}
 	private static class EnumInfo {
 		private int footnoteNumber;
 		private String enumType;
@@ -85,9 +89,11 @@ public class JsonSchemaDocumentationGenerator {
 		private List<EnumInfo> enumList;
 		private int footnoteCount=0;
 		private String lineSeparator;
-		private Map<String,Boolean> recursiveMap = new HashMap<>();
-		private Deque<String> caseNumberStack = new ArrayDeque();
+		private Deque<String> caseNumberStack = new ArrayDeque<>();
 		private ObjectMapper mapper;
+		private Integer logicalConstraintCounter;
+		private Map<String,CommentType> commentTypeMap = new HashMap<>();
+		
 		
 		public Worker(ObjectNode root, PrettyPrintWriter out) {
 			this.root = root;
@@ -128,19 +134,24 @@ public class JsonSchemaDocumentationGenerator {
 		
 		private void object(ObjectNode schema, ObjectNode schemaRef, String accessorName, String comment, boolean moreFields) throws IOException {
 			
-			Boolean isRecursive = isRecursive(schema);
+			CommentType commentType = commentType(schema, schemaRef);
 			
 			if (comment == null) {
 				comment = comment(required(schema, schemaRef, accessorName), null, description(schema, schemaRef), null, null);
 			}
-			comment = objectComment(isRecursive, comment, schema, schemaRef);
+			comment = objectComment(commentType, comment, schema, schemaRef);
 			out.print('{');
 			out.print(comment);
 			
 			out.pushIndent();
 			 
-			if (!Boolean.TRUE.equals(isRecursive)) {
+			switch (commentType) {
+			case INITIAL_RECURSIVE :
+			case NOT_RECURSIVE :
 				emitProperties(schema, schemaRef);
+				break;
+			default:
+				
 			}
 			
 			out.popIndent();
@@ -156,9 +167,116 @@ public class JsonSchemaDocumentationGenerator {
 		}
 		
 
+		private CommentType commentType(ObjectNode schema, ObjectNode schemaRef) {
+			
+			String ref = (schema==root) ? "#" : getString(schema, schemaRef, "$ref");
+			
+			CommentType result = commentTypeMap.get(ref);
+			if (result == null) {
+				String id = getString(schema, schemaRef, "$id");
+				String nodeId = getString(schema, schemaRef, "nodeShape");
+				boolean isRecursive = containsRef(schema, schemaRef, ref, id, nodeId);
+				CommentType commentType = null;
+				if (isRecursive) {
+					result =  CommentType.INITIAL_RECURSIVE;
+					commentType = CommentType.SUBSEQUENT_RECURSIVE;
+				} else {
+					result = commentType = CommentType.NOT_RECURSIVE;
+				}
+				commentTypeMap.put(ref, commentType);
+			}
+			return result;
+		}
 
-		private String objectComment(Boolean recursive, String comment, ObjectNode node, ObjectNode nodeRef) {
-			if (isRecursive(node, nodeRef)) {
+		private boolean containsRef(ObjectNode schema, ObjectNode schemaRef, String ref, String id, String nodeId) {
+			return 
+					propertiesContainsRef(schema, schemaRef, ref, id, nodeId) ||
+					arrayContainsRef(schema, schemaRef, "allOf", ref, id, nodeId) ||
+					arrayContainsRef(schema, schemaRef, "anyOf", ref, id, nodeId) ||
+					arrayContainsRef(schema, schemaRef, "oneOf", ref, id, nodeId);
+					
+		}
+
+		private boolean arrayContainsRef(ObjectNode schema, ObjectNode schemaRef, String fieldName, String ref, String id,
+				String nodeId) {
+			ArrayNode array = (ArrayNode) get(schema, schemaRef, fieldName);
+			if (array != null) {
+				Iterator<JsonNode> elements = array.elements();
+				while (elements.hasNext()) {
+					JsonNode json = elements.next();
+					if (json instanceof ObjectNode) {
+						ObjectNode elementSchema = (ObjectNode) json;
+						ObjectNode elementSchemaRef = resolveReference(elementSchema);
+						if (containsRef(elementSchema, elementSchemaRef, ref, id, nodeId)) {
+							return true;
+						}
+					}
+				}
+			}
+			return false;
+		}
+
+		private boolean propertiesContainsRef(ObjectNode schema, ObjectNode schemaRef, String ref, String id, String nodeId) {
+			ObjectNode properties = (ObjectNode) get(schema, schemaRef, "properties");
+			if (properties != null) {
+				
+				
+				Iterator<Entry<String,JsonNode>> sequence = properties.fields();
+				while (sequence.hasNext()) {
+					Entry<String,JsonNode> entry = sequence.next();
+					JsonNode value = entry.getValue();
+					if (value instanceof ObjectNode) {
+						
+						ObjectNode valueSchema = (ObjectNode) value;
+						JsonNode type = valueSchema.get("type");
+						ObjectNode valueRef = null;
+						String typeText = type==null ? null : type.asText();
+						if ("array".equals(typeText)) {
+							valueRef = resolveReference(valueSchema);
+							JsonNode items = get(valueSchema, valueRef, "items");
+							if (items instanceof ObjectNode) {
+								valueRef = (ObjectNode) items;
+							}
+						}
+						if (valueRef != null || "object".equals(typeText)) {
+
+							if (valueRef == null) {
+								valueRef = resolveReference(valueSchema);
+							}
+							if (
+									equals(valueSchema, valueRef, "$ref", ref) ||
+									equals(valueSchema, valueRef, "$id", id) ||
+									equals(valueSchema, valueRef, "nodeShape", nodeId)
+							) {
+								return true;
+							}
+							
+							if (containsRef(valueSchema, valueRef, ref, id, nodeId)) {
+								return true;
+							}
+						}
+					}
+				}
+			}
+			
+			
+			return false;
+		}
+
+		private boolean equals(ObjectNode schema, ObjectNode schemaRef, String fieldName, String value) {
+			
+			return (value==null) ? false : value.equals(getString(schema, schemaRef, fieldName));
+		}
+
+		private String getString(ObjectNode schema, ObjectNode schemaRef, String fieldName) {
+			
+			JsonNode node = get(schema, schemaRef, fieldName);
+			return node==null ? null : node.asText();
+		}
+
+		private String objectComment(CommentType commentType, String comment, ObjectNode node, ObjectNode nodeRef) {
+			
+			if (commentType != CommentType.NOT_RECURSIVE) {
 				String ref = ref(node);
 				StringBuilder builder = new StringBuilder();
 				if (comment != null) {
@@ -175,16 +293,25 @@ public class JsonSchemaDocumentationGenerator {
 					}
 				}
 				String localName = localName(ref);
-				if (Boolean.TRUE.equals(recursive)) {
-					builder.append("Repeat the '");
-					builder.append(localName);
-					builder.append("' structure here...");
-					
-				} else {
+				
+				switch (commentType) {
+				case INITIAL_RECURSIVE :
+
 					builder.append("This is a recursive structure named '");
 					builder.append(localName);
 					builder.append("'.");
+					break;
+					
+				case SUBSEQUENT_RECURSIVE :
+
+					builder.append("Repeat the '");
+					builder.append(localName);
+					builder.append("' structure here...");
+					break;
+					
+				default:
 				}
+				
 				builder.append(lineSeparator);
 				
 				comment = builder.toString();
@@ -230,12 +357,49 @@ public class JsonSchemaDocumentationGenerator {
 					
 				}
 			}
-			
+			Integer counter = logicalConstraintCounter;
+			logicalConstraintCounter = logicalConstraintCounter(schema, schemaRef);
 			logicalConstraint(schema, schemaRef, "oneOf", "Must match exactly one of the following {0} cases");
 			logicalConstraint(schema, schemaRef, "anyOf", "Must match one or more of the following {0} cases");
 			logicalConstraint(schema, schemaRef, "not", "Must NOT match any of the following {0} cases");
 			
+			logicalConstraintCounter = counter;
 			
+		}
+
+		private Integer logicalConstraintCounter(ObjectNode schema, ObjectNode schemaRef) {
+			
+			int count = logicalConstraintCount(schema, schemaRef);
+			if (count>1) {
+				return new Integer(0);
+			}
+			ArrayNode allOf = (ArrayNode) get(schema, schemaRef, "allOf");
+			if (allOf != null) {
+				Iterator<JsonNode> sequence = allOf.elements();
+				while (sequence.hasNext()) {
+					ObjectNode next = (ObjectNode) sequence.next();
+					ObjectNode nextRef = resolveReference(next);
+					count += logicalConstraintCount(next, nextRef);
+					if (count > 1) {
+						return new Integer(0);
+					}
+				}
+			}
+			return null;
+		}
+
+		private int logicalConstraintCount(ObjectNode schema, ObjectNode schemaRef) {
+			int count = 0;
+			if (get(schema, schemaRef, "oneOf")!=null) {
+				count++;
+			}
+			if (get(schema, schemaRef, "anyOf")!=null) {
+				count++;
+			}
+			if (get(schema, schemaRef, "not")!=null) {
+				count++;
+			}
+			return count;
 		}
 
 		private void logicalConstraint(ObjectNode schema, ObjectNode schemaRef, String fieldName, String pattern) throws IOException {
@@ -265,6 +429,14 @@ public class JsonSchemaDocumentationGenerator {
 				return;
 			}
 			
+			Integer counter = null;
+			
+			if (logicalConstraintCounter != null) {
+				logicalConstraintCounter = logicalConstraintCounter + 1;
+				caseNumberStack.push(logicalConstraintCounter.toString());
+				counter = logicalConstraintCounter;
+				logicalConstraintCounter = null;
+			}
 			
 			String statement = MessageFormat.format(pattern, list.size());
 			int separatorLength = statement.length();
@@ -279,6 +451,11 @@ public class JsonSchemaDocumentationGenerator {
 				ObjectNode schemaRef = resolveReference(schema);
 				
 				logicalCase(i, schema, schemaRef, separatorLength);
+			}
+			
+			if (counter!=null) {
+				caseNumberStack.pop();
+				logicalConstraintCounter = counter;
 			}
 			
 		}
@@ -663,19 +840,6 @@ public class JsonSchemaDocumentationGenerator {
 		
 
 
-		private Boolean isRecursive(ObjectNode schema) {
-
-			if (schema != null) {
-				
-				String ref = ref(schema);
-				
-				if (ref != null) {
-					return recursiveMap.get(ref);
-				}
-			}
-			
-			return null;
-		}
 
 		private String ref(ObjectNode schema) {
 
@@ -689,65 +853,8 @@ public class JsonSchemaDocumentationGenerator {
 			return null;
 		}
 
-		private boolean isRecursive(ObjectNode node, ObjectNode nodeRef) {
-			if (node == null) {
-				return false;
-			}
-			
-
-			String ref = ref(node);
-			if (ref == null) {
-				return false;
-			}
-			Boolean truth = recursiveMap.get(ref);
-			if (truth == null) {
-				truth = isRecursive(ref, node, nodeRef);
-				recursiveMap.put(ref, truth);
-			}
-			
-			return truth;
-			
-		}
-		private boolean isRecursive(String ref, ObjectNode node, ObjectNode nodeRef) {
-			
-			
-			ObjectNode properties = properties(node, nodeRef);
-			if (properties != null) {
-				Iterator<String> fieldNames = properties.fieldNames();
-				while (fieldNames.hasNext()) {
-					String fieldName = fieldNames.next();
-					ObjectNode fieldSchema = (ObjectNode) properties.get(fieldName);
-					
-					
-					JsonNode fieldRefNode = fieldSchema.get("$ref");
-					if (fieldRefNode==null) {
-
-						JsonNode items = fieldSchema.get("items");
-						if (items != null) {
-							fieldRefNode = items.get("$ref");
-							if (fieldRefNode == null) {
-								continue;
-							}
-						} else {
-							continue;
-						}
-					}
-					String fieldRef = fieldRefNode.asText();
-					if (fieldRef.equals(ref)) {
-						return true;
-					}
-
-					ObjectNode fieldSchemaRef = resolveReference(fieldSchema);
-				
-					if (isRecursive(ref, fieldSchema, fieldSchemaRef)) {
-						return true;
-					}
-					
-				}
-			}
-
-			return false;
-		}
+	
+	
 
 		private String stringValue(ObjectNode node, ObjectNode nodeRef, String fieldName) {
 			if (node == null) {
@@ -768,5 +875,6 @@ public class JsonSchemaDocumentationGenerator {
 		
 		
 	}
+
 
 }

@@ -1,0 +1,29 @@
+@prefix konig: <http://www.konig.io/ns/core/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix shape: <http://example.com/ns/shape/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+
+shape: a owl:Ontology ; 
+	vann:preferredNamespacePrefix "shape" ; 
+	rdfs:label "Shape Ontology" . 
+
+shape:ContactPointShape konig:mediaTypeBaseName "application/vnd.example.ns.shape.contactpoint" . 
+
+shape:FamilyNameShape konig:mediaTypeBaseName "application/vnd.example.ns.shape.familynameshape" . 
+
+shape:GivenNameShape konig:mediaTypeBaseName "application/vnd.example.ns.shape.givennameshape" . 
+
+shape:PersonContactPointShape konig:mediaTypeBaseName "application/vnd.example.ns.shape.person" . 
+
+shape:PersonContactShape konig:mediaTypeBaseName "application/vnd.example.ns.shape.person" . 
+
+shape:PersonEmailShape konig:mediaTypeBaseName "application/vnd.example.ns.shape.person" . 
+
+shape:PersonFullnameShape konig:mediaTypeBaseName "application/vnd.example.ns.shape.person" . 
+
+shape:PersonNamePartsShape konig:mediaTypeBaseName "application/vnd.example.ns.shape.person" . 
+
+shape:PersonNameShape konig:mediaTypeBaseName "application/vnd.example.ns.shape.person" . 
+
+shape:PersonTargetShape konig:mediaTypeBaseName "application/vnd.example.ns.shape.person" . 
