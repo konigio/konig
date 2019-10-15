@@ -1,0 +1,8 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shape: <http://example.com/ns/shape/> .
+
+shape:PersonNameShape a sh:Shape , sh:NodeShape ; 
+	sh:xone (shape:PersonNamePartsShape shape:PersonFullnameShape) ; 
+	sh:targetClass schema:Person . 

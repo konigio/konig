@@ -71,6 +71,47 @@ public class JsonSchemaDocumentationGeneratorTest {
 		schemaGenerator.setIncludeIdValue(true);
 	}
 
+
+	@Test
+	public void testUniqueCaseNumber() throws Exception {
+		String expected =
+				"{\n" + 
+				"   \"id\": string  -- The IRI that identifies this Person\n" + 
+				"   _______________________________________________\n" + 
+				"   Must match exactly one of the following 2 cases\n" + 
+				"   _______________________________________________\n" + 
+				"   CASE 1.1 ... Person Email\n" + 
+				"   \"email\": string  -- (Required) \n" + 
+				"   _______________________________________________\n" + 
+				"   CASE 1.2 ... Person Contact Point\n" + 
+				"   \"contactPoint\": {\n" + 
+				"   }\n" + 
+				"   _______________________________________________\n" + 
+				"   _______________________________________________\n" + 
+				"   Must match exactly one of the following 2 cases\n" + 
+				"   _______________________________________________\n" + 
+				"   CASE 2.1 ... Person Name Parts\n" + 
+				"   _______________________________________________\n" + 
+				"   Must match exactly one of the following 2 cases\n" + 
+				"   _______________________________________________\n" + 
+				"   CASE 2.1.1 ... Given Name\n" + 
+				"   \"givenName\": string  -- (Required) \n" + 
+				"   _______________________________________________\n" + 
+				"   CASE 2.1.2 ... Family Name\n" + 
+				"   \"familyName\": string  -- (Required) \n" + 
+				"   _______________________________________________\n" + 
+				"   _______________________________________________\n" + 
+				"   CASE 2.2 ... Person Fullname\n" + 
+				"   \"name\": string  -- (Required) \n" + 
+				"   _______________________________________________\n" + 
+				"}\n" + 
+				"";
+		URI shapeId = uri("http://example.com/ns/shape/PersonTargetShape");
+		String actual = generate("src/test/resources/JsonSchemaGeneratorTest/unique-case-number", shapeId);
+		assertEquals(expected, actual);
+	}
+	
+
 	@Test
 	public void testJsonLd() throws Exception {
 		String expected = "{\n" + 
