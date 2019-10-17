@@ -7,7 +7,7 @@
 	<parent>
 		<artifactId>konig-parent</artifactId>
 		<groupId>io.konig</groupId>
-		<version>2.11.0</version>
+		<version>1.12.0</version>
 		<relativePath>../konig-parent/pom.xml</relativePath>
 	</parent>
 
