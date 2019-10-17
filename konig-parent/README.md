@@ -26,11 +26,6 @@ mvn versions:commit
 Obviously, you will replace `1.2.1` with the actual value of the version number for
 the current release.
 
-## Verify the build
-
-```
-mvn clean install
-```
 
 ## Push changes to the git repo
 
