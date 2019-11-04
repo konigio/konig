@@ -1012,4 +1012,8 @@ public class OwlReasoner {
 		Set<URI> typeSet = v.asTraversal().out(RDF.TYPE).toUriSet();
 		return (URI) mostSpecificType(typeSet, null);
 	}
+
+	public List<Vertex> instancesOf(Resource enumType) {
+		return graph.v(enumType).in(RDF.TYPE).toVertexList();
+	}
 }

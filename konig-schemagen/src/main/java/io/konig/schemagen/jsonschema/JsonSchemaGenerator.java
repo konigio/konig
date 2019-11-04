@@ -30,9 +30,11 @@ import java.util.Set;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.XMLSchema;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -42,6 +44,8 @@ import io.konig.core.Graph;
 import io.konig.core.KonigException;
 import io.konig.core.NamespaceManager;
 import io.konig.core.OwlReasoner;
+import io.konig.core.Vertex;
+import io.konig.core.impl.RdfUtil;
 import io.konig.core.vocab.Konig;
 import io.konig.schemagen.GeneratedMediaTypeTransformer;
 import io.konig.schemagen.Generator;
@@ -434,6 +438,9 @@ public class JsonSchemaGenerator extends Generator {
 				object.set("enum", array);
 				array.add(strictValue);
 				
+			} else if (isEnumStruct(property)) {
+				enumStruct(property, object);
+				
 			} else if (enumList != null) {
 				object.put("type", "string");
 				ArrayNode array = mapper.createArrayNode();
@@ -549,6 +556,87 @@ public class JsonSchemaGenerator extends Generator {
 			}
 			
 			return object;
+		}
+
+		private void enumStruct(PropertyConstraint property, ObjectNode object) {
+			Shape valueShape = property.getShape();
+			
+			ArrayNode oneOf = mapper.createArrayNode();
+			object.set("oneOf", oneOf);
+			
+			Resource enumType = property.getValueClass();
+			if (enumType == null) {
+				enumType = valueShape.getTargetClass();
+			}
+			
+			List<Vertex> individualList = reasoner.instancesOf(enumType);
+			for (Vertex v : individualList) {
+				ObjectNode individual = enumMember(v, valueShape);
+				oneOf.add(individual);
+			}
+			
+		}
+
+		private ObjectNode enumMember(Vertex v, Shape valueShape) {
+			ObjectNode node = mapper.createObjectNode();
+			node.put("type", "object");
+			
+			URI memberName = RdfUtil.uri(v.getId());
+			
+			ObjectNode properties = mapper.createObjectNode();
+			node.set("properties", properties);
+			
+			if (valueShape.getNodeKind() == NodeKind.IRI) {
+			
+				ObjectNode idNode = mapper.createObjectNode();
+				idNode.put("type", "string");
+				ArrayNode nameEnum = mapper.createArrayNode();
+				nameEnum.add(memberName.getLocalName());
+				idNode.set("enum", nameEnum);
+				
+				properties.set("id", idNode);
+			}
+			
+			for (PropertyConstraint p : valueShape.getProperty()) {
+				URI predicate = p.getPredicate();
+				if (predicate == null) {
+					continue;
+				}
+				
+				Value value = v.getValue(predicate);
+				if (value==null) {
+					continue;
+				}
+				
+				URI datatype = p.getDatatype();
+				if (XMLSchema.STRING.equals(datatype)) {
+					ObjectNode pNode = mapper.createObjectNode();
+					pNode.put("type", "string");
+					properties.set(predicate.getLocalName(), pNode);
+					ArrayNode pEnum = mapper.createArrayNode();
+					pNode.set("enum", pEnum);
+					pEnum.add(value.stringValue());
+				}
+			}
+			return node;
+		}
+
+		private boolean isEnumStruct(PropertyConstraint property) {
+			if (reasoner != null) {
+				Shape shape = property.getShape();
+				if (shape != null) {
+					URI targetClass = shape.getTargetClass();
+					if (targetClass != null && reasoner.isEnumerationClass(targetClass)) {
+						return true;
+					}
+					
+					Resource valueClass = property.getValueClass();
+					if (valueClass != null && reasoner.isEnumerationClass(valueClass)) {
+						return true;
+					}
+				}
+			}
+			return false;
 		}
 
 		private ObjectNode definitions() {
