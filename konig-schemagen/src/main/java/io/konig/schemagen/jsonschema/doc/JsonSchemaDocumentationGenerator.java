@@ -610,9 +610,38 @@ public class JsonSchemaDocumentationGenerator {
 		private String type(ObjectNode schema, ObjectNode schemaRef) {
 			String value = stringValue(schema, schemaRef, "type");
 			if (value == null) {
-				throw new IllegalArgumentException("type is not defined");
+				
+				value = typeFromBooleanConstraint(schema, schemaRef);
+				
+				if (value == null) {
+					throw new IllegalArgumentException("type is not defined");
+				}
 			}
 			return value;
+		}
+
+		private String typeFromBooleanConstraint(ObjectNode schema, ObjectNode schemaRef) {
+			
+			ArrayNode array = (ArrayNode) get(schema, schemaRef, "anyOf");
+			if (array == null) {
+				array = (ArrayNode) get(schema, schemaRef, "oneOf");
+			}
+			
+			if (array == null) {
+				array = (ArrayNode) get(schema, schemaRef, "allOf");
+			}
+			
+			if (array != null) {
+				for (int i=0; i<array.size(); i++) {
+					JsonNode element = array.get(i).get("type");
+					if (element != null) {
+						return element.asText();
+					}
+				
+				}
+			}
+			
+			return null;
 		}
 
 		private ObjectNode resolveReference(ObjectNode schema) {
@@ -720,7 +749,7 @@ public class JsonSchemaDocumentationGenerator {
 			
 			StringBuilder builder = new StringBuilder();
 			
-			if (required || format!=null || description!=null) {
+			if (required || format!=null || description!=null || enumList!=null) {
 				builder.append(" -- ");
 				if (required || format!=null) {
 					String comma = "";

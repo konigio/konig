@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openrdf.model.URI;
@@ -47,6 +48,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.konig.core.ContextManager;
 import io.konig.core.GraphBuilder;
 import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryContextManager;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
@@ -74,6 +76,73 @@ public class JsonSchemaGeneratorTest {
 	JsonSchemaTypeMapper typeMapper = new SimpleJsonSchemaTypeMapper();
 	JsonSchemaGenerator generator = new JsonSchemaGenerator(namer, nsManager, typeMapper);
 	
+	@Before
+	public void setUp() {
+		generator.setReasoner(new OwlReasoner(graph));
+	}
+	
+
+	@Test
+	public void testEnumShape() throws Exception {
+
+		load("src/test/resources/JsonSchemaGeneratorTest/enum-shape");
+		URI shapeId = uri("http://example.com/ns/shape/PersonShape");
+		Shape shape = shapeManager.getShapeById(shapeId);
+
+		ObjectNode schema = generator.generateJsonSchema(shape);
+		
+		ObjectNode properties = (ObjectNode) schema.get("properties");
+		
+		ObjectNode gender = (ObjectNode) properties.get("gender");
+		assertTrue(gender != null);
+		
+		ArrayNode oneOf = (ArrayNode) gender.get("oneOf");
+		assertTrue(oneOf != null);
+		
+		assertEquals(3, oneOf.size());
+		
+		ObjectNode nonBinary = findEnum(oneOf, "id", "NonBinary");
+		assertTrue(nonBinary != null);
+		
+		String name = nonBinary.get("properties").get("name").get("enum").get(0).asText();
+		assertEquals("non-binary", name);
+		
+//		
+//
+//		ObjectMapper mapper = new ObjectMapper();
+//		
+//		mapper.enable(SerializationFeature.INDENT_OUTPUT);
+//		mapper.setSerializationInclusion(Include.NON_NULL);
+//		String actualJson = mapper.writeValueAsString(schema);
+//		
+//		
+//		System.out.println(actualJson);
+		
+	}
+	
+	
+	private ObjectNode findEnum(ArrayNode array, String fieldName, String enumValue) {
+		for (int i=0; i<array.size(); i++) {
+			ObjectNode node = (ObjectNode) array.get(i);
+			ObjectNode properties = (ObjectNode) node.get("properties");
+			if (properties != null) {
+				ObjectNode field = (ObjectNode)properties.get(fieldName);
+				if (field != null) {
+					ArrayNode enumArray = (ArrayNode) field.get("enum");
+					for (int j=0; j<enumArray.size(); j++) {
+						JsonNode enumMember = enumArray.get(j);
+						if (enumValue.equals(enumMember.asText())) {
+							return (ObjectNode) node;
+						}
+					}
+				}
+				
+			}
+		}
+		return null;
+	}
+
+
 	@Test
 	public void testJsonld() throws Exception {
 

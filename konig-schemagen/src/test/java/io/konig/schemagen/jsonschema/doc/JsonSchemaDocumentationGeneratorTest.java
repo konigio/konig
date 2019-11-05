@@ -40,6 +40,7 @@ import org.openrdf.rio.RDFParseException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.konig.core.NamespaceManager;
+import io.konig.core.OwlReasoner;
 import io.konig.core.impl.MemoryGraph;
 import io.konig.core.impl.MemoryNamespaceManager;
 import io.konig.core.impl.RdfUtil;
@@ -69,6 +70,37 @@ public class JsonSchemaDocumentationGeneratorTest {
 	@Before
 	public void setUp() {
 		schemaGenerator.setIncludeIdValue(true);
+		schemaGenerator.setReasoner(new OwlReasoner(graph));
+	}
+	
+
+	@Ignore
+	public void testEnumShape() throws Exception {
+		String expected =
+				"{\n" + 
+				"   \"givenName\": string, -- (Required) \n" + 
+				"   \"gender\": {\n" + 
+				"      _______________________________________________\n" + 
+				"      Must match exactly one of the following 3 cases\n" + 
+				"      _______________________________________________\n" + 
+				"      CASE 1\n" + 
+				"      \"id\": string, --  The value must be \"NonBinary\".\n" + 
+				"      \"name\": string  --  The value must be \"non-binary\".\n" + 
+				"      _______________________________________________\n" + 
+				"      CASE 2\n" + 
+				"      \"id\": string, --  The value must be \"Female\".\n" + 
+				"      \"name\": string  --  The value must be \"female\".\n" + 
+				"      _______________________________________________\n" + 
+				"      CASE 3\n" + 
+				"      \"id\": string, --  The value must be \"Male\".\n" + 
+				"      \"name\": string  --  The value must be \"male\".\n" + 
+				"      _______________________________________________\n" + 
+				"   }\n" + 
+				"}\n" + 
+				"";
+		URI shapeId = uri("http://example.com/ns/shape/PersonShape");
+		String actual = generate("src/test/resources/JsonSchemaGeneratorTest/enum-shape", shapeId);
+		assertEquals(expected, actual);
 	}
 
 
