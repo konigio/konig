@@ -539,6 +539,7 @@ public class FormulaParser {
 				(primary=tryLiteralFormula()) != null ? primary :
 				(primary=tryPath()) != null ? primary :
 				(primary=tryIri()) != null ? primary :
+				(primary=tryBNode()) != null ? primary :
 				null;
 			
 			
@@ -547,6 +548,19 @@ public class FormulaParser {
 		}
 
 		
+		private PrimaryExpression tryBNode() throws IOException, RDFParseException, RDFHandlerException {
+			
+			skipSpace();
+			int c = peek();
+			
+			if (c == '[') {
+				List<PredicateObjectList> constraints = predicateObjectList();
+				return new BNodePrimaryExpression(constraints);
+			}
+			
+			return null;
+		}
+
 		/**
 		 * Return one of fully-qualified IRI, CURIE, or localName registered with the LocalNameService.
 		 * @throws IOException 

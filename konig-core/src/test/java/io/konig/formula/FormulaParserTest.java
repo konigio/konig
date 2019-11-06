@@ -44,6 +44,34 @@ public class FormulaParserTest {
 
 	private FormulaParser parser = new FormulaParser();
 	
+
+	@Test
+	public void testTopLevelBNode() throws Exception {
+		String text = 
+				"@term contactType <http://schema.org/contactPoint>\n" + 
+				"@term Sales <http://example.com/ns/Sales>\n" + 
+				"@term email <http://schema.org/email>\n" + 
+				"@term email_address <http://example.com/ns/email_address>\n" + 
+				"\n" + 
+				"[\n" + 
+				"   contactType Sales;\n" + 
+				"   email $.email_address\n" + 
+				"]";
+
+		SimpleLocalNameService service = new SimpleLocalNameService();
+		
+		FormulaParser parser = new FormulaParser(null, service);
+
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		String actual = e.toSimpleString();
+		
+		String expected = "[contactType Sales; email $.email_address]";
+		
+		assertEquals(expected, actual);
+		
+	}
+	
+	
 	@Test
 	public void testInt() throws Exception {
 		String text = "INT(\"1234\")";

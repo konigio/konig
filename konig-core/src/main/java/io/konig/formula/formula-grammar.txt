@@ -70,7 +70,9 @@ UnaryExpression	  ::=
 	|	'-' PrimaryExpression 
 	|	PrimaryExpression
 	
-PrimaryExpression	  ::=  	BrackettedExpression | BuiltInCall | Path | Literal | IRI | CURIE
+PrimaryExpression	  ::=  	BrackettedExpression | BuiltInCall | Path | Literal | IRI | CURIE | BNode
+
+BNode ::= '[' PredicateObjectList ']'
 
 BrackettedExpression	  ::=  	'(' Expression ')'
 
