@@ -44,6 +44,23 @@ public class FormulaParserTest {
 
 	private FormulaParser parser = new FormulaParser();
 	
+	@Test
+	public void testInt() throws Exception {
+		String text = "INT(\"1234\")";
+
+		SimpleLocalNameService service = new SimpleLocalNameService();
+		
+		FormulaParser parser = new FormulaParser(null, service);
+
+		QuantifiedExpression e = parser.quantifiedExpression(text);
+		String actual = e.toSimpleString();
+		
+		String expected = text;
+		
+		assertEquals(expected, actual);
+		
+	}
+	
 
 	@Test
 	public void testSelfReference() throws Exception {

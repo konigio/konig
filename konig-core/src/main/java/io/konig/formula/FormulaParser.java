@@ -748,6 +748,7 @@ public class FormulaParser {
 			(call=tryGenericFunction(FunctionModel.UNIX_TIME)) != null ? call :
 			(call=tryGenericFunction(FunctionModel.IRI)) != null ? call :
 			(call=tryGenericFunction(FunctionModel.STRIP_SPACES)) != null ? call :
+			(call=tryGenericFunction(FunctionModel.INT)) != null ? call :
 			(call=tryBoundFunction()) != null ? call :
 				
 			null;

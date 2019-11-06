@@ -43,6 +43,10 @@ public class FunctionModel {
 	public static final FunctionModel COUNT = 
 		new FunctionModel(FunctionExpression.COUNT, KqlType.NUMBER)
 		.param("expr", KqlType.NUMBER);
+	
+	public static final FunctionModel INT =
+			new FunctionModel(FunctionExpression.INT, KqlType.INTEGER)
+			.param("stringValue", KqlType.STRING);
 
 	public static final FunctionModel UNIX_TIME = 
 		new FunctionModel(FunctionExpression.UNIX_TIME, KqlType.INTEGER)
