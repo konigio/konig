@@ -821,6 +821,9 @@ public class JsonSchemaDocumentationGenerator {
 				
 				case "date" :
 					return "ISO8601/RFC-3339 date";
+
+				case "time" :
+					return "ISO8601/RFC-3339 time";
 					
 				case "date-time" :
 					return "ISO8601/RFC-3339 date-time";
