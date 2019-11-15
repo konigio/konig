@@ -205,8 +205,13 @@ public class JsonSchemaGenerator extends Generator {
 
 		private void putRequired(ObjectNode json, Shape shape) {
 			List<PropertyConstraint> requiredList = requiredList(shape);
-			if (!requiredList.isEmpty()) {
+			boolean hasRequiredId = shape.getNodeKind()==NodeKind.IRI;
+			if (!requiredList.isEmpty() || hasRequiredId) {
+				
 				ArrayNode array = mapper.createArrayNode();
+				if (hasRequiredId) {
+					array.add("id");
+				}
 				for (PropertyConstraint p : requiredList) {
 					String fieldName = p.getPredicate().getLocalName();
 					array.add(fieldName);

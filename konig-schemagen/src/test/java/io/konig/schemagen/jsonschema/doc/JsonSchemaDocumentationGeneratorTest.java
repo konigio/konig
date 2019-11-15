@@ -108,7 +108,7 @@ public class JsonSchemaDocumentationGeneratorTest {
 	public void testUniqueCaseNumber() throws Exception {
 		String expected =
 				"{\n" + 
-				"   \"id\": string  -- The IRI that identifies this Person\n" + 
+				"   \"id\": string  -- (Required) The IRI that identifies this Person\n" + 
 				"   _______________________________________________\n" + 
 				"   Must match exactly one of the following 2 cases\n" + 
 				"   _______________________________________________\n" + 
@@ -161,7 +161,7 @@ public class JsonSchemaDocumentationGeneratorTest {
 	@Test
 	public void testLogicalConstraints() throws Exception {
 		String expected = "{\n" + 
-				"   \"id\": string  -- The IRI that identifies this Person\n" + 
+				"   \"id\": string  -- (Required) The IRI that identifies this Person\n" + 
 				"   _______________________________________________\n" + 
 				"   Must match exactly one of the following 2 cases\n" + 
 				"   _______________________________________________\n" + 
@@ -182,7 +182,7 @@ public class JsonSchemaDocumentationGeneratorTest {
 	@Test
 	public void testRecursive() throws Exception {
 		String expected = "{ -- This is a recursive structure named 'PersonTargetShape'.\n" + 
-				"   \"id\": string, -- The IRI that identifies this Person\n" + 
+				"   \"id\": string, -- (Required) The IRI that identifies this Person\n" + 
 				"   \"givenName\": string,\n" + 
 				"   \"children\": [\n" + 
 				"      { -- Repeat the 'PersonTargetShape' structure here...\n" + 
@@ -198,7 +198,7 @@ public class JsonSchemaDocumentationGeneratorTest {
 	@Test
 	public void testAllOf() throws Exception {
 		String expected = "{\n" + 
-				"   \"id\": string, -- The IRI that identifies this Person\n" + 
+				"   \"id\": string, -- (Required) The IRI that identifies this Person\n" + 
 				"   \"givenName\": string,\n" + 
 				"   \"familyName\": string \n" + 
 				"}\n";
