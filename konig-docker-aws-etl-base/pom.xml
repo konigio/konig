@@ -41,7 +41,7 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.45</version>
+			<version>8.0.16</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel</groupId>
@@ -78,7 +78,7 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.9</version>
+			<version>8.0.16</version>
 		</dependency>
 
 		<dependency>
